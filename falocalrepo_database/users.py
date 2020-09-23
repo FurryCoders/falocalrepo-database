@@ -49,6 +49,16 @@ def exist_user(db: Connection, user: str) -> bool:
     return bool(select(db, users_table, ["USERNAME"], "USERNAME", user).fetchone())
 
 
+def exist_user_field_value(db: Connection, user: str, field: str, value: str) -> bool:
+    value_: Optional[tuple] = select(db, users_table, [field], "USERNAME", user).fetchone()
+    if value_ is None:
+        return False
+    elif value in value_[0].split(","):
+        return True
+
+    return False
+
+
 def new_user(db: Connection, user: str):
     insert(db, users_table, users_fields, [user] + [""] * (len(users_fields) - 1), False)
     db.commit()
