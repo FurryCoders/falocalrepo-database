@@ -82,7 +82,7 @@ def edit_user_field_add(db: Connection, user: str, field: str, values: List[str]
     values = old_values_raw[0].split(",") + values
     values.sort()
 
-    edit_user_replace(db, user, [field], [",".join(values)])
+    edit_user_field_replace(db, user, [field], [",".join(values)])
 
 
 def edit_user_field_remove(db: Connection, user: str, field: str, values: List[str]):
@@ -92,4 +92,4 @@ def edit_user_field_remove(db: Connection, user: str, field: str, values: List[s
 
     values = [v for v in old_values_raw[0].split(",") if v not in values]
 
-    edit_user_replace(db, user, [field], [",".join(values)])
+    edit_user_field_replace(db, user, [field], [",".join(values)])
