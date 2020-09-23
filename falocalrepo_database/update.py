@@ -382,6 +382,11 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
     return connect_database("FA.db")
 
 
+def update_to_current(db: Connection) -> Connection:
+    write_setting(db, "VERSION", __version__)
+    return db
+
+
 def update_database(db: Connection) -> Connection:
     if not (db_version := get_version(db)):
         raise Exception("Cannot read version from database.")
@@ -400,5 +405,7 @@ def update_database(db: Connection) -> Connection:
         db = update_3_1_to_3_2(db)
     elif compare_versions(db_version, "2.7.0") < 0:
         raise Exception("Update does not support versions lower than 2.11.2")
+    elif compare_versions(db_version, __version__) < 0:
+        return update_to_current(db)
 
     return db
