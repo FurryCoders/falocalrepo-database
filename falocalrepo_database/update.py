@@ -15,7 +15,7 @@ from .database import Connection
 from .database import connect_database
 from .database import count
 from .database import insert
-from .database import make_database
+from .database import make_tables
 from .database import select
 from .database import select_all
 from .database import tiered_path
@@ -339,7 +339,7 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
 
     try:
         db_new = connect_database("FA_new.db")
-        make_database(db_new)
+        make_tables(db_new)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")

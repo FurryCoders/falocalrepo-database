@@ -4,7 +4,7 @@ from .database import connect_database
 from .database import connect_database
 from .database import count
 from .database import insert
-from .database import make_database
+from .database import make_tables
 from .database import select
 from .database import select_all
 from .database import tiered_path

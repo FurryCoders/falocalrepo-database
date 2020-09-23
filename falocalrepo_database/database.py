@@ -81,7 +81,7 @@ def check_errors(db: Connection, table: str) -> List[tuple]:
         return []
 
 
-def make_database(db: Connection):
+def make_tables(db: Connection):
     from .journals import make_journals_table
     from .settings import make_settings_table
     from .submissions import make_submissions_table
