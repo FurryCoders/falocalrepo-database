@@ -29,9 +29,9 @@ from .submissions import submissions_fields
 from .submissions import submissions_indexes
 from .submissions import submissions_table
 from .update import update_database
-from .users import edit_user_folder_add
-from .users import edit_user_folder_remove
-from .users import edit_user_replace
+from .users import edit_user_field_add
+from .users import edit_user_field_remove
+from .users import edit_user_field_replace
 from .users import exist_user
 from .users import new_user
 from .users import remove_user

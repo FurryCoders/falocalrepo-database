@@ -59,12 +59,12 @@ def remove_user(db: Connection, user: str):
     db.commit()
 
 
-def edit_user_replace(db: Connection, user: str, fields: List[str], new_values: List[str]):
+def edit_user_field_replace(db: Connection, user: str, fields: List[str], new_values: List[str]):
     update(db, users_table, fields, new_values, "USERNAME", user)
     db.commit()
 
 
-def edit_user_folder_add(db: Connection, user: str, field: str, values: List[str]):
+def edit_user_field_add(db: Connection, user: str, field: str, values: List[str]):
     old_values_raw: Optional[Tuple[str]] = select(db, users_table, [field], "USERNAME", user).fetchone()
     if old_values_raw is None:
         return
@@ -75,7 +75,7 @@ def edit_user_folder_add(db: Connection, user: str, field: str, values: List[str
     edit_user_replace(db, user, [field], [",".join(values)])
 
 
-def edit_user_folder_remove(db: Connection, user: str, field: str, values: List[str]):
+def edit_user_field_remove(db: Connection, user: str, field: str, values: List[str]):
     old_values_raw: Optional[Tuple[str]] = select(db, users_table, [field], "USERNAME", user).fetchone()
     if old_values_raw is None:
         return
