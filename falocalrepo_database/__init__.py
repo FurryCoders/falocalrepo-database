@@ -3,6 +3,7 @@ from .database import check_errors
 from .database import connect_database
 from .database import connect_database
 from .database import count
+from .database import delete
 from .database import insert
 from .database import make_tables
 from .database import select
@@ -27,6 +28,7 @@ from .submissions import search_submissions
 from .submissions import submissions_fields
 from .submissions import submissions_indexes
 from .submissions import submissions_table
+from .update import update_database
 from .users import edit_user_folder_add
 from .users import edit_user_folder_remove
 from .users import edit_user_replace
