@@ -13,10 +13,12 @@ from .database import vacuum
 from .journals import exist_journal
 from .journals import journals_fields
 from .journals import journals_indexes
+from .journals import journals_table
 from .journals import remove_journal
 from .journals import save_journal
 from .journals import search_journals
 from .settings import read_setting
+from .settings import settings_table
 from .settings import write_setting
 from .submissions import exist_submission
 from .submissions import remove_submission
@@ -24,6 +26,7 @@ from .submissions import save_submission
 from .submissions import search_submissions
 from .submissions import submissions_fields
 from .submissions import submissions_indexes
+from .submissions import submissions_table
 from .users import edit_user_folder_add
 from .users import edit_user_folder_remove
 from .users import edit_user_replace
@@ -32,3 +35,4 @@ from .users import new_user
 from .users import remove_user
 from .users import users_fields
 from .users import users_indexes
+from .users import users_table
