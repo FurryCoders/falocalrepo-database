@@ -21,7 +21,7 @@ from .database import select_all
 from .database import tiered_path
 from .database import update
 from .settings import read_setting
-from .settings import setting_write
+from .settings import write_setting
 
 
 def get_version(db: Connection) -> str:
@@ -257,8 +257,8 @@ def update_2_7_to_3(db: Connection) -> Connection:
             move("FA.files_new", "FA.files")
 
         # Update counters for new database
-        setting_write(db_new, "SUBN", str(count(db_new, "SUBMISSIONS")))
-        setting_write(db_new, "USRN", str(count(db_new, "USERS")))
+        write_setting(db_new, "SUBN", str(count(db_new, "SUBMISSIONS")))
+        write_setting(db_new, "USRN", str(count(db_new, "USERS")))
 
         # Close databases and replace old database
         print("Close databases and replace old database")
