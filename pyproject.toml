@@ -4,6 +4,7 @@ version = "3.2.1"
 description = "Database functionality for falocalrepo."
 authors = ["Matteo Campinoti <matteo.campinoti94@gmail.com>"]
 license = "EUPL-1.2"
+readme = "README.md"
 homepage = "https://gitlab.com/MatteoCampinoti94/falocalrepo-database"
 repository = "https://gitlab.com/MatteoCampinoti94/falocalrepo-database"
 classifiers = [
