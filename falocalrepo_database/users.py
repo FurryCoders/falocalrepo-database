@@ -104,3 +104,7 @@ def find_user_from_fields(db: Connection, fields: List[str], values: List[str], 
 
 def find_user_from_submission(db: Connection, submission_id: int) -> Cursor:
     return find_user_from_fields(db, ["GALLERY", "SCRAPS", "FAVORITES", "MENTIONS"], [f"%{int(submission_id):010}%"])
+
+
+def find_user_from_journal(db: Connection, journal_id: int) -> Cursor:
+    return find_user_from_fields(db, ["JOURNALS"], [f"%{int(journal_id):010}%"])
