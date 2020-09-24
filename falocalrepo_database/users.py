@@ -100,3 +100,7 @@ def edit_user_field_remove(db: Connection, user: str, field: str, values: List[s
 
 def find_user_from_fields(db: Connection, fields: List[str], values: List[str], and_: bool = False) -> Cursor:
     return select_multi(db, users_table, ["USERNAME"], fields, values, True, and_)
+
+
+def find_user_from_submission(db: Connection, submission_id: int) -> Cursor:
+    return find_user_from_fields(db, ["GALLERY", "SCRAPS", "FAVORITES", "MENTIONS"], [f"%{int(submission_id):010}%"])

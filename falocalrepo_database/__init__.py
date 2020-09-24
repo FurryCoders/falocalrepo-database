@@ -36,6 +36,7 @@ from .users import edit_user_field_replace
 from .users import exist_user
 from .users import exist_user_field_value
 from .users import find_user_from_fields
+from .users import find_user_from_submission
 from .users import new_user
 from .users import remove_user
 from .users import users_fields
