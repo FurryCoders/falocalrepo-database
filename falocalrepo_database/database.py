@@ -28,9 +28,10 @@ def insert(db: Connection, table: str, keys: List[str], values: List[Union[int, 
     )
 
 
-def select(db: Connection, table: str, fields: List[str], key: str, key_value: Union[int, str]) -> Cursor:
+def select(db: Connection, table: str, fields: List[str], key: str, key_value: Union[int, str], like: bool = False
+           ) -> Cursor:
     return db.execute(
-        f'''SELECT {",".join(fields)} FROM {table} WHERE {key} = ?''',
+        f'''SELECT {",".join(fields)} FROM {table} WHERE {key} {"like" if like else "="} ?''',
         (key_value,)
     )
 
