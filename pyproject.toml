@@ -19,7 +19,6 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-faapi = "2.8.3"
 filetype = "1.0.7"
 
 [tool.poetry.dev-dependencies]
