@@ -4,9 +4,11 @@ from typing import Optional
 from typing import Tuple
 
 from .database import Connection
+from .database import Cursor
 from .database import delete
 from .database import insert
 from .database import select
+from .database import select_multi
 from .database import update
 
 """
@@ -94,3 +96,7 @@ def edit_user_field_remove(db: Connection, user: str, field: str, values: List[s
     values = [v for v in old_values if v not in values]
 
     edit_user_field_replace(db, user, [field], [",".join(values)])
+
+
+def find_user_from_fields(db: Connection, fields: List[str], values: List[str], and_: bool = False) -> Cursor:
+    return select_multi(db, users_table, ["USERNAME"], fields, values, True, and_)
