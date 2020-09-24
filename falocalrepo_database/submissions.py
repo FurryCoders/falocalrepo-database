@@ -5,7 +5,6 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-from faapi import Sub
 from filetype import guess_extension
 
 from .database import Connection
@@ -75,9 +74,9 @@ def remove_submission(db: Connection, submission_id: int):
     db.commit()
 
 
-def save_submission(db: Connection, submission: Sub, file: Optional[bytes]):
+def save_submission(db: Connection, submission: Dict[str, Union[str, int]], file: Optional[bytes]):
     file_ext: str = ""
-    file_url_name: str = submission.file_url.split("/")[-1]
+    file_url_name: str = submission["file_url"].split("/")[-1]
     file_url_ext: str = file_url_name.split(".")[-1] if "." in file_url_name else ""
 
     if file:
@@ -86,7 +85,7 @@ def save_submission(db: Connection, submission: Sub, file: Optional[bytes]):
         elif (file_ext := str(file_ext_tmp)) == "zip" and file_url_ext:
             file_ext = file_url_ext
 
-        sub_folder: str = join_path(read_setting(db, "FILESFOLDER"), tiered_path(submission.id))
+        sub_folder: str = join_path(read_setting(db, "FILESFOLDER"), tiered_path(submission["id"]))
         sub_file: str = "submission" + (f".{file_ext}" if file_ext else "")
 
         makedirs(sub_folder, exist_ok=True)
@@ -96,10 +95,10 @@ def save_submission(db: Connection, submission: Sub, file: Optional[bytes]):
 
     insert(db, submissions_table,
            list(submissions_indexes.keys()),
-           [submission.id, submission.author, submission.title,
-            submission.date, submission.description, ",".join(sorted(submission.tags, key=str.lower)),
-            submission.category, submission.species, submission.gender,
-            submission.rating, submission.file_url, file_ext,
+           [submission["id"], submission["author"], submission["title"],
+            submission["date"], submission["description"], ",".join(sorted(submission["tags"], key=str.lower)),
+            submission["category"], submission["species"], submission["gender"],
+            submission["rating"], submission["file_url"], file_ext,
             file is not None],
            replace=True)
 

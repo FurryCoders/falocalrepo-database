@@ -2,8 +2,6 @@ from typing import Dict
 from typing import List
 from typing import Union
 
-from faapi import Journal
-
 from .database import Connection
 from .database import delete
 from .database import insert
@@ -43,9 +41,9 @@ def exist_journal(db: Connection, journal_id: int) -> bool:
     return bool(select(db, journals_table, ["ID"], "ID", journal_id).fetchone())
 
 
-def save_journal(db: Connection, journal: Journal):
+def save_journal(db: Connection, journal: Dict[str, Union[str, int]]):
     insert(db, journals_table, journals_fields,
-           [journal.id, journal.author, journal.title, journal.date, journal.content])
+           [journal["id"], journal["author"], journal["title"], journal["date"], journal["content"]])
     db.commit()
 
 
