@@ -36,6 +36,16 @@ def select(db: Connection, table: str, fields: List[str], key: str, key_value: U
     )
 
 
+def select_multi(db: Connection, table: str, fields: List[str], keys: List[str], key_values: List[Union[int, str]],
+                 like: bool = False, and_: bool = True
+                 ) -> Cursor:
+    where: List[str] = [f"{key} {'like' if like else '='} ?" for key in keys for _ in key_values]
+    return db.execute(
+        f'''SELECT {",".join(fields)} FROM {table} WHERE {f" {'AND' if and_ else 'OR'} ".join(where)}''',
+        key_values * len(keys)
+    )
+
+
 def select_all(db: Connection, table: str, fields: List[str]) -> Cursor:
     return db.execute(f'''SELECT {",".join(fields)} FROM {table}''')
 

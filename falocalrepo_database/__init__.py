@@ -8,6 +8,7 @@ from .database import insert
 from .database import make_tables
 from .database import select
 from .database import select_all
+from .database import select_multi
 from .database import tiered_path
 from .database import update
 from .database import vacuum
