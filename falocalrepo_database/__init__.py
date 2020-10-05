@@ -19,6 +19,8 @@ from .journals import journals_table
 from .journals import remove_journal
 from .journals import save_journal
 from .journals import search_journals
+from .settings import add_history
+from .settings import read_history
 from .settings import read_setting
 from .settings import settings_table
 from .settings import write_setting
