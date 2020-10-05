@@ -450,6 +450,7 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
 def update_3_2_to_3_3(db: Connection) -> Connection:
     print("Updating 3.2.0 to 3.3.0")
     db_new: Optional[Connection] = None
+    db_open: bool = True
 
     try:
         db_new = connect_database("FA_new.db")
@@ -477,24 +478,24 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
 
         # Add update to history
         last_update: str = select(db, settings_table, ["SVALUE"], "SETTING", "LASTUPDATE").fetchone()
-        if last_update != "0":
-            add_history(db_new, float(last_update), "update")
-
-        db.commit()
-        db_new.commit()
+        if last_update and last_update[0] != "0":
+            # Commit and close databases to unlock
+            db.commit()
+            db.close()
+            db = None
+            add_history(db_new, float(last_update[0]), "update")
 
         # Close databases and replace old database
         print("Close databases and replace old database")
-        db.commit()
-        db.close()
         db_new.commit()
         db_new.close()
         move("FA.db", "FA_3.db")
         move("FA_new.db", "FA.db")
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
-        db.commit()
-        db.close()
+        if db is not None:
+            db.commit()
+            db.close()
         if db_new is not None:
             db_new.commit()
             db_new.close()
