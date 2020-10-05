@@ -15,13 +15,18 @@ from .database import Connection
 from .database import connect_database
 from .database import count
 from .database import insert
+from .database import make_tables
 from .database import select
 from .database import select_all
 from .database import tiered_path
 from .database import update
+from .journals import journals_table
+from .settings import add_history
 from .settings import read_setting
 from .settings import settings_table
 from .settings import write_setting
+from .submissions import submissions_table
+from .users import users_table
 
 
 def get_version(db: Connection) -> str:
@@ -442,6 +447,62 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
     return connect_database("FA.db")
 
 
+def update_3_2_to_3_3(db: Connection) -> Connection:
+    print("Updating 3.2.0 to 3.3.0")
+    db_new: Optional[Connection] = None
+
+    try:
+        db_new = connect_database("FA_new.db")
+        make_tables(db_new)
+
+        # Transfer common submissions and users data
+        print("Transfer common submissions and users data")
+        db.execute("ATTACH DATABASE 'FA_new.db' AS db_new")
+        db.execute(
+            f"""INSERT OR IGNORE INTO db_new.{users_table}
+            SELECT * FROM {users_table}"""
+        )
+        db.execute(
+            f"""INSERT OR IGNORE INTO db_new.{submissions_table}
+            SELECT * FROM {submissions_table}"""
+        )
+        db.execute(
+            f"""INSERT OR IGNORE INTO db_new.{journals_table}
+            SELECT * FROM {journals_table}"""
+        )
+        db.execute(
+            f"""INSERT OR IGNORE INTO db_new.{settings_table}
+            SELECT * FROM {settings_table} WHERE SETTING != "LASTSTART" AND SETTING != "LASTUPDATE";"""
+        )
+
+        # Add update to history
+        last_update: str = select(db, settings_table, ["SVALUE"], "SETTING", "LASTUPDATE").fetchone()
+        if last_update != "0":
+            add_history(db_new, float(last_update), "update")
+
+        db.commit()
+        db_new.commit()
+
+        # Close databases and replace old database
+        print("Close databases and replace old database")
+        db.commit()
+        db.close()
+        db_new.commit()
+        db_new.close()
+        move("FA.db", "FA_3.db")
+        move("FA_new.db", "FA.db")
+    except (BaseException, Exception) as err:
+        print("Database update interrupted!")
+        db.commit()
+        db.close()
+        if db_new is not None:
+            db_new.commit()
+            db_new.close()
+        raise err
+
+    return connect_database("FA.db")
+
+
 def update_to_current(db: Connection, version: str) -> Connection:
     print(f"Updating {version} to {__version__}")
     write_setting(db, "VERSION", __version__)
@@ -463,6 +524,8 @@ def update_database(db: Connection) -> Connection:
         return update_database(update_3_to_3_1(db))
     elif v >= 0 and (v := compare_versions(db_version, "3.2.0")) < 0:
         return update_database(update_3_1_to_3_2(db))
+    elif v >= 0 and (v := compare_versions(db_version, "3.3.0")) < 0:
+        return update_database(update_3_2_to_3_3(db))
     elif v >= 0 and compare_versions(db_version, __version__) < 0:
         return update_to_current(db, db_version)
 
