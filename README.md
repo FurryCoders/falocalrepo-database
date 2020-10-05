@@ -86,3 +86,7 @@ Files are moved to the new structure and the old files folder is deleted. Only s
 ### 3.1.x &rarr; 3.2.0
 
 Add `JOURNALS` table and `JOURNALS` field in `USERS` table.
+
+### 3.2.x &rarr; 3.3.0
+
+Remove `LASTSTART` and `LASTUPDATE` entries and add `HISTORY` entry in `SETTINGS` table.
