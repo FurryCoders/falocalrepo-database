@@ -15,12 +15,12 @@ from .database import Connection
 from .database import connect_database
 from .database import count
 from .database import insert
-from .database import make_tables
 from .database import select
 from .database import select_all
 from .database import tiered_path
 from .database import update
 from .settings import read_setting
+from .settings import settings_table
 from .settings import write_setting
 
 
@@ -153,6 +153,66 @@ def make_database_3_1(db: Connection):
     insert(db, "SETTINGS", ["SETTING", "SVALUE"], ["VERSION", "3.1.0"], False)
 
     db.commit()
+
+
+def make_database_3_2(db: Connection) -> Connection:
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS USERS
+        (USERNAME TEXT UNIQUE NOT NULL,
+        FOLDERS TEXT NOT NULL,
+        GALLERY TEXT,
+        SCRAPS TEXT,
+        FAVORITES TEXT,
+        MENTIONS TEXT,
+        JOURNALS TEXT,
+        PRIMARY KEY (USERNAME ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS SUBMISSIONS
+        (ID INT UNIQUE NOT NULL,
+        AUTHOR TEXT NOT NULL,
+        TITLE TEXT,
+        UDATE DATE NOT NULL,
+        DESCRIPTION TEXT,
+        TAGS TEXT,
+        CATEGORY TEXT,
+        SPECIES TEXT,
+        GENDER TEXT,
+        RATING TEXT,
+        FILELINK TEXT,
+        FILEEXT TEXT,
+        FILESAVED INT,
+        PRIMARY KEY (ID ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS JOURNALS
+        (ID INT UNIQUE NOT NULL,
+        AUTHOR TEXT NOT NULL,
+        TITLE TEXT,
+        UDATE DATE NOT NULL,
+        CONTENT TEXT,
+        PRIMARY KEY (ID ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS SETTINGS
+        (SETTING TEXT UNIQUE,
+        SVALUE TEXT,
+        PRIMARY KEY (SETTING ASC));"""
+    )
+
+    insert(db, settings_table, ["SETTING", "SVALUE"], ["USRN", "0"], False)
+    insert(db, settings_table, ["SETTING", "SVALUE"], ["SUBN", "0"], False)
+    insert(db, settings_table, ["SETTING", "SVALUE"], ["JRNN", "0"], False)
+    insert(db, settings_table, ["SETTING", "SVALUE"], ["LASTUPDATE", "0"], False)
+    insert(db, settings_table, ["SETTING", "SVALUE"], ["LASTSTART", "0"], False)
+    insert(db, settings_table, ["SETTING", "SVALUE"], ["COOKIES", "{}"], False)
+    insert(db, settings_table, ["SETTING", "SVALUE"], ["FILESFOLDER", "FA.files"], False)
+    insert(db, settings_table, ["SETTING", "SVALUE"], ["VERSION", __version__], False)
+
+    return db
 
 
 def update_2_7_to_3(db: Connection) -> Connection:
@@ -339,7 +399,7 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
 
     try:
         db_new = connect_database("FA_new.db")
-        make_tables(db_new)
+        make_database_3_2(db_new)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
