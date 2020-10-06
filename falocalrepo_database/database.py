@@ -37,13 +37,16 @@ def select(db: Connection, table: str, fields: List[str], key: str, key_value: U
 
 
 def select_multi(db: Connection, table: str, fields: List[str], keys: List[str], key_values: List[Union[int, str]],
-                 like: bool = False, and_: bool = True
+                 like: bool = False, and_: bool = True, order: List[str] = None
                  ) -> Cursor:
     op: str = "like" if like else "="
     logic: str = "AND" if and_ else "OR"
     where: List[str] = [f"{key} {op} ?" for key in keys for _ in key_values]
+    order = [] if order is None else order
     return db.execute(
-        f'''SELECT {",".join(fields)} FROM {table} WHERE {f" {logic} ".join(where)}''',
+        f'''SELECT {",".join(fields)} FROM {table} 
+        WHERE {f" {logic} ".join(where)}
+        {"ORDER BY " + ','.join(order) if order else ""}''',
         key_values * len(keys)
     )
 
