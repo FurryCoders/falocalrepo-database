@@ -6,6 +6,7 @@ from os.path import join as path_join
 from shutil import copy
 from shutil import move
 from shutil import rmtree
+from sqlite3 import DatabaseError
 from sqlite3 import OperationalError
 from typing import List
 from typing import Optional
@@ -512,13 +513,13 @@ def update_to_current(db: Connection, version: str) -> Connection:
 
 def update_database(db: Connection) -> Connection:
     if not (db_version := get_version(db)):
-        raise Exception("Cannot read version from database.")
+        raise DatabaseError("Cannot read version from database.")
     elif (v := compare_versions(db_version, __version__)) == 0:
         return db
     elif v > 0:
-        raise Exception("Database version is newer than program.")
+        raise DatabaseError("Database version is newer than program.")
     elif (v := compare_versions(db_version, "2.7.0")) < 0:
-        raise Exception("Update does not support versions lower than 2.11.2")
+        raise DatabaseError("Update does not support versions lower than 2.11.2")
     elif v >= 0 and (v := compare_versions(db_version, "3.0.0")) < 0:
         return update_database(update_2_7_to_3(db))
     elif v >= 0 and (v := compare_versions(db_version, "3.1.0")) < 0:
