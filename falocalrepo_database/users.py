@@ -101,6 +101,10 @@ def find_user_from_fields(db: Connection, fields: List[str], values: List[str], 
     return select(db, users_table, ["USERNAME"], fields, values, True, and_)
 
 
+def find_user_from_galleries(db: Connection, submission_id: int) -> Cursor:
+    return find_user_from_fields(db, ["GALLERY", "SCRAPS"], [f"%{int(submission_id):010}%"] * 2)
+
+
 def find_user_from_submission(db: Connection, submission_id: int) -> Cursor:
     return find_user_from_fields(
         db,
