@@ -48,8 +48,9 @@ def select_multi(db: Connection, table: str, fields: List[str], keys: List[str],
     )
 
 
-def select_all(db: Connection, table: str, fields: List[str]) -> Cursor:
-    return db.execute(f'''SELECT {",".join(fields)} FROM {table}''')
+def select_all(db: Connection, table: str, fields: List[str], order: List[str] = None) -> Cursor:
+    order = [] if order is None else order
+    return db.execute(f'''SELECT {",".join(fields)} FROM {table} {"ORDER BY " + ','.join(order) if order else ""}''')
 
 
 def update(db: Connection, table: str, fields: List[str], values: List[Union[int, str]], key: str, key_value: str):
