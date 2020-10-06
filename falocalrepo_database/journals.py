@@ -38,7 +38,7 @@ def make_journals_table(db: Connection):
 
 
 def exist_journal(db: Connection, journal_id: int) -> bool:
-    return bool(select(db, journals_table, ["ID"], "ID", journal_id).fetchone())
+    return bool(select(db, journals_table, ["ID"], ["ID"], [journal_id]).fetchone())
 
 
 def save_journal(db: Connection, journal: Dict[str, Union[str, int]]):

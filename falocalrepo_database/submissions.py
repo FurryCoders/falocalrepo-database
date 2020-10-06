@@ -66,7 +66,7 @@ def make_submissions_table(db: Connection):
 
 
 def exist_submission(db: Connection, submission_id: int) -> bool:
-    return bool(select(db, submissions_table, ["ID"], "ID", submission_id).fetchone())
+    return bool(select(db, submissions_table, ["ID"], ["ID"], [submission_id]).fetchone())
 
 
 def remove_submission(db: Connection, submission_id: int):

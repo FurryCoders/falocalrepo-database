@@ -35,7 +35,7 @@ def get_version(db: Connection) -> str:
         return read_setting(db, "VERSION")
     except OperationalError:
         # Database version 2.7.0
-        return next(select(db, "INFOS", ["VALUE"], "FIELD", "VERSION"))[0]
+        return next(select(db, "INFOS", ["VALUE"], ["FIELD"], ["VERSION"]))[0]
 
 
 def compare_versions(a: str, b: str) -> int:
@@ -477,7 +477,7 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
         )
 
         # Add update to history
-        last_update: str = select(db, settings_table, ["SVALUE"], "SETTING", "LASTUPDATE").fetchone()
+        last_update: str = select(db, settings_table, ["SVALUE"], ["SETTING"], ["LASTUPDATE"]).fetchone()
         if last_update and last_update[0] != "0":
             # Commit and close databases to unlock
             db.commit()

@@ -18,7 +18,7 @@ def write_setting(db: Connection, key: str, value: str):
 
 
 def read_setting(db: Connection, key: str) -> Optional[str]:
-    setting = select(db, settings_table, ["SVALUE"], "SETTING", key).fetchone()
+    setting = select(db, settings_table, ["SVALUE"], ["SETTING"], [key]).fetchone()
 
     return None if not setting else setting[0]
 

@@ -8,7 +8,6 @@ from .database import Cursor
 from .database import delete
 from .database import insert
 from .database import select
-from .database import select_multi
 from .database import update
 
 """
@@ -48,11 +47,11 @@ def make_users_table(db: Connection):
 
 
 def exist_user(db: Connection, user: str) -> bool:
-    return bool(select(db, users_table, ["USERNAME"], "USERNAME", user).fetchone())
+    return bool(select(db, users_table, ["USERNAME"], ["USERNAME"], [user]).fetchone())
 
 
 def exist_user_field_value(db: Connection, user: str, field: str, value: str) -> bool:
-    value_: Optional[tuple] = select(db, users_table, [field], "USERNAME", user).fetchone()
+    value_: Optional[tuple] = select(db, users_table, [field], ["USERNAME"], [user]).fetchone()
     if value_ is None:
         return False
     elif value in value_[0].split(","):
@@ -77,7 +76,7 @@ def edit_user_field_replace(db: Connection, user: str, fields: List[str], new_va
 
 
 def edit_user_field_add(db: Connection, user: str, field: str, values: List[str]):
-    old_values_raw: Optional[Tuple[str]] = select(db, users_table, [field], "USERNAME", user).fetchone()
+    old_values_raw: Optional[Tuple[str]] = select(db, users_table, [field], ["USERNAME"], [user]).fetchone()
     if old_values_raw is None:
         return
 
@@ -88,7 +87,7 @@ def edit_user_field_add(db: Connection, user: str, field: str, values: List[str]
 
 
 def edit_user_field_remove(db: Connection, user: str, field: str, values: List[str]):
-    old_values_raw: Optional[Tuple[str]] = select(db, users_table, [field], "USERNAME", user).fetchone()
+    old_values_raw: Optional[Tuple[str]] = select(db, users_table, [field], ["USERNAME"], [user]).fetchone()
     if old_values_raw is None:
         return
 
@@ -99,11 +98,15 @@ def edit_user_field_remove(db: Connection, user: str, field: str, values: List[s
 
 
 def find_user_from_fields(db: Connection, fields: List[str], values: List[str], and_: bool = False) -> Cursor:
-    return select_multi(db, users_table, ["USERNAME"], fields, values, True, and_)
+    return select(db, users_table, ["USERNAME"], fields, values, True, and_)
 
 
 def find_user_from_submission(db: Connection, submission_id: int) -> Cursor:
-    return find_user_from_fields(db, ["GALLERY", "SCRAPS", "FAVORITES", "MENTIONS"], [f"%{int(submission_id):010}%"])
+    return find_user_from_fields(
+        db,
+        ["GALLERY", "SCRAPS", "FAVORITES", "MENTIONS"],
+        [f"%{int(submission_id):010}%"] * 4
+    )
 
 
 def find_user_from_journal(db: Connection, journal_id: int) -> Cursor:
