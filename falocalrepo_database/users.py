@@ -98,7 +98,7 @@ def edit_user_field_remove(db: Connection, user: str, field: str, values: List[s
 
 
 def find_user_from_fields(db: Connection, fields: List[str], values: List[str], and_: bool = False) -> Cursor:
-    return select(db, users_table, ["USERNAME"], fields, values, True, and_)
+    return select(db, users_table, ["*"], fields, values, True, and_)
 
 
 def find_user_from_galleries(db: Connection, submission_id: int) -> Cursor:
