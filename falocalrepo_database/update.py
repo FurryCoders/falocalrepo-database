@@ -479,6 +479,7 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
             f"""INSERT OR IGNORE INTO db_new.{settings_table}
             SELECT * FROM {settings_table} WHERE SETTING != "LASTSTART" AND SETTING != "LASTUPDATE";"""
         )
+        db.execute("UPDATE db_new.SETTINGS SET SVALUE = '3.3.0' WHERE SETTING = 'VERSION'")
 
         # Add update to history
         last_update: str = select(db, settings_table, ["SVALUE"], ["SETTING"], ["LASTUPDATE"]).fetchone()
@@ -535,6 +536,7 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
             f"""INSERT OR IGNORE INTO db_new.{settings_table}
             SELECT * FROM {settings_table} WHERE SETTING != "HISTORY";"""
         )
+        db.execute("UPDATE db_new.SETTINGS SET SVALUE = '3.5.0' WHERE SETTING = 'VERSION'")
 
         # Update history
         history: List[List[str]] = json_loads(
