@@ -103,14 +103,15 @@ def edit_user_field_remove(db: Connection, user: str, field: str, values: List[U
 
 
 def edit_user_remove_submission(db: Connection, user: str, sub: int):
-    edit_user_field_remove(db, user, "GALLERY", [sub])
-    edit_user_field_remove(db, user, "SCRAPS", [sub])
-    edit_user_field_remove(db, user, "FAVORITES", [sub])
-    edit_user_field_remove(db, user, "MENTIONS", [sub])
+    sub_format: str = str(sub).zfill(10)
+    edit_user_field_remove(db, user, "GALLERY", [sub_format])
+    edit_user_field_remove(db, user, "SCRAPS", [sub_format])
+    edit_user_field_remove(db, user, "FAVORITES", [sub_format])
+    edit_user_field_remove(db, user, "MENTIONS", [sub_format])
 
 
 def edit_user_remove_journal(db: Connection, user: str, jrn: int):
-    edit_user_field_remove(db, user, "JOURNALS", [jrn])
+    edit_user_field_remove(db, user, "JOURNALS", [str(jrn).zfill(10)])
 
 
 def find_user_from_fields(db: Connection, fields: List[str], values: List[str], and_: bool = False) -> Cursor:
