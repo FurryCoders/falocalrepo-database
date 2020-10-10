@@ -1,4 +1,6 @@
 from glob import glob
+from json import dumps as json_dumps
+from json import loads as json_loads
 from os import makedirs
 from os.path import basename
 from os.path import isdir
@@ -10,8 +12,6 @@ from sqlite3 import DatabaseError
 from sqlite3 import OperationalError
 from typing import List
 from typing import Optional
-from json import loads as json_loads
-from json import dumps as json_dumps
 from typing import Tuple
 
 from .__version__ import __version__
@@ -537,7 +537,9 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
         )
 
         # Update history
-        history: List[List[str]] = json_loads(select(db, settings_table, ["SVALUE"], ["SETTING"], ["HISTORY"]).fetchone())
+        history: List[List[str]] = json_loads(
+            select(db, settings_table, ["SVALUE"], ["SETTING"], ["HISTORY"]).fetchone()[0]
+        )
         history_new: List[Tuple[float, str]] = list(map(lambda th: (float(th[0]), th[1]), history))
         db.commit()
         db.close()
