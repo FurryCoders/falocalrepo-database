@@ -567,9 +567,9 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
     return connect_database("FA.db")
 
 
-def update_to_current(db: Connection, version: str) -> Connection:
-    print(f"Updating {version} to {__version__}")
-    write_setting(db, "VERSION", __version__)
+def update_version(db: Connection, version: str, target_version: str) -> Connection:
+    print(f"Updating {version} to {target_version}")
+    write_setting(db, "VERSION", target_version)
     return db
 
 
@@ -590,9 +590,11 @@ def update_database(db: Connection) -> Connection:
         return update_database(update_3_1_to_3_2(db))
     elif v >= 0 and (v := compare_versions(db_version, "3.3.0")) < 0:
         return update_database(update_3_2_to_3_3(db))
+    elif v >= 0 and (v := compare_versions(db_version, "3.4.0")) < 0:
+        return update_version(db, db_version, "3.4.0")
     elif v >= 0 and (v := compare_versions(db_version, "3.5.0")) < 0:
         return update_database(update_3_4_to_3_5(db))
     elif v >= 0 and compare_versions(db_version, __version__) < 0:
-        return update_to_current(db, db_version)
+        return update_version(db, db_version, __version__)
 
     return db
