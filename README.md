@@ -91,6 +91,6 @@ Add `JOURNALS` table and `JOURNALS` field in `USERS` table.
 
 Remove `LASTSTART` and `LASTUPDATE` entries and add `HISTORY` entry in `SETTINGS` table.
 
-### 3.3.x, 3.4.x &rarr; 3.5.0
+### 3.3.x, 3.4.x, 3.5.x &rarr; 3.6.0
 
 Changes in database functions, simply update `VERSION`.
