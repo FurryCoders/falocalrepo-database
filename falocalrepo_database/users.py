@@ -76,37 +76,38 @@ def edit_user_field_replace(db: Connection, user: str, fields: List[str], new_va
     db.commit()
 
 
-def edit_user_field_add(db: Connection, user: str, field: str, values: List[str]):
+def edit_user_field_add(db: Connection, user: str, field: str, values: List[Union[str, int]]):
     old_values_raw: Optional[Tuple[str]] = select(db, users_table, [field], ["USERNAME"], [user]).fetchone()
     if old_values_raw is None:
         return
 
     old_values: List[str] = old_values_raw[0].split(",") if old_values_raw[0] else []
-    values = list(set(old_values + values))
+    values = list(set(old_values + list(map(str, values))))
 
     edit_user_field_replace(db, user, [field], [",".join(values)])
 
 
-def edit_user_field_remove(db: Connection, user: str, field: str, values: List[str]):
+def edit_user_field_remove(db: Connection, user: str, field: str, values: List[Union[str, int]]):
     old_values_raw: Optional[Tuple[str]] = select(db, users_table, [field], ["USERNAME"], [user]).fetchone()
     if old_values_raw is None:
         return
 
     old_values: List[str] = old_values_raw[0].split(",") if old_values_raw[0] else []
+    values = list(map(str, values))
     values = [v for v in old_values if v not in values]
 
     edit_user_field_replace(db, user, [field], [",".join(values)])
 
 
 def edit_user_remove_submission(db: Connection, user: str, sub: int):
-    edit_user_field_remove(db, user, "GALLERY", [str(sub)])
-    edit_user_field_remove(db, user, "SCRAPS", [str(sub)])
-    edit_user_field_remove(db, user, "FAVORITES", [str(sub)])
-    edit_user_field_remove(db, user, "MENTIONS", [str(sub)])
+    edit_user_field_remove(db, user, "GALLERY", [sub])
+    edit_user_field_remove(db, user, "SCRAPS", [sub])
+    edit_user_field_remove(db, user, "FAVORITES", [sub])
+    edit_user_field_remove(db, user, "MENTIONS", [sub])
 
 
 def edit_user_remove_journal(db: Connection, user: str, jrn: int):
-    edit_user_field_remove(db, user, "JOURNALS", [str(jrn)])
+    edit_user_field_remove(db, user, "JOURNALS", [jrn])
 
 
 def find_user_from_fields(db: Connection, fields: List[str], values: List[str], and_: bool = False) -> Cursor:
