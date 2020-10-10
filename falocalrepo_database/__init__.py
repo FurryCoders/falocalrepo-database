@@ -34,6 +34,8 @@ from .update import update_database
 from .users import edit_user_field_add
 from .users import edit_user_field_remove
 from .users import edit_user_field_replace
+from .users import edit_user_remove_journal
+from .users import edit_user_remove_submission
 from .users import exist_user
 from .users import exist_user_field_value
 from .users import find_user_from_fields
