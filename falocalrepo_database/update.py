@@ -437,7 +437,7 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
         db.close()
         db_new.commit()
         db_new.close()
-        move("FA.db", "FA_3.db")
+        move("FA.db", "FA_3_1.db")
         move("FA_new.db", "FA.db")
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -494,7 +494,7 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
         print("Close databases and replace old database")
         db_new.commit()
         db_new.close()
-        move("FA.db", "FA_3.db")
+        move("FA.db", "FA_3_2.db")
         move("FA_new.db", "FA.db")
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -552,7 +552,7 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
         print("Close databases and replace old database")
         db_new.commit()
         db_new.close()
-        move("FA.db", "FA_3.db")
+        move("FA.db", "FA_3_4.db")
         move("FA_new.db", "FA.db")
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
