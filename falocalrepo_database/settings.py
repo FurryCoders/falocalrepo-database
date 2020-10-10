@@ -1,7 +1,9 @@
 from json import dumps as json_dumps
 from json import loads as json_loads
+
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 from .__version__ import __version__
 from .database import Connection
@@ -23,12 +25,12 @@ def read_setting(db: Connection, key: str) -> Optional[str]:
     return None if not setting else setting[0]
 
 
-def read_history(db: Connection) -> List[List[str]]:
+def read_history(db: Connection) -> List[Tuple[float, str]]:
     return sorted(json_loads(read_setting(db, "HISTORY")), key=lambda h: h[0])
 
 
 def add_history(db: Connection, time: float, command: str):
-    history: List[List[str]] = [[str(time), command], *read_history(db)]
+    history: List[Tuple[float, str]] = [*read_history(db), [time, command]]
     write_setting(db, "HISTORY", json_dumps(sorted(history, key=lambda h: h[0])))
 
 
