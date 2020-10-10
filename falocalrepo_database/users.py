@@ -2,6 +2,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 from .database import Connection
 from .database import Cursor
@@ -95,6 +96,17 @@ def edit_user_field_remove(db: Connection, user: str, field: str, values: List[s
     values = [v for v in old_values if v not in values]
 
     edit_user_field_replace(db, user, [field], [",".join(values)])
+
+
+def edit_user_remove_submission(db: Connection, user: str, sub: int):
+    edit_user_field_remove(db, user, "GALLERY", [str(sub)])
+    edit_user_field_remove(db, user, "SCRAPS", [str(sub)])
+    edit_user_field_remove(db, user, "FAVORITES", [str(sub)])
+    edit_user_field_remove(db, user, "MENTIONS", [str(sub)])
+
+
+def edit_user_remove_journal(db: Connection, user: str, jrn: int):
+    edit_user_field_remove(db, user, "JOURNALS", [str(jrn)])
 
 
 def find_user_from_fields(db: Connection, fields: List[str], values: List[str], and_: bool = False) -> Cursor:
