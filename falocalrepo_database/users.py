@@ -96,6 +96,9 @@ def edit_user_field_remove(db: Connection, user: str, field: str, values: List[U
     values = list(map(str, values))
     values = [v for v in old_values if v not in values]
 
+    if values == old_values:
+        return
+
     edit_user_field_replace(db, user, [field], [",".join(values)])
 
 
