@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "falocalrepo-database"
-version = "3.6.0"
+version = "3.6.1"
 description = "Database functionality for falocalrepo."
 authors = ["Matteo Campinoti <matteo.campinoti94@gmail.com>"]
 license = "EUPL-1.2"
