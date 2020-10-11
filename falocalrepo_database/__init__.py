@@ -44,6 +44,7 @@ from .users import find_user_from_journal
 from .users import find_user_from_submission
 from .users import new_user
 from .users import remove_user
+from .users import search_users
 from .users import users_fields
 from .users import users_indexes
 from .users import users_table
