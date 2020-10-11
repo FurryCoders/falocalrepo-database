@@ -106,13 +106,12 @@ def save_submission(db: Connection, submission: Dict[str, Union[str, int]], file
 
 
 def search_submissions(db: Connection,
-                       limit: List[Union[str, int]] = None, offset: List[Union[str, int]] = None,
-                       order: List[str] = None, author: List[str] = None, title: List[str] = None,
+                       author: List[str] = None, title: List[str] = None,
                        date: List[str] = None, description: List[str] = None, tags: List[str] = None,
                        category: List[str] = None, species: List[str] = None, gender: List[str] = None,
-                       rating: List[str] = None
+                       rating: List[str] = None, limit: List[Union[str, int]] = None,
+                       offset: List[Union[str, int]] = None, order: List[str] = None
                        ) -> List[tuple]:
-    order = [] if order is None else order
     author = [] if author is None else list(map(str.lower, author))
     title = [] if title is None else list(map(str.lower, title))
     date = [] if date is None else list(map(str.lower, date))
