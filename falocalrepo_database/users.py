@@ -115,7 +115,7 @@ def edit_user_remove_journal(db: Connection, user: str, jrn: int):
 
 
 def find_user_from_fields(db: Connection, fields: List[str], values: List[str], and_: bool = False) -> Cursor:
-    return select(db, users_table, ["*"], fields, values, True, and_)
+    return select(db, users_table, ["*"], fields, values, True, and_, ["USERNAME"])
 
 
 def find_user_from_galleries(db: Connection, submission_id: int) -> Cursor:
