@@ -132,3 +132,36 @@ def find_user_from_submission(db: Connection, submission_id: int) -> Cursor:
 
 def find_user_from_journal(db: Connection, journal_id: int) -> Cursor:
     return find_user_from_fields(db, ["JOURNALS"], [f"%{int(journal_id):010}%"])
+
+
+def search_users(db: Connection, username: List[str] = None, folders: List[str] = None, gallery: List[str] = None,
+                 scraps: List[str] = None, favorites: List[str] = None, mentions: List[str] = None,
+                 limit: List[Union[str, int]] = None, offset: List[Union[str, int]] = None, order: List[str] = None,
+                 ) -> List[tuple]:
+    username = [] if username is None else username
+    folders = [] if folders is None else folders
+    gallery = [] if gallery is None else gallery
+    scraps = [] if scraps is None else scraps
+    favorites = [] if favorites is None else favorites
+    mentions = [] if mentions is None else mentions
+
+    assert any((username, folders, gallery, scraps, favorites, mentions))
+
+    wheres: List[str] = [
+        " OR ".join(['replace(lower(USERNAME), "_", "") like ?'] * len(username)),
+        " OR ".join(["lower(FOLDERS) like ?"] * len(folders)),
+        " OR ".join(["GALLERY like ?"] * len(gallery)),
+        " OR ".join(["SCRAPS like ?"] * len(scraps)),
+        " OR ".join(["FAVORITES like ?"] * len(favorites)),
+        " OR ".join(["MENTIONS like ?"] * len(mentions))
+    ]
+
+    wheres_str: str = " AND ".join(map(lambda p: "(" + p + ")", filter(len, wheres)))
+    order_str: str = f"ORDER BY {','.join(order)}" if order else ""
+    limit_str: str = f"LIMIT {int(limit[0])}" if limit is not None else ""
+    offset_str: str = f"OFFSET {int(offset[0])}" if offset is not None else ""
+
+    return db.execute(
+        f"""SELECT * FROM {users_table} WHERE {wheres_str} {order_str} {limit_str} {offset_str}""",
+        username + folders + gallery + scraps + favorites + mentions
+    ).fetchall()
