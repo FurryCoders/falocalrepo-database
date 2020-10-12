@@ -583,19 +583,19 @@ def update_database(db: Connection) -> Connection:
     elif (v := compare_versions(db_version, "2.7.0")) < 0:
         raise DatabaseError("Update does not support versions lower than 2.11.2")
     elif v >= 0 and (v := compare_versions(db_version, "3.0.0")) < 0:
-        return update_database(update_2_7_to_3(db))
+        return update_database(update_2_7_to_3(db))  # 2.7.x to 3.0.0
     elif v >= 0 and (v := compare_versions(db_version, "3.1.0")) < 0:
-        return update_database(update_3_to_3_1(db))
+        return update_database(update_3_to_3_1(db))  # 3.0.x to 3.1.0
     elif v >= 0 and (v := compare_versions(db_version, "3.2.0")) < 0:
-        return update_database(update_3_1_to_3_2(db))
+        return update_database(update_3_1_to_3_2(db))  # 3.1.x to 3.2.0
     elif v >= 0 and (v := compare_versions(db_version, "3.3.0")) < 0:
-        return update_database(update_3_2_to_3_3(db))
+        return update_database(update_3_2_to_3_3(db))  # 3.2.x to 3.3.0
     elif v >= 0 and (v := compare_versions(db_version, "3.4.0")) < 0:
-        return update_database(update_version(db, db_version, "3.4.0"))
+        return update_database(update_version(db, db_version, "3.4.0"))  # 3.3.x to 3.4.0
     elif v >= 0 and (v := compare_versions(db_version, "3.5.0")) < 0:
-        return update_database(update_3_4_to_3_5(db))
+        return update_database(update_3_4_to_3_5(db))  # 3.4.x to 3.5.0
     elif v >= 0 and (v := compare_versions(db_version, "3.6.0")) < 0:
-        return update_database(update_version(db, db_version, "3.6.0"))
+        return update_database(update_version(db, db_version, "3.6.0"))  # 3.5.x to 3.6.0
     elif v >= 0 and compare_versions(db_version, __version__) < 0:
         return update_version(db, db_version, __version__)
 
