@@ -105,6 +105,12 @@ def remove_submission(db: Connection, submission_id: int):
     db.commit()
 
 
+def get_submission(db: Connection, submission_id: int) -> Optional[Dict[str, Union[str, int]]]:
+    submission: Optional[tuple] = select(db, submissions_table, submissions_fields, ["ID"], [submission_id]).fetchone()
+
+    return dict(zip(submissions_fields, submission)) if submission is not None else None
+
+
 def search_submissions(db: Connection,
                        author: List[str] = None, title: List[str] = None,
                        date: List[str] = None, description: List[str] = None, tags: List[str] = None,
