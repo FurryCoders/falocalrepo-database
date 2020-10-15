@@ -3,6 +3,7 @@ from .database import check_errors
 from .database import connect_database
 from .database import count
 from .database import delete
+from .database import get_entry
 from .database import insert
 from .database import make_tables
 from .database import select
@@ -25,6 +26,7 @@ from .settings import read_setting
 from .settings import settings_table
 from .settings import write_setting
 from .submissions import exist_submission
+from .submissions import get_submission
 from .submissions import remove_submission
 from .submissions import save_submission
 from .submissions import search_submissions
@@ -43,6 +45,7 @@ from .users import find_user_from_fields
 from .users import find_user_from_galleries
 from .users import find_user_from_journal
 from .users import find_user_from_submission
+from .users import get_user
 from .users import new_user
 from .users import remove_user
 from .users import search_users
