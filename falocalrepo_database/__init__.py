@@ -1,7 +1,6 @@
 from .__version__ import __version__
 from .database import check_errors
 from .database import connect_database
-from .database import connect_database
 from .database import count
 from .database import delete
 from .database import insert
