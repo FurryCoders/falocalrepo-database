@@ -20,6 +20,7 @@ from .journals import remove_journal
 from .journals import save_journal
 from .journals import search_journals
 from .merge import merge_database
+from .merge import merge_folders
 from .settings import add_history
 from .settings import read_history
 from .settings import read_setting
