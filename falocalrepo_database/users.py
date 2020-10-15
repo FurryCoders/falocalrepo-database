@@ -71,6 +71,29 @@ def remove_user(db: Connection, user: str):
     db.commit()
 
 
+def enable_user(db: Connection, user: str):
+    folders_result: Optional[Tuple[str, ...]] = select(db, users_table, ["FOLDERS"], ["USERNAME"], [user]).fetchone()
+
+    if folders_result is None:
+        return
+
+    edit_user_field_replace(db, user, ["FOLDERS"], [folders_result[0].replace("!", "")])
+
+
+def disable_user(db: Connection, user: str):
+    folders_result: Optional[Tuple[str, ...]] = select(db, users_table, ["FOLDERS"], ["USERNAME"], [user]).fetchone()
+
+    if folders_result is None:
+        return
+
+    folders: List[str] = [
+        f"!{f}" if f.lower() in ("gallery", "scraps", "favorites") else f
+        for f in filter(bool, folders_result[0].split(","))
+    ]
+
+    edit_user_field_replace(db, user, ["FOLDERS"], [",".join(folders)])
+
+
 def edit_user_field_replace(db: Connection, user: str, fields: List[str], new_values: List[str]):
     update(db, users_table, fields, new_values, "USERNAME", user)
     db.commit()
