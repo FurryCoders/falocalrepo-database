@@ -99,6 +99,6 @@ Changes in database functions, simply update `VERSION`.
 
 Update `HISTORY` entry in `SETTINGS` to use the `List[List[float, str]]` format. 
 
-### 3.5.x, 3.6.x &rarr; 3.7.0
+### 3.5.0 - 3.7.x &rarr; 3.8.0
 
 Changes in database functions, simply update `VERSION`.
