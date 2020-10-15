@@ -12,6 +12,7 @@ from .database import tiered_path
 from .database import update
 from .database import vacuum
 from .journals import exist_journal
+from .journals import get_journal
 from .journals import journals_fields
 from .journals import journals_indexes
 from .journals import journals_table

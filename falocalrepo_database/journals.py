@@ -1,5 +1,6 @@
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Union
 
 from .database import Connection
@@ -50,6 +51,12 @@ def save_journal(db: Connection, journal: Dict[str, Union[str, int]]):
 def remove_journal(db: Connection, journal_id: int):
     delete(db, journals_table, "ID", journal_id)
     db.commit()
+
+
+def get_journal(db: Connection, journal_id: int) -> Optional[Dict[str, Union[str, int]]]:
+    journal: Optional[tuple] = select(db, journals_table, journals_fields, ["ID"], [journal_id]).fetchone()
+
+    return dict(zip(journals_fields, journal)) if journal is not None else None
 
 
 def search_journals(db: Connection,
