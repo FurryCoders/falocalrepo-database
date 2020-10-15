@@ -7,6 +7,7 @@ from typing import Union
 from .database import Connection
 from .database import Cursor
 from .database import delete
+from .database import get_entry
 from .database import insert
 from .database import select
 from .database import update
@@ -72,9 +73,7 @@ def remove_user(db: Connection, user: str):
 
 
 def get_user(db: Connection, username: str) -> Optional[Dict[str, Union[str, int]]]:
-    user: Optional[tuple] = select(db, users_table, users_fields, ["USERNAME"], [username]).fetchone()
-
-    return dict(zip(users_fields, user)) if user is not None else None
+    return get_entry(db, users_table, users_fields, "ID", username)
 
 
 def enable_user(db: Connection, user: str):

@@ -9,6 +9,7 @@ from filetype import guess_extension
 
 from .database import Connection
 from .database import delete
+from .database import get_entry
 from .database import insert
 from .database import select
 from .database import tiered_path
@@ -106,9 +107,7 @@ def remove_submission(db: Connection, submission_id: int):
 
 
 def get_submission(db: Connection, submission_id: int) -> Optional[Dict[str, Union[str, int]]]:
-    submission: Optional[tuple] = select(db, submissions_table, submissions_fields, ["ID"], [submission_id]).fetchone()
-
-    return dict(zip(submissions_fields, submission)) if submission is not None else None
+    return get_entry(db, submissions_table, submissions_fields, "ID", submission_id)
 
 
 def search_submissions(db: Connection,

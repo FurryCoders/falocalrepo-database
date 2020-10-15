@@ -5,6 +5,7 @@ from typing import Union
 
 from .database import Connection
 from .database import delete
+from .database import get_entry
 from .database import insert
 from .database import select
 
@@ -54,9 +55,7 @@ def remove_journal(db: Connection, journal_id: int):
 
 
 def get_journal(db: Connection, journal_id: int) -> Optional[Dict[str, Union[str, int]]]:
-    journal: Optional[tuple] = select(db, journals_table, journals_fields, ["ID"], [journal_id]).fetchone()
-
-    return dict(zip(journals_fields, journal)) if journal is not None else None
+    return get_entry(db, journals_table, journals_fields, "ID", journal_id)
 
 
 def search_journals(db: Connection,
