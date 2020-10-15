@@ -88,14 +88,14 @@ def get_entry(db: Connection, table: str, fields: Collection[str], key: str, key
 def check_errors(db: Connection, table: str) -> List[tuple]:
     if (table := table.upper()) in ("SUBMISSIONS", "JOURNALS"):
         errors: List[tuple] = []
-        errors.extend(select(db, table, ["*"], "ID", 0).fetchall())
-        errors.extend(select(db, table, ["*"], "AUTHOR", "").fetchall())
-        errors.extend(select(db, table, ["*"], "TITLE", "").fetchall())
-        errors.extend(select(db, table, ["*"], "UDATE", "").fetchall())
+        errors.extend(select(db, table, ["*"], ["ID"], [0]).fetchall())
+        errors.extend(select(db, table, ["*"], ["AUTHOR"], [""]).fetchall())
+        errors.extend(select(db, table, ["*"], ["TITLE"], [""]).fetchall())
+        errors.extend(select(db, table, ["*"], ["UDATE"], [""]).fetchall())
 
         if table == "SUBMISSIONS":
-            errors.extend(select(db, table, ["*"], "FILELINK", "").fetchall())
-            errors.extend(select(db, table, ["*"], "FILESAVED", "").fetchall())
+            errors.extend(select(db, table, ["*"], ["FILELINK"], [""]).fetchall())
+            errors.extend(select(db, table, ["*"], ["FILESAVED"], [""]).fetchall())
 
         return sorted(set(errors), key=lambda s: s[0])
     else:
