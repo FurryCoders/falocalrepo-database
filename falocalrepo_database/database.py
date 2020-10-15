@@ -4,6 +4,7 @@ from sqlite3 import Cursor
 from sqlite3 import connect
 from typing import Collection
 from typing import List
+from typing import Optional
 from typing import Union
 
 
@@ -75,6 +76,13 @@ def count(db: Connection, table: str) -> int:
 
 def vacuum(db: Connection):
     db.execute("VACUUM")
+
+
+def get_entry(db: Connection, table: str, fields: Collection[str], key: str, key_value: Union[str, int]
+              ) -> Optional[Dict[str, Union[str, int]]]:
+    entry: Optional[tuple] = select(db, table, fields, [key], [key_value]).fetchone()
+
+    return dict(zip(fields, entry)) if entry is not None else None
 
 
 def check_errors(db: Connection, table: str) -> List[tuple]:
