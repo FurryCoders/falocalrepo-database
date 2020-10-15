@@ -69,11 +69,6 @@ def exist_submission(db: Connection, submission_id: int) -> bool:
     return bool(select(db, submissions_table, ["ID"], ["ID"], [submission_id]).fetchone())
 
 
-def remove_submission(db: Connection, submission_id: int):
-    delete(db, submissions_table, "ID", submission_id)
-    db.commit()
-
-
 def save_submission(db: Connection, submission: Dict[str, Union[str, int]], file: Optional[bytes]):
     file_ext: str = ""
     file_url_name: str = submission["file_url"].split("/")[-1]
@@ -102,6 +97,11 @@ def save_submission(db: Connection, submission: Dict[str, Union[str, int]], file
             file is not None],
            replace=True)
 
+    db.commit()
+
+
+def remove_submission(db: Connection, submission_id: int):
+    delete(db, submissions_table, "ID", submission_id)
     db.commit()
 
 
