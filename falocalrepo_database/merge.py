@@ -15,11 +15,12 @@ from .database import Connection
 from .database import insert
 from .database import select
 from .database import select_all
-from .journals import journals_indexes
+from .journals import journals_fields
 from .journals import journals_table
 from .settings import read_setting
-from .submissions import submissions_indexes
+from .submissions import submissions_fields
 from .submissions import submissions_table
+from .users import users_fields
 from .users import users_indexes
 from .users import users_table
 
@@ -57,10 +58,6 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
     db_b_files_folder: str = join(db_b_folder, read_setting(db_b, "FILESFOLDER"))
 
     merge_folders(db_b_files_folder, db_a_files_folder)
-
-    submissions_fields: list = list(submissions_indexes.keys())
-    journals_fields: list = list(journals_indexes.keys())
-    users_fields: list = list(users_indexes.keys())
 
     submission: tuple
     for submission in select_all(db_b, submissions_table, submissions_fields):
