@@ -71,6 +71,12 @@ def remove_user(db: Connection, user: str):
     db.commit()
 
 
+def get_user(db: Connection, username: str) -> Optional[Dict[str, Union[str, int]]]:
+    user: Optional[tuple] = select(db, users_table, users_fields, ["USERNAME"], [username]).fetchone()
+
+    return dict(zip(users_fields, user)) if user is not None else None
+
+
 def enable_user(db: Connection, user: str):
     folders_result: Optional[Tuple[str, ...]] = select(db, users_table, ["FOLDERS"], ["USERNAME"], [user]).fetchone()
 
