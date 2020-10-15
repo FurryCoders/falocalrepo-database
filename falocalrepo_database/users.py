@@ -73,7 +73,7 @@ def remove_user(db: Connection, user: str):
 
 
 def get_user(db: Connection, username: str) -> Optional[Dict[str, Union[str, int]]]:
-    return get_entry(db, users_table, users_fields, "ID", username)
+    return get_entry(db, users_table, users_fields, "USERNAME", username)
 
 
 def enable_user(db: Connection, user: str):
