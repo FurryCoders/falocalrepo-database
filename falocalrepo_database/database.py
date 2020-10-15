@@ -3,6 +3,7 @@ from sqlite3 import Connection
 from sqlite3 import Cursor
 from sqlite3 import connect
 from typing import Collection
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
