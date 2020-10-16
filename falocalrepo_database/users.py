@@ -72,7 +72,7 @@ def remove_user(db: Connection, user: str):
     db.commit()
 
 
-def get_user(db: Connection, username: str) -> Optional[Dict[str, Union[str, int]]]:
+def get_user(db: Connection, username: str) -> Optional[Dict[str, str]]:
     return get_entry(db, users_table, users_fields, "USERNAME", username)
 
 
