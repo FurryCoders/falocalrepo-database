@@ -86,6 +86,16 @@ def get_entry(db: Connection, table: str, fields: Collection[str], key: str, key
     return dict(zip(fields, entry)) if entry is not None else None
 
 
+def database_path(db: Connection):
+    name: str
+    filename: Optional[str]
+    for _, name, filename in db.execute("PRAGMA database_list"):
+        if name == "main" and filename is not None:
+            return filename
+
+    return None
+
+
 def check_errors(db: Connection, table: str) -> List[tuple]:
     if (table := table.upper()) in ("SUBMISSIONS", "JOURNALS"):
         errors: List[tuple] = []
