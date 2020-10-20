@@ -127,7 +127,8 @@ def search_submissions(db: Connection,
     gender = [] if gender is None else list(map(str.lower, gender))
     rating = [] if rating is None else list(map(str.lower, rating))
 
-    assert any((author, title, date, description, tags, category, species, gender, rating))
+    assert any(
+        (author, title, date, description, tags, category, species, gender, rating)), "at least one parameter needed"
 
     wheres: List[str] = [
         " OR ".join(["UDATE like ?"] * len(date)),

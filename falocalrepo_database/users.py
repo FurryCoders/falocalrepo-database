@@ -173,7 +173,7 @@ def search_users(db: Connection, username: List[str] = None, folders: List[str] 
     favorites = [] if favorites is None else favorites
     mentions = [] if mentions is None else mentions
 
-    assert any((username, folders, gallery, scraps, favorites, mentions))
+    assert any((username, folders, gallery, scraps, favorites, mentions)), "at least one parameter needed"
 
     wheres: List[str] = [
         " OR ".join(['replace(lower(USERNAME), "_", "") like ?'] * len(username)),

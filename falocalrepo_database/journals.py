@@ -69,7 +69,7 @@ def search_journals(db: Connection,
     date = [] if date is None else list(map(str.lower, date))
     content = [] if content is None else list(map(str.lower, content))
 
-    assert any((author, title, date, content))
+    assert any((author, title, date, content)), "at least one parameter needed"
 
     wheres: List[str] = [
         " OR ".join(["UDATE like ?"] * len(date)),
