@@ -73,9 +73,11 @@ class FADatabaseTable:
             yield dict(zip(self.columns, entry))
 
     def select(self, query: Dict[str, Union[List[Value], Value]] = None, columns: List[str] = None,
-               query_and: bool = True, query_and_values: bool = False, like: bool = False
+               query_and: bool = True, query_and_values: bool = False, like: bool = False,
+               order: List[str] = None, limit: int = 0, offset: int = 0
                ) -> Cursor:
         query = {k: [v] if not isinstance(v, list) else v for k, v in query.items()} if query is not None else {}
+        order = [] if order is None else order
         columns = ["*"] if columns is None else columns
         op: str = "like" if like else "="
         logic: str = "AND" if query_and else "OR"
@@ -84,8 +86,13 @@ class FADatabaseTable:
             f" {logic_values} ".join([f"{k} {op} ?" for _ in query[k]])
             for k in query
         ]))
+        order_str = ",".join(order)
         return self.connection.execute(
-            f"SELECT {','.join(columns)} FROM {self.table} {'WHERE ' + where_str if where_str else ''}",
+            f"""SELECT {','.join(columns)} FROM {self.table}
+            {f' WHERE {where_str} ' if where_str else ''}
+            {f' ORDER BY {order_str} ' if order_str else ''}
+            {f' LIMIT {limit} ' if limit > 0 else ''}
+            OFFSET {offset}""",
             [v for values in query.values() for v in values]
         )
 
