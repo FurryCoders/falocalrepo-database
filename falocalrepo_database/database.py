@@ -127,7 +127,7 @@ class FADatabaseJournals(FADatabaseTable):
 
 class FADatabaseSettings(FADatabaseTable):
     def __getitem__(self, setting: str) -> Optional[str]:
-        return entry["SETTING"] if (entry := super().__getitem__(setting)) is not None else None
+        return entry["SVALUE"] if (entry := super().__getitem__(setting)) is not None else None
 
     def __setitem__(self, setting: str, value: str):
         self.insert({"SETTING": setting, "SVALUE": value})
