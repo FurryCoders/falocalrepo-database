@@ -20,8 +20,12 @@ from typing import Union
 
 from .__version__ import __version__
 from .journals import journals_table
+from .journals import make_journals_table
+from .settings import make_settings_table
 from .settings import settings_table
+from .submissions import make_submissions_table
 from .submissions import submissions_table
+from .users import make_users_table
 from .users import users_table
 
 
@@ -538,7 +542,10 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
 
     try:
         db_new = connect_database("FA_new.db")
-        make_tables(db_new)
+        make_journals_table(db_new)
+        make_settings_table(db_new)
+        make_submissions_table(db_new)
+        make_users_table(db_new)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
