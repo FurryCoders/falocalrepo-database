@@ -6,11 +6,6 @@ from typing import Union
 
 from .database import Connection
 from .database import Cursor
-from .database import delete
-from .database import get_entry
-from .database import insert
-from .database import select
-from .database import update
 
 """
 Entries guide - USERS
@@ -46,120 +41,6 @@ def make_users_table(db: Connection):
         JOURNALS TEXT,
         PRIMARY KEY (USERNAME ASC));"""
     )
-
-
-def exist_user(db: Connection, user: str) -> bool:
-    return bool(select(db, users_table, ["USERNAME"], ["USERNAME"], [user]).fetchone())
-
-
-def exist_user_field_value(db: Connection, user: str, field: str, value: str) -> bool:
-    value_: Optional[tuple] = select(db, users_table, [field], ["USERNAME"], [user]).fetchone()
-    if value_ is None:
-        return False
-    elif value in value_[0].split(","):
-        return True
-
-    return False
-
-
-def new_user(db: Connection, user: str):
-    insert(db, users_table, users_fields, [user] + [""] * (len(users_fields) - 1), False)
-    db.commit()
-
-
-def remove_user(db: Connection, user: str):
-    delete(db, users_table, "USERNAME", user)
-    db.commit()
-
-
-def get_user(db: Connection, username: str) -> Optional[Dict[str, str]]:
-    return get_entry(db, users_table, users_fields, "USERNAME", username)
-
-
-def enable_user(db: Connection, user: str):
-    folders_result: Optional[Tuple[str, ...]] = select(db, users_table, ["FOLDERS"], ["USERNAME"], [user]).fetchone()
-
-    if folders_result is None:
-        return
-
-    edit_user_field_replace(db, user, ["FOLDERS"], [folders_result[0].replace("!", "")])
-
-
-def disable_user(db: Connection, user: str):
-    folders_result: Optional[Tuple[str, ...]] = select(db, users_table, ["FOLDERS"], ["USERNAME"], [user]).fetchone()
-
-    if folders_result is None:
-        return
-
-    folders: List[str] = [
-        f"!{f}" if f.lower() in ("gallery", "scraps", "favorites") else f
-        for f in filter(bool, folders_result[0].split(","))
-    ]
-
-    edit_user_field_replace(db, user, ["FOLDERS"], [",".join(folders)])
-
-
-def edit_user_field_replace(db: Connection, user: str, fields: List[str], new_values: List[str]):
-    update(db, users_table, fields, new_values, "USERNAME", user)
-    db.commit()
-
-
-def edit_user_field_add(db: Connection, user: str, field: str, values: List[Union[str, int]]):
-    old_values_raw: Optional[Tuple[str]] = select(db, users_table, [field], ["USERNAME"], [user]).fetchone()
-    if old_values_raw is None:
-        return
-
-    old_values: List[str] = old_values_raw[0].split(",") if old_values_raw[0] else []
-    values = list(set(old_values + list(map(str, values))))
-
-    edit_user_field_replace(db, user, [field], [",".join(values)])
-
-
-def edit_user_field_remove(db: Connection, user: str, field: str, values: List[Union[str, int]]):
-    old_values_raw: Optional[Tuple[str]] = select(db, users_table, [field], ["USERNAME"], [user]).fetchone()
-    if old_values_raw is None:
-        return
-
-    old_values: List[str] = old_values_raw[0].split(",") if old_values_raw[0] else []
-    values = list(map(str, values))
-    values = [v for v in old_values if v not in values]
-
-    if values == old_values:
-        return
-
-    edit_user_field_replace(db, user, [field], [",".join(values)])
-
-
-def edit_user_remove_submission(db: Connection, user: str, sub: int):
-    sub_format: str = str(sub).zfill(10)
-    edit_user_field_remove(db, user, "GALLERY", [sub_format])
-    edit_user_field_remove(db, user, "SCRAPS", [sub_format])
-    edit_user_field_remove(db, user, "FAVORITES", [sub_format])
-    edit_user_field_remove(db, user, "MENTIONS", [sub_format])
-
-
-def edit_user_remove_journal(db: Connection, user: str, jrn: int):
-    edit_user_field_remove(db, user, "JOURNALS", [str(jrn).zfill(10)])
-
-
-def find_user_from_fields(db: Connection, fields: List[str], values: List[str], and_: bool = False) -> Cursor:
-    return select(db, users_table, ["*"], fields, values, True, and_, ["USERNAME"])
-
-
-def find_user_from_galleries(db: Connection, submission_id: int) -> Cursor:
-    return find_user_from_fields(db, ["GALLERY", "SCRAPS"], [f"%{int(submission_id):010}%"] * 2)
-
-
-def find_user_from_submission(db: Connection, submission_id: int) -> Cursor:
-    return find_user_from_fields(
-        db,
-        ["GALLERY", "SCRAPS", "FAVORITES", "MENTIONS"],
-        [f"%{int(submission_id):010}%"] * 4
-    )
-
-
-def find_user_from_journal(db: Connection, journal_id: int) -> Cursor:
-    return find_user_from_fields(db, ["JOURNALS"], [f"%{int(journal_id):010}%"])
 
 
 def search_users(db: Connection, username: List[str] = None, folders: List[str] = None, gallery: List[str] = None,

@@ -1,13 +1,7 @@
+from sqlite3 import Connection
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Union
-
-from .database import Connection
-from .database import delete
-from .database import get_entry
-from .database import insert
-from .database import select
 
 """
 Entries guide - JOURNALS
@@ -39,23 +33,15 @@ def make_journals_table(db: Connection):
     )
 
 
-def exist_journal(db: Connection, journal_id: int) -> bool:
-    return bool(select(db, journals_table, ["ID"], ["ID"], [journal_id]).fetchone())
+def journals_table_errors(db: Connection):
+    errors: List[tuple] = []
+    errors.extend(db.execute("SELECT * FROM JOURNALS WHERE ID = 0").fetchall())
+    errors.extend(db.execute("SELECT * FROM JOURNALS WHERE AUTHOR = ''").fetchall())
+    errors.extend(db.execute("SELECT * FROM JOURNALS WHERE TITLE = ''").fetchall())
+    errors.extend(db.execute("SELECT * FROM JOURNALS WHERE UDATE = ''").fetchall())
+    errors.extend(db.execute(f"SELECT * FROM JOURNALS WHERE {' OR '.join(f'{f} = null' for f in journals_fields)}"))
 
-
-def save_journal(db: Connection, journal: Dict[str, Union[str, int]]):
-    insert(db, journals_table, journals_fields,
-           [journal["id"], journal["author"], journal["title"], journal["date"], journal["content"]])
-    db.commit()
-
-
-def remove_journal(db: Connection, journal_id: int):
-    delete(db, journals_table, "ID", journal_id)
-    db.commit()
-
-
-def get_journal(db: Connection, journal_id: int) -> Optional[Dict[str, Union[str, int]]]:
-    return get_entry(db, journals_table, journals_fields, "ID", journal_id)
+    return sorted(set(errors), key=lambda s: s[0])
 
 
 def search_journals(db: Connection,

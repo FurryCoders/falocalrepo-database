@@ -1,19 +1,7 @@
-from os import makedirs
-from os.path import join as join_path
+from sqlite3 import Connection
 from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Union
-
-from filetype import guess_extension
-
-from .database import Connection
-from .database import delete
-from .database import get_entry
-from .database import insert
-from .database import select
-from .database import tiered_path
-from .settings import read_setting
 
 """
 Entries guide - SUBMISSIONS
@@ -66,48 +54,18 @@ def make_submissions_table(db: Connection):
     )
 
 
-def exist_submission(db: Connection, submission_id: int) -> bool:
-    return bool(select(db, submissions_table, ["ID"], ["ID"], [submission_id]).fetchone())
+def submissions_table_errors(db: Connection) -> List[tuple]:
+    errors: List[tuple] = []
+    errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE ID = 0").fetchall())
+    errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE AUTHOR = ''").fetchall())
+    errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE TITLE = ''").fetchall())
+    errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE UDATE = ''").fetchall())
+    errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE FILELINK = ''").fetchall())
+    errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE FILESAVED = ''").fetchall())
+    errors.extend(db.execute(
+        f"SELECT * FROM SUBMISSIONS WHERE {' OR '.join(f'{f} = null' for f in submissions_fields)}").fetchall())
 
-
-def save_submission(db: Connection, submission: Dict[str, Union[str, int]], file: Optional[bytes]):
-    file_ext: str = ""
-    file_url_name: str = submission["file_url"].split("/")[-1]
-    file_url_ext: str = file_url_name.split(".")[-1] if "." in file_url_name else ""
-
-    if file:
-        if (file_ext_tmp := guess_extension(file)) is None:
-            file_ext = file_url_ext
-        elif (file_ext := str(file_ext_tmp)) == "zip" and file_url_ext:
-            file_ext = file_url_ext
-
-        sub_folder: str = join_path(read_setting(db, "FILESFOLDER"), tiered_path(submission["id"]))
-        sub_file: str = "submission" + (f".{file_ext}" if file_ext else "")
-
-        makedirs(sub_folder, exist_ok=True)
-
-        with open(join_path(sub_folder, sub_file), "wb") as f:
-            f.write(file)
-
-    insert(db, submissions_table,
-           list(submissions_indexes.keys()),
-           [submission["id"], submission["author"], submission["title"],
-            submission["date"], submission["description"], ",".join(sorted(submission["tags"], key=str.lower)),
-            submission["category"], submission["species"], submission["gender"],
-            submission["rating"], submission["file_url"], file_ext,
-            file is not None],
-           replace=True)
-
-    db.commit()
-
-
-def remove_submission(db: Connection, submission_id: int):
-    delete(db, submissions_table, "ID", submission_id)
-    db.commit()
-
-
-def get_submission(db: Connection, submission_id: int) -> Optional[Dict[str, Union[str, int]]]:
-    return get_entry(db, submissions_table, submissions_fields, "ID", submission_id)
+    return sorted(set(errors), key=lambda s: s[0])
 
 
 def search_submissions(db: Connection,

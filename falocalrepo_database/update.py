@@ -8,27 +8,19 @@ from os.path import join as path_join
 from shutil import copy
 from shutil import move
 from shutil import rmtree
+from sqlite3 import Connection
 from sqlite3 import DatabaseError
 from sqlite3 import OperationalError
+from sqlite3 import connect as connect_database
+from typing import Collection
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 from .__version__ import __version__
-from .database import Connection
-from .database import connect_database
-from .database import count
-from .database import insert
-from .database import make_tables
-from .database import select
-from .database import select_all
-from .database import tiered_path
-from .database import update
 from .journals import journals_table
-from .settings import add_history
-from .settings import read_setting
 from .settings import settings_table
-from .settings import write_setting
 from .submissions import submissions_table
 from .users import users_table
 
@@ -36,10 +28,10 @@ from .users import users_table
 def get_version(db: Connection) -> str:
     try:
         # Database version 3.0.0 and above
-        return read_setting(db, "VERSION")
+        return db.execute(f"SELECT SVALUE FROM {settings_table} WHERE SETTING = 'VERSION'").fetchone()[0]
     except OperationalError:
         # Database version 2.7.0
-        return next(select(db, "INFOS", ["VALUE"], ["FIELD"], ["VERSION"]))[0]
+        return db.execute(f"SELECT VALUE FROM {settings_table} WHERE FIELD = 'VERSION'").fetchone()[0]
 
 
 def compare_versions(a: str, b: str) -> int:
@@ -54,6 +46,34 @@ def compare_versions(a: str, b: str) -> int:
         elif a_ < b_:
             return -1
     return 0
+
+
+def insert(db: Connection, table: str, keys: Collection[str], values: Collection[Union[int, str]],
+           replace: bool = True):
+    db.execute(
+        f"""INSERT OR {"REPLACE" if replace else "IGNORE"} INTO {table}
+        ({",".join(keys)})
+        VALUES ({",".join(["?"] * len(values))})""",
+        values
+    )
+
+
+def update(db: Connection, table: str, fields: Collection[str], values: Collection[Union[int, str]], key: str,
+           key_value: str):
+    assert len(fields) == len(values) and len(fields) > 0
+
+    update_values: List[str] = [f"{u} = ?" for u in fields]
+
+    db.execute(
+        f"""UPDATE {table}
+        SET {",".join(update_values)}
+        WHERE {key} = ?""",
+        (*values, key_value,)
+    )
+
+
+def count(db: Connection, table: str) -> int:
+    return db.execute(f"SELECT COUNT(*) FROM {table}").fetchall()[0][0]
 
 
 def make_database_3(db: Connection):
@@ -153,18 +173,19 @@ def make_database_3_1(db: Connection):
     db.commit()
 
     # Add settings
-    insert(db, "SETTINGS", ["SETTING", "SVALUE"], ["USRN", "0"], False)
-    insert(db, "SETTINGS", ["SETTING", "SVALUE"], ["SUBN", "0"], False)
-    insert(db, "SETTINGS", ["SETTING", "SVALUE"], ["LASTUPDATE", "0"], False)
-    insert(db, "SETTINGS", ["SETTING", "SVALUE"], ["LASTSTART", "0"], False)
-    insert(db, "SETTINGS", ["SETTING", "SVALUE"], ["COOKIES", "{}"], False)
-    insert(db, "SETTINGS", ["SETTING", "SVALUE"], ["FILESFOLDER", "FA.files"], False)
-    insert(db, "SETTINGS", ["SETTING", "SVALUE"], ["VERSION", "3.1.0"], False)
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["USRN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["SUBN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["JRNN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["LASTUPDATE", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["LASTSTART", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["COOKIES", "{}"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["FILESFOLDER", "FA.files"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["VERSION", "3.1.0"])
 
     db.commit()
 
 
-def make_database_3_2(db: Connection) -> Connection:
+def make_database_3_2(db: Connection):
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
         (USERNAME TEXT UNIQUE NOT NULL,
@@ -212,19 +233,21 @@ def make_database_3_2(db: Connection) -> Connection:
         PRIMARY KEY (SETTING ASC));"""
     )
 
-    insert(db, settings_table, ["SETTING", "SVALUE"], ["USRN", "0"], False)
-    insert(db, settings_table, ["SETTING", "SVALUE"], ["SUBN", "0"], False)
-    insert(db, settings_table, ["SETTING", "SVALUE"], ["JRNN", "0"], False)
-    insert(db, settings_table, ["SETTING", "SVALUE"], ["LASTUPDATE", "0"], False)
-    insert(db, settings_table, ["SETTING", "SVALUE"], ["LASTSTART", "0"], False)
-    insert(db, settings_table, ["SETTING", "SVALUE"], ["COOKIES", "{}"], False)
-    insert(db, settings_table, ["SETTING", "SVALUE"], ["FILESFOLDER", "FA.files"], False)
-    insert(db, settings_table, ["SETTING", "SVALUE"], ["VERSION", __version__], False)
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["USRN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["SUBN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["JRNN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["LASTUPDATE", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["LASTSTART", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["COOKIES", "{}"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["FILESFOLDER", "FA.files"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["VERSION", "3.2.0"])
 
-    return db
+    db.commit()
 
 
 def update_2_7_to_3(db: Connection) -> Connection:
+    from .database import tiered_path
+
     print("Updating 2.7.0 to 3.0.0")
     db_new: Optional[Connection] = None
 
@@ -283,7 +306,7 @@ def update_2_7_to_3(db: Connection) -> Connection:
         print("Update submissions FILEEXT and FILESAVED and move to new location")
         sub_n: int = 0
         sub_not_found: List[int] = []
-        for id_, location in select_all(db, "SUBMISSIONS", ["ID", "LOCATION"]):
+        for id_, location in db.execute("SELECT ID, LOCATION FROM SUBMISSIONS"):
             sub_n += 1
             print(sub_n, end="\r", flush=True)
             if isdir(folder_old := path_join("FA.files", location.strip("/"))):
@@ -326,8 +349,8 @@ def update_2_7_to_3(db: Connection) -> Connection:
             move("FA.files_new", "FA.files")
 
         # Update counters for new database
-        write_setting(db_new, "SUBN", str(count(db_new, "SUBMISSIONS")))
-        write_setting(db_new, "USRN", str(count(db_new, "USERS")))
+        update(db, settings_table, ["SVALUE"], [str(count(db_new, "SUBMISSIONS"))], "SETTING", "SUBN")
+        update(db, settings_table, ["SVALUE"], [str(count(db_new, "USERS"))], "SETTING", "USRN")
 
         # Close databases and replace old database
         print("Close databases and replace old database")
@@ -454,7 +477,6 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
 def update_3_2_to_3_3(db: Connection) -> Connection:
     print("Updating 3.2.0 to 3.3.0")
     db_new: Optional[Connection] = None
-    db_open: bool = True
 
     try:
         db_new = connect_database("FA_new.db")
@@ -482,13 +504,14 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
         db.execute("UPDATE db_new.SETTINGS SET SVALUE = '3.3.0' WHERE SETTING = 'VERSION'")
 
         # Add update to history
-        last_update: str = select(db, settings_table, ["SVALUE"], ["SETTING"], ["LASTUPDATE"]).fetchone()
+        last_update: str = db.execute("SELECT SVALUE FROM SETTINGS WHERE SETTING = 'LASTUPDATE'").fetchone()
         if last_update and last_update[0] != "0":
             # Commit and close databases to unlock
             db.commit()
             db.close()
             db = None
-            add_history(db_new, float(last_update[0]), "update")
+            db_new.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'HISTORY'",
+                           json_dumps([[float(last_update[0]), "update"]]))
 
         # Close databases and replace old database
         print("Close databases and replace old database")
@@ -540,13 +563,13 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
 
         # Update history
         history: List[List[str]] = json_loads(
-            select(db, settings_table, ["SVALUE"], ["SETTING"], ["HISTORY"]).fetchone()[0]
+            db.execute("SELECT SVALUE FROM SETTINGS WHERE SETTING = 'HISTORY'").fetchone()[0]
         )
         history_new: List[Tuple[float, str]] = list(map(lambda th: (float(th[0]), th[1]), history))
         db.commit()
         db.close()
         db = None
-        write_setting(db_new, "HISTORY", json_dumps(history_new))
+        db_new.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'HISTORY'", json_dumps(history_new))
 
         # Close databases and replace old database
         print("Close databases and replace old database")
@@ -569,7 +592,7 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
 
 def update_version(db: Connection, version: str, target_version: str) -> Connection:
     print(f"Updating {version} to {target_version}")
-    write_setting(db, "VERSION", target_version)
+    db.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", target_version)
     return db
 
 
