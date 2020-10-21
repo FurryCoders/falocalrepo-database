@@ -12,6 +12,8 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+from filetype import guess_extension as filetype_guess_extension
+
 from .journals import journals_table
 from .journals import journals_table_errors
 from .journals import make_journals_table
@@ -27,6 +29,17 @@ from .users import users_table
 
 Key = Union[str, int, float]
 Value = Union[str, int, float, None]
+
+
+def guess_extension(file: bytes, default: str = "") -> str:
+    if not file:
+        return ""
+    elif (file_type := filetype_guess_extension(file)) is None:
+        return default
+    elif (file_ext := str(file_type)) == "zip":
+        return default if default != "zip" else file_ext
+    else:
+        return file_ext
 
 
 def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> str:
@@ -143,18 +156,23 @@ class FADatabaseSettings(FADatabaseTable):
 
 
 class FADatabaseSubmissions(FADatabaseTable):
-    def save_submission_file(self, submission_id: int, file_ext: str, file: bytes):
+    def save_submission_file(self, submission_id: int, file_ext: str, file: bytes) -> str:
         if not file:
-            return
+            return ""
+
+        file_ext = guess_extension(file, file_ext)
+
         path = join(self.database.settings["FILESFOLDER"], tiered_path(submission_id), f"submission.{file_ext}")
         with open(path, "wb") as f:
             f.write(file)
+
+        return file_ext
 
     def save_submission(self, submission: Dict[str, Union[int, str]], file: Optional[bytes] = None):
         submission["FILEEXT"] = name.split(".")[-1] if "." in (name := submission["FILELINK"].split("/")[-1]) else ""
         submission["FILESAVED"] = bool(file)
 
-        self.save_submission_file(submission["ID"], submission["FILEEXT"], file)
+        submission["FILEEXT"] = self.save_submission_file(submission["ID"], submission["FILEEXT"], file)
 
         self[submission["ID"]] = submission
 
