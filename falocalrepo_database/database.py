@@ -92,7 +92,7 @@ class FADatabaseTable:
             {f' WHERE {where_str} ' if where_str else ''}
             {f' ORDER BY {order_str} ' if order_str else ''}
             {f' LIMIT {limit} ' if limit > 0 else ''}
-            OFFSET {offset}""",
+            {f' OFFSET {offset} ' if limit > 0 and offset > 0 else ''}""",
             [v for values in query.values() for v in values]
         )
 
