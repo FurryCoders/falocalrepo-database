@@ -96,6 +96,12 @@ class FADatabaseTable:
             [v for values in query.values() for v in values]
         )
 
+    def cursor_to_dict(self, cursor: Cursor) -> Generator[Dict[str, Value], None, None]:
+        return (
+            dict(zip(self.columns, entry))
+            for entry in cursor
+        )
+
     def insert(self, values: Dict[str, Value], replace: bool = True):
         self.connection.execute(
             f"""INSERT OR {'REPLACE' if replace else 'IGNORE'} INTO {self.table}
