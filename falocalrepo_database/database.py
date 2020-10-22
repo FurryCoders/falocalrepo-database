@@ -26,6 +26,7 @@ from .update import update_database
 from .users import make_users_table
 from .users import users_fields
 from .users import users_table
+from .users import users_table_errors
 
 Key = Union[str, int, float]
 Value = Union[str, int, float, None]
@@ -326,6 +327,7 @@ class FADatabase:
         errors: List[tuple] = []
         errors.extend(journals_table_errors(self.connection))
         errors.extend(submissions_table_errors(self.connection))
+        errors.extend(users_table_errors(self.connection))
 
         return errors
 

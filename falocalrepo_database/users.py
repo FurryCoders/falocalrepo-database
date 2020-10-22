@@ -1,11 +1,8 @@
 from typing import Dict
 from typing import List
-from typing import Optional
-from typing import Tuple
 from typing import Union
 
 from .database import Connection
-from .database import Cursor
 
 """
 Entries guide - USERS
@@ -41,6 +38,18 @@ def make_users_table(db: Connection):
         JOURNALS TEXT,
         PRIMARY KEY (USERNAME ASC));"""
     )
+
+
+def users_table_errors(db: Connection):
+    errors: List[tuple] = []
+    errors.extend(db.execute("SELECT * FROM USERS WHERE USERNAME = ''").fetchall())
+    errors.extend(db.execute(
+        """SELECT * FROM USERS WHERE FOLDERS = '' AND
+        (GALLERY != '' OR SCRAPS != '' OR FAVORITES != '' OR MENTIONS != '' OR JOURNALS != ''"""
+    ).fetchall())
+    errors.extend(db.execute(f"SELECT * FROM USERS WHERE {' OR '.join(f'{f} = null' for f in users_fields)}"))
+
+    return sorted(set(errors), key=lambda s: s[0])
 
 
 def search_users(db: Connection, username: List[str] = None, folders: List[str] = None, gallery: List[str] = None,
