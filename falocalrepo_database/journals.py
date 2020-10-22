@@ -37,7 +37,6 @@ def journals_table_errors(db: Connection):
     errors: List[tuple] = []
     errors.extend(db.execute("SELECT * FROM JOURNALS WHERE ID = 0").fetchall())
     errors.extend(db.execute("SELECT * FROM JOURNALS WHERE AUTHOR = ''").fetchall())
-    errors.extend(db.execute("SELECT * FROM JOURNALS WHERE TITLE = ''").fetchall())
     errors.extend(db.execute("SELECT * FROM JOURNALS WHERE UDATE = ''").fetchall())
     errors.extend(db.execute(f"SELECT * FROM JOURNALS WHERE {' OR '.join(f'{f} = null' for f in journals_fields)}"))
 
