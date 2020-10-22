@@ -328,6 +328,9 @@ class FADatabase:
         self.connection.commit()
         self.committed_changes = self.total_changes
 
+    def close(self):
+        self.connection.close()
+
     def make(self):
         make_journals_table(self.connection)
         make_settings_table(self.connection)
