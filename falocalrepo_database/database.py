@@ -110,9 +110,10 @@ class FADatabaseTable:
             [v for values in query.values() for v in values]
         )
 
-    def cursor_to_dict(self, cursor: Cursor) -> Generator[Dict[str, Value], None, None]:
+    def cursor_to_dict(self, cursor: Cursor, columns: List[str] = None) -> Generator[Dict[str, Value], None, None]:
+        columns = self.columns if columns is None else columns
         return (
-            dict(zip(self.columns, entry))
+            dict(zip(columns, entry))
             for entry in cursor
         )
 
