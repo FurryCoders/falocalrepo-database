@@ -134,7 +134,8 @@ class FADatabaseTable:
 
 
 class FADatabaseJournals(FADatabaseTable):
-    pass
+    def errors(self) -> List[tuple]:
+        return journals_table_errors(self.connection)
 
 
 class FADatabaseSettings(FADatabaseTable):
@@ -176,6 +177,9 @@ class FADatabaseSubmissions(FADatabaseTable):
         self[submission["ID"]] = submission
 
         self.database.commit()
+
+    def errors(self) -> List[tuple]:
+        return submissions_table_errors(self.connection)
 
 
 class FADatabaseUsers(FADatabaseTable):
@@ -268,6 +272,9 @@ class FADatabaseUsers(FADatabaseTable):
         if self.remove_item(user, "JOURNALS", f"{journal_id:010}"):
             self.database.commit()
 
+    def errors(self) -> List[tuple]:
+        return users_table_errors(self.connection)
+
 
 class FADatabase:
     def __init__(self, database_path: str):
@@ -320,14 +327,6 @@ class FADatabase:
     def commit(self):
         self.connection.commit()
         self.committed_changes = self.total_changes
-
-    def errors(self) -> List[tuple]:
-        errors: List[tuple] = []
-        errors.extend(journals_table_errors(self.connection))
-        errors.extend(submissions_table_errors(self.connection))
-        errors.extend(users_table_errors(self.connection))
-
-        return errors
 
     def make(self):
         make_journals_table(self.connection)
