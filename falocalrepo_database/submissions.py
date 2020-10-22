@@ -58,10 +58,9 @@ def submissions_table_errors(db: Connection) -> List[tuple]:
     errors: List[tuple] = []
     errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE ID = 0").fetchall())
     errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE AUTHOR = ''").fetchall())
-    errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE TITLE = ''").fetchall())
     errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE UDATE = ''").fetchall())
     errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE FILELINK = ''").fetchall())
-    errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE FILESAVED = ''").fetchall())
+    errors.extend(db.execute("SELECT * FROM SUBMISSIONS WHERE FILESAVED NOT IN (0, 1) ").fetchall())
     errors.extend(db.execute(
         f"SELECT * FROM SUBMISSIONS WHERE {' OR '.join(f'{f} = null' for f in submissions_fields)}").fetchall())
 
