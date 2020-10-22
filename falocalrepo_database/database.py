@@ -112,10 +112,7 @@ class FADatabaseTable:
 
     def cursor_to_dict(self, cursor: Cursor, columns: List[str] = None) -> Generator[Dict[str, Value], None, None]:
         columns = self.columns if columns is None else columns
-        return (
-            dict(zip(columns, entry))
-            for entry in cursor
-        )
+        return (dict(zip(columns, entry)) for entry in cursor)
 
     def insert(self, values: Dict[str, Value], replace: bool = True):
         self.connection.execute(
