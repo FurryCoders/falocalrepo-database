@@ -45,7 +45,7 @@ def users_table_errors(db: Connection):
     errors.extend(db.execute("SELECT * FROM USERS WHERE USERNAME = ''").fetchall())
     errors.extend(db.execute(
         """SELECT * FROM USERS WHERE FOLDERS = '' AND
-        (GALLERY != '' OR SCRAPS != '' OR FAVORITES != '' OR MENTIONS != '' OR JOURNALS != ''"""
+        (GALLERY != '' OR FAVORITES != '' OR MENTIONS != '' OR JOURNALS != '')"""
     ).fetchall())
     errors.extend(db.execute(f"SELECT * FROM USERS WHERE {' OR '.join(f'{f} = null' for f in users_fields)}"))
 
