@@ -282,7 +282,7 @@ class FADatabase:
         self.settings: FADatabaseSettings = FADatabaseSettings(self, settings_table)
         self.submissions: FADatabaseSubmissions = FADatabaseSubmissions(self, submissions_table)
         self.users: FADatabaseTable = FADatabaseUsers(self, users_table)
-        self.committed_changes: int = 0
+        self.committed_changes: int = self.total_changes
 
     def __getitem__(self, table: str):
         return FADatabaseTable(self, table)
