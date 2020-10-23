@@ -709,6 +709,53 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
     return connect_database("FA.db")
 
 
+def update_3_8_to_4(db: Connection) -> Connection:
+    print("Updating 3.8.0 to 4.0.0")
+    db_new: Optional[Connection] = None
+
+    try:
+        db_new = connect_database("FA_new.db")
+        make_database_4(db_new)
+
+        # Transfer common submissions and users data
+        print("Transfer common submissions and users data")
+        db.execute("ATTACH DATABASE 'FA_new.db' AS db_new")
+        db.execute(
+            f"""INSERT OR IGNORE INTO db_new.USERS
+            SELECT * FROM USERS"""
+        )
+        db.execute(
+            f"""INSERT OR IGNORE INTO db_new.SUBMISSIONS
+            SELECT * FROM SUBMISSIONS"""
+        )
+        db.execute(
+            f"""INSERT OR IGNORE INTO db_new.JOURNALS
+            SELECT * FROM JOURNALS"""
+        )
+        db.execute(
+            f"""INSERT OR REPLACE INTO db_new.SETTINGS
+            SELECT * FROM SETTINGS WHERE SETTING != 'VERSION';"""
+        )
+
+        # Close databases and replace old database
+        print("Close databases and replace old database")
+        db_new.commit()
+        db_new.close()
+        move("FA.db", "FA_3_8.db")
+        move("FA_new.db", "FA.db")
+    except (BaseException, Exception) as err:
+        print("Database update interrupted!")
+        if db is not None:
+            db.commit()
+            db.close()
+        if db_new is not None:
+            db_new.commit()
+            db_new.close()
+        raise err
+
+    return connect_database("FA.db")
+
+
 def update_version(db: Connection, version: str, target_version: str) -> Connection:
     print(f"Updating {version} to {target_version}")
     db.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", target_version)
@@ -738,6 +785,8 @@ def update_database(db: Connection) -> Connection:
         return update_database(update_3_4_to_3_5(db))  # 3.4.x to 3.5.0
     elif v >= 0 and (v := compare_versions(db_version, "3.8.0")) < 0:
         return update_database(update_version(db, db_version, "3.8.0"))  # 3.5.0-3.6.x to 3.8.0
+    elif v >= 0 and (v := compare_versions(db_version, "4.0.0")) < 0:
+        return update_database(update_3_8_to_4(db))  # 3.8.x to 4.0.0
     elif v >= 0 and compare_versions(db_version, __version__) < 0:
         return update_version(db, db_version, __version__)
 
