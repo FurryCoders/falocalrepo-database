@@ -1,6 +1,4 @@
 from sqlite3 import Connection
-from typing import Dict
-from typing import List
 
 """
 Entries guide - SUBMISSIONS

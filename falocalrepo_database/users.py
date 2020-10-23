@@ -1,7 +1,4 @@
-from typing import Dict
-from typing import List
-
-from .database import Connection
+from sqlite3 import Connection
 
 """
 Entries guide - USERS
