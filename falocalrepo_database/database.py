@@ -16,18 +16,15 @@ from typing import Union
 from filetype import guess_extension as filetype_guess_extension
 
 from .journals import journals_table
-from .journals import journals_table_errors
 from .journals import make_journals_table
 from .settings import make_settings_table
 from .settings import settings_table
 from .submissions import make_submissions_table
 from .submissions import submissions_table
-from .submissions import submissions_table_errors
 from .update import update_database
 from .users import make_users_table
 from .users import users_fields
 from .users import users_table
-from .users import users_table_errors
 
 Key = Union[str, int, float]
 Value = Union[str, int, float, None]
@@ -141,8 +138,7 @@ class FADatabaseTable:
 
 
 class FADatabaseJournals(FADatabaseTable):
-    def errors(self) -> List[tuple]:
-        return journals_table_errors(self.connection)
+    pass
 
 
 class FADatabaseSettings(FADatabaseTable):
@@ -184,9 +180,6 @@ class FADatabaseSubmissions(FADatabaseTable):
         self[submission["ID"]] = submission
 
         self.database.commit()
-
-    def errors(self) -> List[tuple]:
-        return submissions_table_errors(self.connection)
 
 
 class FADatabaseUsers(FADatabaseTable):
@@ -289,9 +282,6 @@ class FADatabaseUsers(FADatabaseTable):
         user = clean_username(user)
         if self.remove_item(user, "JOURNALS", f"{journal_id:010}"):
             self.database.commit()
-
-    def errors(self) -> List[tuple]:
-        return users_table_errors(self.connection)
 
 
 class FADatabase:

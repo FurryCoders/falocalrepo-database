@@ -37,15 +37,3 @@ def make_users_table(db: Connection):
         JOURNALS TEXT NOT NULL,
         PRIMARY KEY (USERNAME ASC));"""
     )
-
-
-def users_table_errors(db: Connection):
-    errors: List[tuple] = []
-    errors.extend(db.execute("SELECT * FROM USERS WHERE USERNAME = ''").fetchall())
-    errors.extend(db.execute(
-        """SELECT * FROM USERS WHERE FOLDERS = '' AND
-        (GALLERY != '' OR FAVORITES != '' OR MENTIONS != '' OR JOURNALS != '')"""
-    ).fetchall())
-    errors.extend(db.execute(f"SELECT * FROM USERS WHERE {' OR '.join(f'{f} = null' for f in users_fields)}"))
-
-    return sorted(set(errors), key=lambda s: s[0])

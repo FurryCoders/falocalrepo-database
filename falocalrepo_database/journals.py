@@ -30,11 +30,3 @@ def make_journals_table(db: Connection):
         CONTENT TEXT NOT NULL,
         PRIMARY KEY (ID ASC));"""
     )
-
-
-def journals_table_errors(db: Connection):
-    errors: List[tuple] = []
-    errors.extend(db.execute("SELECT * FROM JOURNALS WHERE ID = 0").fetchall())
-    errors.extend(db.execute(f"SELECT * FROM JOURNALS WHERE {' OR '.join(f'{f} = null' for f in journals_fields)}"))
-
-    return sorted(set(errors), key=lambda s: s[0])
