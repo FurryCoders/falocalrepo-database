@@ -102,3 +102,7 @@ Update `HISTORY` entry in `SETTINGS` to use the `List[List[float, str]]` format.
 ### 3.5.0 - 3.7.x &rarr; 3.8.0
 
 Changes in database functions, simply update `VERSION`.
+
+### 3.8.x &rarr; 4.0.0
+
+Rename `UDATE` column in `SUBMISSIONS` and `JOURNALS` to `DATE`. Add automatic insertion checks to all tables.
