@@ -2,6 +2,7 @@ from datetime import datetime
 from json import dumps
 from json import loads
 from os.path import join
+from re import sub
 from sqlite3 import Connection
 from sqlite3 import Cursor
 from sqlite3 import connect
@@ -23,7 +24,6 @@ from .submissions import make_submissions_table
 from .submissions import submissions_table
 from .submissions import submissions_table_errors
 from .update import update_database
-from .users import clean_username
 from .users import make_users_table
 from .users import users_fields
 from .users import users_table
@@ -51,6 +51,10 @@ def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> str:
 
     id_str: str = str(int(id_)).zfill(depth * width)
     return join(*[id_str[n:n + width] for n in range(0, depth * width, width)])
+
+
+def clean_username(username: str) -> str:
+    return str(sub(r"[^a-zA-Z0-9\-.~,]", "", username.lower().strip()))
 
 
 class FADatabaseTable:
@@ -91,15 +95,17 @@ class FADatabaseTable:
                query_and: bool = True, query_and_values: bool = False, like: bool = False,
                order: List[str] = None, limit: int = 0, offset: int = 0
                ) -> Cursor:
-        query = {k: [v] if not isinstance(v, list) else v for k, v in query.items()} if query is not None else {}
+        query = {} if query is None else query
+        query = {k: [v] if not isinstance(v, list) else v for k, v in query.items()}
+        query = {k: vs for k, vs in query.items() if vs}
         order = [] if order is None else order
-        columns = ["*"] if columns is None else columns
+        columns = self.columns if columns is None else columns
         op: str = "like" if like else "="
         logic: str = "AND" if query_and else "OR"
         logic_values: str = "AND" if query_and_values else "OR"
         where_str: str = f" {logic} ".join(map(lambda q: f"({q})", [
-            f" {logic_values} ".join([f"{k} {op} ?" for _ in query[k]])
-            for k in query
+            f" {logic_values} ".join([f"{k} {op} ?"] * len(vs))
+            for k, vs in query.items()
         ]))
         order_str = ",".join(order)
         return self.connection.execute(
