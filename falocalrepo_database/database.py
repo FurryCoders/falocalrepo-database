@@ -139,7 +139,9 @@ class FADatabaseTable:
 
 
 class FADatabaseJournals(FADatabaseTable):
-    pass
+    def save_journal(self, journal: Dict[str, Union[int, str]]):
+        journal = {k.upper(): v for k, v in journal.items()}
+        self[journal["ID"]] = journal
 
 
 class FADatabaseSettings(FADatabaseTable):
