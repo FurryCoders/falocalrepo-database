@@ -23,6 +23,7 @@ from .submissions import make_submissions_table
 from .submissions import submissions_table
 from .submissions import submissions_table_errors
 from .update import update_database
+from .users import clean_username
 from .users import make_users_table
 from .users import users_fields
 from .users import users_table
@@ -184,12 +185,14 @@ class FADatabaseSubmissions(FADatabaseTable):
 
 class FADatabaseUsers(FADatabaseTable):
     def new_user(self, user: str):
+        user = clean_username(user)
         if user not in self:
             self.__setitem__(user, {f: "" for f in users_fields})
 
         self.database.commit()
 
     def enable_user(self, user: str):
+        user = clean_username(user)
         if (user_entry := self[user]) is None:
             return
 
@@ -198,6 +201,7 @@ class FADatabaseUsers(FADatabaseTable):
         self.database.commit()
 
     def disable_user(self, user: str):
+        user = clean_username(user)
         if (user_entry := self[user]) is None:
             return
 
@@ -209,6 +213,7 @@ class FADatabaseUsers(FADatabaseTable):
         self.database.commit()
 
     def add_item(self, user: str, folder: str, item: str) -> bool:
+        user = clean_username(user)
         if (user_entry := self[user]) is None:
             return False
 
@@ -220,6 +225,7 @@ class FADatabaseUsers(FADatabaseTable):
         return False
 
     def remove_item(self, user: str, folder: str, item: str) -> bool:
+        user = clean_username(user)
         if (user_entry := self[user]) is None:
             return False
 
@@ -231,10 +237,12 @@ class FADatabaseUsers(FADatabaseTable):
         return False
 
     def add_user_folder(self, user: str, folder: str):
+        user = clean_username(user)
         if self.add_item(user, "FOLDERS", folder):
             self.database.commit()
 
     def remove_user_folder(self, user: str, folder: str):
+        user = clean_username(user)
         if self.remove_item(user, "FOLDERS", folder):
             self.database.commit()
 
@@ -249,14 +257,17 @@ class FADatabaseUsers(FADatabaseTable):
         return self.select({"JOURNALS": f"%{journal_id:010}%"}, like=True)
 
     def add_submission(self, user: str, folder: str, submission_id: int):
+        user = clean_username(user)
         if self.add_item(user, folder, f"{submission_id:010}"):
             self.database.commit()
 
     def add_journal(self, user: str, journal_id: int):
+        user = clean_username(user)
         if self.add_item(user, "JOURNALS", f"{journal_id:010}"):
             self.database.commit()
 
     def remove_submission(self, user: str, submission_id: int):
+        user = clean_username(user)
         submission_id_fmt: str = f"{submission_id:010}"
         update: bool = False
 
@@ -269,6 +280,7 @@ class FADatabaseUsers(FADatabaseTable):
             self.database.commit()
 
     def remove_journal(self, user: str, journal_id: int):
+        user = clean_username(user)
         if self.remove_item(user, "JOURNALS", f"{journal_id:010}"):
             self.database.commit()
 
