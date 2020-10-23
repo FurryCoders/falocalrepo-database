@@ -4,28 +4,28 @@ from typing import List
 
 """
 Entries guide - SUBMISSIONS
-v3.2
-0  ID
-1  AUTHOR
-2  TITLE
-3  UDATE
-4  DESCRIPTION
-5  TAGS
-6  CATEGORY
-7  SPECIES
-8  GENDER
-9  RATING
-10 FILELINK
-11 FILEEXT
-12 FILESAVED
-13 LOCATION
-14 SERVER
+v3.2            v4.0
+0  ID           ID
+1  AUTHOR       AUTHOR
+2  TITLE        TITLE
+3  UDATE        DATE
+4  DESCRIPTION  DESCRIPTION
+5  TAGS         TAGS
+6  CATEGORY     CATEGORY
+7  SPECIES      SPECIES
+8  GENDER       GENDER
+9  RATING       RATING
+10 FILELINK     FILELINK
+11 FILEEXT      FILEEXT
+12 FILESAVED    FILESAVED
+13 LOCATION     LOCATION
+14 SERVER       SERVER
 """
 
 submissions_table: str = "SUBMISSIONS"
 submissions_fields: List[str] = [
     "ID", "AUTHOR", "TITLE",
-    "UDATE", "DESCRIPTION", "TAGS",
+    "DATE", "DESCRIPTION", "TAGS",
     "CATEGORY", "SPECIES", "GENDER",
     "RATING", "FILELINK", "FILEEXT",
     "FILESAVED"
@@ -39,7 +39,7 @@ def make_submissions_table(db: Connection):
         (ID INT UNIQUE NOT NULL,
         AUTHOR TEXT NOT NULL,
         TITLE TEXT,
-        UDATE DATE NOT NULL,
+        DATE DATE NOT NULL,
         DESCRIPTION TEXT,
         TAGS TEXT,
         CATEGORY TEXT,
