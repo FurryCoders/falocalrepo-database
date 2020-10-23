@@ -766,6 +766,8 @@ def update_3_8_to_4(db: Connection) -> Connection:
 
         # Close databases and replace old database
         print("Close databases and replace old database")
+        db.commit()
+        db.close()
         db_new.commit()
         db_new.close()
         move(db_path, path_join(dirname(db_path), "v3_8_" + basename(db_path)))
