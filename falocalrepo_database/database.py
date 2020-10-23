@@ -293,10 +293,10 @@ class FADatabase:
         self.make()
         self.connection = update_database(self.connection)
 
-        self.journals: FADatabaseTable = FADatabaseJournals(self, journals_table)
+        self.journals: FADatabaseJournals = FADatabaseJournals(self, journals_table)
         self.settings: FADatabaseSettings = FADatabaseSettings(self, settings_table)
         self.submissions: FADatabaseSubmissions = FADatabaseSubmissions(self, submissions_table)
-        self.users: FADatabaseTable = FADatabaseUsers(self, users_table)
+        self.users: FADatabaseUsers = FADatabaseUsers(self, users_table)
         self.committed_changes: int = self.total_changes
 
     def __getitem__(self, table: str):
