@@ -167,7 +167,8 @@ class FADatabaseSubmissions(FADatabaseTable):
 
         file_ext = guess_extension(file, file_ext)
 
-        path = join(self.database.settings["FILESFOLDER"], tiered_path(submission_id), f"submission.{file_ext}")
+        path = join(dirname(self.database.database_path), self.database.settings["FILESFOLDER"],
+                    tiered_path(submission_id), f"submission.{file_ext}")
         makedirs(dirname(path), exist_ok=True)
         with open(path, "wb") as f:
             f.write(file)
