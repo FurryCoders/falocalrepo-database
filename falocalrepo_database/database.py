@@ -82,7 +82,7 @@ class FADatabaseTable:
         self.connection.execute(f"""DELETE FROM {self.table} WHERE {self.column_id} = ?""", (key,))
 
     def __contains__(self, key: Union[Key, Dict[str, Value]]) -> bool:
-        return self.__getitem__(key) is not None
+        return self[key] is not None
 
     def __iter__(self) -> Generator[Dict[str, Value], None, None]:
         entry: Tuple[Value]
@@ -187,7 +187,7 @@ class FADatabaseUsers(FADatabaseTable):
     def new_user(self, user: str):
         user = clean_username(user)
         if user not in self:
-            self.__setitem__(user, {f: "" for f in self.columns})
+            self[user] = {f: "" for f in self.columns}
 
         self.database.commit()
 
