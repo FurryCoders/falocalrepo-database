@@ -4,12 +4,12 @@ from typing import List
 
 """
 Entries guide - JOURNALS
-v3.2
-0 ID
-1 AUTHOR
-2 TITLE
-3 UDATE
-4 CONTENT
+v3.2        v4.0
+0 ID        ID
+1 AUTHOR    AUTHOR
+2 TITLE     TITLE
+3 UDATE     DATE
+4 CONTENT   CONTENT
 """
 
 journals_table: str = "JOURNALS"
@@ -26,7 +26,7 @@ def make_journals_table(db: Connection):
         (ID INT UNIQUE NOT NULL,
         AUTHOR TEXT NOT NULL,
         TITLE TEXT NOT NULL,
-        UDATE DATE NOT NULL,
+        DATE DATE NOT NULL,
         CONTENT TEXT NOT NULL,
         PRIMARY KEY (ID ASC));"""
     )
@@ -35,8 +35,6 @@ def make_journals_table(db: Connection):
 def journals_table_errors(db: Connection):
     errors: List[tuple] = []
     errors.extend(db.execute("SELECT * FROM JOURNALS WHERE ID = 0").fetchall())
-    errors.extend(db.execute("SELECT * FROM JOURNALS WHERE AUTHOR = ''").fetchall())
-    errors.extend(db.execute("SELECT * FROM JOURNALS WHERE UDATE = ''").fetchall())
     errors.extend(db.execute(f"SELECT * FROM JOURNALS WHERE {' OR '.join(f'{f} = null' for f in journals_fields)}"))
 
     return sorted(set(errors), key=lambda s: s[0])
