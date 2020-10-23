@@ -1,6 +1,7 @@
 from datetime import datetime
 from json import dumps
 from json import loads
+from os.path import dirname
 from os.path import join
 from re import sub
 from sqlite3 import Connection
@@ -17,6 +18,7 @@ from filetype import guess_extension as filetype_guess_extension
 
 from .journals import journals_table
 from .journals import make_journals_table
+from .merge import merge_database
 from .settings import make_settings_table
 from .settings import settings_table
 from .submissions import make_submissions_table
@@ -345,3 +347,6 @@ class FADatabase:
         make_users_table(self.connection)
 
         self.commit()
+
+    def merge(self, db_b: Connection, db_b_folder: str):
+        merge_database(self.connection, dirname(self.database_path), db_b, db_b_folder)
