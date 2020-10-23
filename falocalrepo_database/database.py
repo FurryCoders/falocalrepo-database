@@ -180,8 +180,6 @@ class FADatabaseSubmissions(FADatabaseTable):
 
         self[submission["ID"]] = submission
 
-        self.database.commit()
-
 
 class FADatabaseUsers(FADatabaseTable):
     def new_user(self, user: str):
@@ -189,16 +187,12 @@ class FADatabaseUsers(FADatabaseTable):
         if user not in self:
             self[user] = {f: "" for f in self.columns}
 
-        self.database.commit()
-
     def enable_user(self, user: str):
         user = clean_username(user)
         if (user_entry := self[user]) is None:
             return
 
         self.update({"FOLDERS": ",".join([f.strip("!") for f in filter(bool, user_entry["FOLDERS"].split(","))])}, user)
-
-        self.database.commit()
 
     def disable_user(self, user: str):
         user = clean_username(user)
@@ -209,8 +203,6 @@ class FADatabaseUsers(FADatabaseTable):
             f"!{f}" if f.lower() in ("gallery", "scraps", "favorites") else f
             for f in filter(bool, user_entry["FOLDERS"].split(","))
         ])}, user)
-
-        self.database.commit()
 
     def add_item(self, user: str, folder: str, item: str) -> bool:
         user = clean_username(user)
@@ -237,14 +229,10 @@ class FADatabaseUsers(FADatabaseTable):
         return False
 
     def add_user_folder(self, user: str, folder: str):
-        user = clean_username(user)
-        if self.add_item(user, "FOLDERS", folder):
-            self.database.commit()
+        self.add_item(clean_username(user), "FOLDERS", folder)
 
     def remove_user_folder(self, user: str, folder: str):
-        user = clean_username(user)
-        if self.remove_item(user, "FOLDERS", folder):
-            self.database.commit()
+        self.remove_item(clean_username(user), "FOLDERS", folder)
 
     def find_from_submission(self, submission_id: int) -> Cursor:
         return self.select(
@@ -257,32 +245,21 @@ class FADatabaseUsers(FADatabaseTable):
         return self.select({"JOURNALS": f"%{journal_id:010}%"}, like=True)
 
     def add_submission(self, user: str, folder: str, submission_id: int):
-        user = clean_username(user)
-        if self.add_item(user, folder, f"{submission_id:010}"):
-            self.database.commit()
+        self.add_item(clean_username(user), folder, f"{submission_id:010}")
 
     def add_journal(self, user: str, journal_id: int):
-        user = clean_username(user)
-        if self.add_item(user, "JOURNALS", f"{journal_id:010}"):
-            self.database.commit()
+        self.add_item(clean_username(user), "JOURNALS", f"{journal_id:010}")
 
     def remove_submission(self, user: str, submission_id: int):
         user = clean_username(user)
         submission_id_fmt: str = f"{submission_id:010}"
-        update: bool = False
-
-        update = self.remove_item(user, "GALLERY", submission_id_fmt) or update
-        update = self.remove_item(user, "SCRAPS", submission_id_fmt) or update
-        update = self.remove_item(user, "FAVORITES", submission_id_fmt) or update
-        update = self.remove_item(user, "MENTIONS", submission_id_fmt) or update
-
-        if update:
-            self.database.commit()
+        self.remove_item(user, "GALLERY", submission_id_fmt)
+        self.remove_item(user, "SCRAPS", submission_id_fmt)
+        self.remove_item(user, "FAVORITES", submission_id_fmt)
+        self.remove_item(user, "MENTIONS", submission_id_fmt)
 
     def remove_journal(self, user: str, journal_id: int):
-        user = clean_username(user)
-        if self.remove_item(user, "JOURNALS", f"{journal_id:010}"):
-            self.database.commit()
+        self.remove_item(clean_username(user), "JOURNALS", f"{journal_id:010}")
 
 
 class FADatabase:
