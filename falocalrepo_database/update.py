@@ -676,10 +676,8 @@ def update_database(db: Connection) -> Connection:
         return update_database(update_version(db, db_version, "3.4.0"))  # 3.3.x to 3.4.0
     elif v >= 0 and (v := compare_versions(db_version, "3.5.0")) < 0:
         return update_database(update_3_4_to_3_5(db))  # 3.4.x to 3.5.0
-    elif v >= 0 and (v := compare_versions(db_version, "3.6.0")) < 0:
-        return update_database(update_version(db, db_version, "3.6.0"))  # 3.5.x to 3.6.0
-    elif v >= 0 and (v := compare_versions(db_version, "3.7.0")) < 0:
-        return update_database(update_version(db, db_version, "3.7.0"))  # 3.6.x to 3.7.0
+    elif v >= 0 and (v := compare_versions(db_version, "3.8.0")) < 0:
+        return update_database(update_version(db, db_version, "3.8.0"))  # 3.5.0-3.6.x to 3.8.0
     elif v >= 0 and compare_versions(db_version, __version__) < 0:
         return update_version(db, db_version, __version__)
 
