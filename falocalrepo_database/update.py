@@ -283,7 +283,7 @@ def update_2_7_to_3(db: Connection) -> Connection:
         user: str
         folders: str
         user_n: int = 0
-        for user, folders in select_all(db_new, "USERS", ["USERNAME", "FOLDERS"]):
+        for user, folders in db_new.execute("SELECT USERNAME, FOLDERS FROM USERS"):
             user_n += 1
             print(user_n, end="\r", flush=True)
             folders_new: List[str] = []
