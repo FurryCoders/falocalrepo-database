@@ -23,14 +23,6 @@ v3.2            v4.0
 """
 
 submissions_table: str = "SUBMISSIONS"
-submissions_fields: List[str] = [
-    "ID", "AUTHOR", "TITLE",
-    "DATE", "DESCRIPTION", "TAGS",
-    "CATEGORY", "SPECIES", "GENDER",
-    "RATING", "FILELINK", "FILEEXT",
-    "FILESAVED"
-]
-submissions_indexes: Dict[str, int] = {f: i for i, f in enumerate(submissions_fields)}
 
 
 def make_submissions_table(db: Connection):

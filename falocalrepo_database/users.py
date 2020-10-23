@@ -16,13 +16,6 @@ v3.0        v3.1      v3.2
 """
 
 users_table: str = "USERS"
-users_fields: List[str] = [
-    "USERNAME", "FOLDERS",
-    "GALLERY", "SCRAPS",
-    "FAVORITES", "MENTIONS",
-    "JOURNALS"
-]
-users_indexes: Dict[str, int] = {f: i for i, f in enumerate(users_fields)}
 
 
 def make_users_table(db: Connection):

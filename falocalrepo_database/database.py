@@ -23,7 +23,6 @@ from .submissions import make_submissions_table
 from .submissions import submissions_table
 from .update import update_database
 from .users import make_users_table
-from .users import users_fields
 from .users import users_table
 
 Key = Union[str, int, float]
@@ -186,7 +185,7 @@ class FADatabaseUsers(FADatabaseTable):
     def new_user(self, user: str):
         user = clean_username(user)
         if user not in self:
-            self.__setitem__(user, {f: "" for f in users_fields})
+            self.__setitem__(user, {f: "" for f in self.columns})
 
         self.database.commit()
 

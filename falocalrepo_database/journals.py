@@ -13,11 +13,6 @@ v3.2        v4.0
 """
 
 journals_table: str = "JOURNALS"
-journals_fields: List[str] = [
-    "ID", "AUTHOR", "TITLE",
-    "UDATE", "CONTENT"
-]
-journals_indexes: Dict[str, int] = {f: i for i, f in enumerate(journals_fields)}
 
 
 def make_journals_table(db: Connection):
