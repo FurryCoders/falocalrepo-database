@@ -38,7 +38,7 @@ The submissions table contains the metadata of the submissions downloaded by the
 * `ID` the id of the submission
 * `AUTHOR` the username of the author (uploader) in full format
 * `TITLE`
-* `UDATE` upload date in the format YYYY-MM-DD
+* `DATE` upload date in the format YYYY-MM-DD
 * `DESCRIPTION` description in html format
 * `TAGS` keywords sorted alphanumerically and comma-separated
 * `CATEGORY`
@@ -56,7 +56,7 @@ The journals table contains the metadata of the journals downloaded by the progr
 * `ID` the id of the journal
 * `AUTHOR` the username of the author (uploader) in full format
 * `TITLE`
-* `UDATE` upload date in the format YYYY-MM-DD
+* `DATE` upload date in the format YYYY-MM-DD
 * `CONTENT` content in html format
 
 ## Submission Files
