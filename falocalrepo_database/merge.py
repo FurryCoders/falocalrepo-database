@@ -58,8 +58,7 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
     submission: tuple
     for submission in db_b.execute(f"SELECT * FROM {submissions_table}"):
         db_a.execute(
-            f"""INSERT OR IGNORE INTO {submissions_table}
-            (*) VALUES ({','.join(['?'] * len(submission))})""",
+            f"INSERT OR IGNORE INTO {submissions_table} VALUES ({','.join(['?'] * len(submission))})",
             submission
         )
     db_a.commit()
@@ -67,8 +66,7 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
     journal: tuple
     for journal in db_b.execute(f"SELECT * FROM {journals_table}"):
         db_a.execute(
-            f"""INSERT OR IGNORE INTO {journals_table}
-            (*) VALUES ({','.join(['?'] * len(journal))})""",
+            f"INSERT OR IGNORE INTO {journals_table} VALUES ({','.join(['?'] * len(journal))})",
             journal
         )
     db_a.commit()
@@ -85,8 +83,7 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
                 if (field_b := user_new[i]) != field_a:
                     user_new[i] = ",".join(filter(bool, set(field_a.split(",") + field_b.split(","))))
         db_a.execute(
-            f"""INSERT OR REPLACE INTO {users_table}
-            (*) VALUES ({','.join(['?'] * len(user_new))})""",
+            f"INSERT OR REPLACE INTO {users_table} VALUES ({','.join(['?'] * len(user_new))})",
             user_new
         )
     db_a.commit()
