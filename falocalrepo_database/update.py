@@ -788,6 +788,7 @@ def update_3_8_to_4(db: Connection) -> Connection:
 def update_version(db: Connection, version: str, target_version: str) -> Connection:
     print(f"Updating {version} to {target_version}")
     db.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", [target_version])
+    db.commit()
     return db
 
 
