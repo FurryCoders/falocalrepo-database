@@ -20,16 +20,12 @@ from typing import Tuple
 from typing import Union
 
 from .__version__ import __version__
-from .journals import journals_table
-from .settings import settings_table
-from .submissions import submissions_table
-from .users import users_table
 
 
 def get_version(db: Connection) -> str:
     try:
         # Database version 3.0.0 and above
-        return db.execute(f"SELECT SVALUE FROM {settings_table} WHERE SETTING = 'VERSION'").fetchone()[0]
+        return db.execute(f"SELECT SVALUE FROM SETTINGS WHERE SETTING = 'VERSION'").fetchone()[0]
     except OperationalError:
         # Database version 2.7.0
         return db.execute(f"SELECT VALUE FROM SETTINGS WHERE FIELD = 'VERSION'").fetchone()[0]
@@ -317,7 +313,7 @@ def make_database_3_3(db: Connection):
 
 def make_database_4(db: Connection):
     db.execute(
-        f"""CREATE TABLE IF NOT EXISTS {users_table}
+        f"""CREATE TABLE IF NOT EXISTS USERS
         (USERNAME TEXT UNIQUE NOT NULL CHECK (length(USERNAME) > 0),
         FOLDERS TEXT NOT NULL,
         GALLERY TEXT NOT NULL,
@@ -329,7 +325,7 @@ def make_database_4(db: Connection):
     )
 
     db.execute(
-        f"""CREATE TABLE IF NOT EXISTS {submissions_table}
+        f"""CREATE TABLE IF NOT EXISTS SUBMISSIONS
         (ID INT UNIQUE NOT NULL CHECK (ID > 0),
         AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
         TITLE TEXT NOT NULL,
@@ -347,7 +343,7 @@ def make_database_4(db: Connection):
     )
 
     db.execute(
-        f"""CREATE TABLE IF NOT EXISTS {journals_table}
+        f"""CREATE TABLE IF NOT EXISTS JOURNALS
         (ID INT UNIQUE NOT NULL CHECK (ID > 0),
         AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
         TITLE TEXT NOT NULL,
@@ -357,7 +353,7 @@ def make_database_4(db: Connection):
     )
 
     db.execute(
-        f"""CREATE TABLE IF NOT EXISTS {settings_table}
+        f"""CREATE TABLE IF NOT EXISTS SETTINGS
         (SETTING TEXT UNIQUE NOT NULL CHECK (length(SETTING) > 0),
         SVALUE TEXT NOT NULL CHECK (length(SVALUE) > 0),
         PRIMARY KEY (SETTING ASC));"""
@@ -484,8 +480,8 @@ def update_2_7_to_3(db: Connection) -> Connection:
             move(f, path_join(dirname(db_path), "FA.files"))
 
         # Update counters for new database
-        update(db, settings_table, ["SVALUE"], [str(count(db_new, "SUBMISSIONS"))], "SETTING", "SUBN")
-        update(db, settings_table, ["SVALUE"], [str(count(db_new, "USERS"))], "SETTING", "USRN")
+        update(db, "SETTINGS", ["SVALUE"], [str(count(db_new, "SUBMISSIONS"))], "SETTING", "SUBN")
+        update(db, "SETTINGS", ["SVALUE"], [str(count(db_new, "USERS"))], "SETTING", "USRN")
 
         # Close databases and replace old database
         print("Close databases and replace old database")
@@ -630,20 +626,20 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
         print("Transfer common submissions and users data")
         db.execute("ATTACH DATABASE 'FA_new.db' AS db_new")
         db.execute(
-            f"""INSERT OR IGNORE INTO db_new.{users_table}
-            SELECT * FROM {users_table}"""
+            f"""INSERT OR IGNORE INTO db_new.USERS
+            SELECT * FROM USERS"""
         )
         db.execute(
-            f"""INSERT OR IGNORE INTO db_new.{submissions_table}
-            SELECT * FROM {submissions_table}"""
+            f"""INSERT OR IGNORE INTO db_new.SUBMISSIONS
+            SELECT * FROM SUBMISSIONS"""
         )
         db.execute(
-            f"""INSERT OR IGNORE INTO db_new.{journals_table}
-            SELECT * FROM {journals_table}"""
+            f"""INSERT OR IGNORE INTO db_new.JOURNALS
+            SELECT * FROM JOURNALS"""
         )
         db.execute(
-            f"""INSERT OR REPLACE INTO db_new.{settings_table}
-            SELECT * FROM {settings_table} WHERE SETTING != "LASTSTART" AND SETTING != "LASTUPDATE";"""
+            f"""INSERT OR REPLACE INTO db_new.SETTINGS
+            SELECT * FROM SETTINGS WHERE SETTING != "LASTSTART" AND SETTING != "LASTUPDATE";"""
         )
         db.execute("UPDATE db_new.SETTINGS SET SVALUE = '3.3.0' WHERE SETTING = 'VERSION'")
 
@@ -691,20 +687,20 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
         print("Transfer common submissions and users data")
         db.execute("ATTACH DATABASE 'FA_new.db' AS db_new")
         db.execute(
-            f"""INSERT OR IGNORE INTO db_new.{users_table}
-            SELECT * FROM {users_table}"""
+            f"""INSERT OR IGNORE INTO db_new.USERS
+            SELECT * FROM USERS"""
         )
         db.execute(
-            f"""INSERT OR IGNORE INTO db_new.{submissions_table}
-            SELECT * FROM {submissions_table}"""
+            f"""INSERT OR IGNORE INTO db_new.SUBMISSIONS
+            SELECT * FROM SUBMISSIONS"""
         )
         db.execute(
-            f"""INSERT OR IGNORE INTO db_new.{journals_table}
-            SELECT * FROM {journals_table}"""
+            f"""INSERT OR IGNORE INTO db_new.JOURNALS
+            SELECT * FROM JOURNALS"""
         )
         db.execute(
-            f"""INSERT OR REPLACE INTO db_new.{settings_table}
-            SELECT * FROM {settings_table} WHERE SETTING != "HISTORY";"""
+            f"""INSERT OR REPLACE INTO db_new.SETTINGS
+            SELECT * FROM SETTINGS WHERE SETTING != "HISTORY";"""
         )
         db.execute("UPDATE db_new.SETTINGS SET SVALUE = '3.5.0' WHERE SETTING = 'VERSION'")
 
