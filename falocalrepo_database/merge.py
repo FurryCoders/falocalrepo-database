@@ -61,7 +61,6 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
             f"INSERT OR IGNORE INTO {submissions_table} VALUES ({','.join(['?'] * len(submission))})",
             submission
         )
-    db_a.commit()
 
     journal: tuple
     for journal in db_b.execute(f"SELECT * FROM {journals_table}"):
@@ -69,7 +68,6 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
             f"INSERT OR IGNORE INTO {journals_table} VALUES ({','.join(['?'] * len(journal))})",
             journal
         )
-    db_a.commit()
 
     user_b: Tuple[str, ...]
     for user_b in db_b.execute(f"SELECT * FROM {users_table}"):
@@ -86,4 +84,3 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
             f"INSERT OR REPLACE INTO {users_table} VALUES ({','.join(['?'] * len(user_new))})",
             user_new
         )
-    db_a.commit()
