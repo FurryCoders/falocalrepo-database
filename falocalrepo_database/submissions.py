@@ -1,4 +1,5 @@
 from sqlite3 import Connection
+from sqlite3 import Cursor
 from typing import Dict
 from typing import List
 from typing import Union
@@ -65,46 +66,3 @@ def submissions_table_errors(db: Connection) -> List[tuple]:
         f"SELECT * FROM SUBMISSIONS WHERE {' OR '.join(f'{f} = null' for f in submissions_fields)}").fetchall())
 
     return sorted(set(errors), key=lambda s: s[0])
-
-
-def search_submissions(db: Connection,
-                       author: List[str] = None, title: List[str] = None,
-                       date: List[str] = None, description: List[str] = None, tags: List[str] = None,
-                       category: List[str] = None, species: List[str] = None, gender: List[str] = None,
-                       rating: List[str] = None, limit: List[Union[str, int]] = None,
-                       offset: List[Union[str, int]] = None, order: List[str] = None
-                       ) -> List[tuple]:
-    author = [] if author is None else list(map(str.lower, author))
-    title = [] if title is None else list(map(str.lower, title))
-    date = [] if date is None else list(map(str.lower, date))
-    description = [] if description is None else list(map(str.lower, description))
-    tags = [] if tags is None else list(map(str.lower, tags))
-    category = [] if category is None else list(map(str.lower, category))
-    species = [] if species is None else list(map(str.lower, species))
-    gender = [] if gender is None else list(map(str.lower, gender))
-    rating = [] if rating is None else list(map(str.lower, rating))
-
-    assert any(
-        (author, title, date, description, tags, category, species, gender, rating)), "at least one parameter needed"
-
-    wheres: List[str] = [
-        " OR ".join(["UDATE like ?"] * len(date)),
-        " OR ".join(["lower(RATING) like ?"] * len(rating)),
-        " OR ".join(["lower(GENDER) like ?"] * len(gender)),
-        " OR ".join(["lower(SPECIES) like ?"] * len(species)),
-        " OR ".join(["lower(CATEGORY) like ?"] * len(category)),
-        " OR ".join(['replace(lower(AUTHOR), "_", "") like ?'] * len(author)),
-        " OR ".join(["lower(TITLE) like ?"] * len(title)),
-        " OR ".join(["lower(TAGS) like ?"] * len(tags)),
-        " OR ".join(["lower(DESCRIPTION) like ?"] * len(description))
-    ]
-
-    wheres_str: str = " AND ".join(map(lambda p: "(" + p + ")", filter(len, wheres)))
-    order_str: str = f"ORDER BY {','.join(order)}" if order else ""
-    limit_str: str = f"LIMIT {int(limit[0])}" if limit is not None else ""
-    offset_str: str = f"OFFSET {int(offset[0])}" if offset is not None else ""
-
-    return db.execute(
-        f"""SELECT * FROM {submissions_table} WHERE {wheres_str} {order_str} {limit_str} {offset_str}""",
-        date + rating + gender + species + category + author + title + tags + description
-    ).fetchall()
