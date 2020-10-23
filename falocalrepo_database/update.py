@@ -304,6 +304,66 @@ def make_database_3_3(db: Connection):
     db.commit()
 
 
+def make_database_4(db: Connection):
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS {users_table}
+        (USERNAME TEXT UNIQUE NOT NULL CHECK (length(USERNAME) > 0),
+        FOLDERS TEXT NOT NULL,
+        GALLERY TEXT NOT NULL,
+        SCRAPS TEXT NOT NULL,
+        FAVORITES TEXT NOT NULL,
+        MENTIONS TEXT NOT NULL,
+        JOURNALS TEXT NOT NULL,
+        PRIMARY KEY (USERNAME ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS {submissions_table}
+        (ID INT UNIQUE NOT NULL CHECK (ID > 0),
+        AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
+        TITLE TEXT NOT NULL,
+        DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%d',DATE)),
+        DESCRIPTION TEXT NOT NULL,
+        TAGS TEXT NOT NULL,
+        CATEGORY TEXT NOT NULL,
+        SPECIES TEXT NOT NULL,
+        GENDER TEXT NOT NULL,
+        RATING TEXT NOT NULL,
+        FILELINK TEXT NOT NULL,
+        FILEEXT TEXT NOT NULL,
+        FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1)),
+        PRIMARY KEY (ID ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS {journals_table}
+        (ID INT UNIQUE NOT NULL CHECK (ID > 0),
+        AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
+        TITLE TEXT NOT NULL,
+        DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%d',DATE)),
+        CONTENT TEXT NOT NULL,
+        PRIMARY KEY (ID ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS {settings_table}
+        (SETTING TEXT UNIQUE NOT NULL CHECK (length(SETTING) > 0),
+        SVALUE TEXT NOT NULL CHECK (length(SVALUE) > 0),
+        PRIMARY KEY (SETTING ASC));"""
+    )
+
+    # Add settings
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["USRN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["SUBN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["JRNN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["HISTORY", "[]"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["COOKIES", "{}"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["FILESFOLDER", "FA.files"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["VERSION", "4.0.0"])
+
+    db.commit()
+
+
 def update_2_7_to_3(db: Connection) -> Connection:
     from .database import tiered_path
 
