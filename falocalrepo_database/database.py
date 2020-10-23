@@ -72,7 +72,8 @@ class FADatabaseTable:
 
     def __getitem__(self, key: Union[Key, Dict[str, Union[List[Value], Value]]]) -> Optional[Dict[str, Value]]:
         key = key if isinstance(key, dict) else {self.column_id: key}
-        return dict(zip(self.columns, entry)) if (entry := self.select(key, self.columns).fetchone()) else None
+        entry: Optional[tuple] = self.select(key, self.columns).fetchone()
+        return {k.upper(): v for k, v in zip(self.columns, entry)} if entry is not None else None
 
     def __setitem__(self, key: Key, values: Dict[str, Value]):
         values.update({self.column_id: key})
@@ -117,7 +118,7 @@ class FADatabaseTable:
 
     def cursor_to_dict(self, cursor: Cursor, columns: List[str] = None) -> Generator[Dict[str, Value], None, None]:
         columns = self.columns if columns is None else columns
-        return (dict(zip(columns, entry)) for entry in cursor)
+        return ({k.upper(): v for k, v in zip(columns, entry)} for entry in cursor)
 
     def insert(self, values: Dict[str, Value], replace: bool = True):
         self.connection.execute(
