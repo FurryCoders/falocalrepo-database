@@ -209,6 +209,7 @@ class FADatabaseUsers(FADatabaseTable):
         ])}, user)
 
     def add_item(self, user: str, folder: str, item: str) -> bool:
+        folder = folder.upper()
         user = clean_username(user)
         if (user_entry := self[user]) is None:
             return False
@@ -221,6 +222,7 @@ class FADatabaseUsers(FADatabaseTable):
         return False
 
     def remove_item(self, user: str, folder: str, item: str) -> bool:
+        folder = folder.upper()
         user = clean_username(user)
         if (user_entry := self[user]) is None:
             return False
@@ -233,9 +235,11 @@ class FADatabaseUsers(FADatabaseTable):
         return False
 
     def add_user_folder(self, user: str, folder: str):
+        folder = folder.lower()
         self.add_item(clean_username(user), "FOLDERS", folder)
 
     def remove_user_folder(self, user: str, folder: str):
+        folder = folder.lower()
         self.remove_item(clean_username(user), "FOLDERS", folder)
 
     def find_from_submission(self, submission_id: int) -> Cursor:
@@ -249,6 +253,7 @@ class FADatabaseUsers(FADatabaseTable):
         return self.select({"JOURNALS": f"%{journal_id:010}%"}, like=True)
 
     def add_submission(self, user: str, folder: str, submission_id: int):
+        folder = folder.upper()
         self.add_item(clean_username(user), folder, f"{submission_id:010}")
 
     def add_journal(self, user: str, journal_id: int):
