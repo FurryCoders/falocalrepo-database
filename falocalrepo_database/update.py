@@ -20,12 +20,8 @@ from typing import Union
 
 from .__version__ import __version__
 from .journals import journals_table
-from .journals import make_journals_table
-from .settings import make_settings_table
 from .settings import settings_table
-from .submissions import make_submissions_table
 from .submissions import submissions_table
-from .users import make_users_table
 from .users import users_table
 
 
@@ -245,6 +241,65 @@ def make_database_3_2(db: Connection):
     db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["COOKIES", "{}"])
     db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["FILESFOLDER", "FA.files"])
     db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["VERSION", "3.2.0"])
+
+    db.commit()
+
+
+def make_database_3_3(db: Connection):
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS USERS
+        (USERNAME TEXT UNIQUE NOT NULL,
+        FOLDERS TEXT NOT NULL,
+        GALLERY TEXT,
+        SCRAPS TEXT,
+        FAVORITES TEXT,
+        MENTIONS TEXT,
+        JOURNALS TEXT,
+        PRIMARY KEY (USERNAME ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS SUBMISSIONS
+        (ID INT UNIQUE NOT NULL,
+        AUTHOR TEXT NOT NULL,
+        TITLE TEXT,
+        UDATE DATE NOT NULL,
+        DESCRIPTION TEXT,
+        TAGS TEXT,
+        CATEGORY TEXT,
+        SPECIES TEXT,
+        GENDER TEXT,
+        RATING TEXT,
+        FILELINK TEXT,
+        FILEEXT TEXT,
+        FILESAVED INT,
+        PRIMARY KEY (ID ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS JOURNALS
+        (ID INT UNIQUE NOT NULL,
+        AUTHOR TEXT NOT NULL,
+        TITLE TEXT,
+        UDATE DATE NOT NULL,
+        CONTENT TEXT,
+        PRIMARY KEY (ID ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS SETTINGS
+        (SETTING TEXT UNIQUE,
+        SVALUE TEXT,
+        PRIMARY KEY (SETTING ASC));"""
+    )
+
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["USRN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["SUBN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["JRNN", "0"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["HISTORY", "[]"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["COOKIES", "{}"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["FILESFOLDER", "FA.files"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["VERSION", "3.3.0"])
 
     db.commit()
 
@@ -484,7 +539,7 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
 
     try:
         db_new = connect_database("FA_new.db")
-        make_tables(db_new)
+        make_database_3_3(db_new)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -542,10 +597,7 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
 
     try:
         db_new = connect_database("FA_new.db")
-        make_journals_table(db_new)
-        make_settings_table(db_new)
-        make_submissions_table(db_new)
-        make_users_table(db_new)
+        make_database_3_3(db_new)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
