@@ -1,3 +1,4 @@
+from re import sub
 from typing import Dict
 from typing import List
 from typing import Union
@@ -24,6 +25,10 @@ users_fields: List[str] = [
     "JOURNALS"
 ]
 users_indexes: Dict[str, int] = {f: i for i, f in enumerate(users_fields)}
+
+
+def clean_username(username: str) -> str:
+    return str(sub(r"[^a-zA-Z0-9\-.~,]", "", username.lower().strip()))
 
 
 def make_users_table(db: Connection):
