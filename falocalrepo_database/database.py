@@ -302,9 +302,9 @@ class FADatabase:
     def __getitem__(self, table: str):
         return FADatabaseTable(self, table)
 
-    def __iter__(self) -> Generator[FADatabaseTable, None, None]:
+    def __iter__(self) -> Generator[Tuple[str, FADatabaseTable], None, None]:
         for table in self.tables:
-            yield FADatabaseTable(self, table)
+            yield table, FADatabaseTable(self, table)
 
     def __contains__(self, table: str) -> bool:
         return table in self.tables
