@@ -88,7 +88,7 @@ class FADatabaseTable:
     def __iter__(self) -> Generator[Dict[str, Value], None, None]:
         entry: Tuple[Value]
         for entry in self.select():
-            yield dict(zip(self.columns, entry))
+            yield {k.upper(): v for k, v in zip(self.columns, entry)}
 
     def select(self, query: Dict[str, Union[List[Value], Value]] = None, columns: List[str] = None,
                query_and: bool = True, query_and_values: bool = False, like: bool = False,
