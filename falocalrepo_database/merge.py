@@ -74,7 +74,7 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
     user_b: Tuple[str, ...]
     for user_b in db_b.execute(f"SELECT * FROM {users_table}"):
         user: str = user_b[0]
-        user_a: Optional[Tuple[str, ...]] = db_b.execute(
+        user_a: Optional[Tuple[str, ...]] = db_a.execute(
             f"SELECT * FROM {users_table} WHERE USERNAME = ?", [user]).fetchone()
         user_new: List[str] = list(user_b)
 
