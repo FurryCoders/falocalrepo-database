@@ -386,7 +386,7 @@ def update_2_7_to_3(db: Connection) -> Connection:
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
-        db.execute("ATTACH DATABASE 'FA_new.db' AS db_new")
+        db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
         db.execute(
             """INSERT OR IGNORE INTO
             db_new.SUBMISSIONS(ID, AUTHOR, UDATE, TITLE, DESCRIPTION, TAGS, CATEGORY, SPECIES, GENDER, RATING, FILELINK)
@@ -516,7 +516,7 @@ def update_3_to_3_1(db: Connection) -> Connection:
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
-        db.execute("ATTACH DATABASE 'FA_new.db' AS db_new")
+        db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
         db.execute(
             """INSERT OR IGNORE INTO db_new.SUBMISSIONS
             SELECT * FROM SUBMISSIONS"""
@@ -572,7 +572,7 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
-        db.execute("ATTACH DATABASE 'FA_new.db' AS db_new")
+        db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
         db.execute(
             """INSERT OR IGNORE INTO db_new.SUBMISSIONS
             SELECT * FROM SUBMISSIONS"""
@@ -624,7 +624,7 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
-        db.execute("ATTACH DATABASE 'FA_new.db' AS db_new")
+        db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
         db.execute(
             f"""INSERT OR IGNORE INTO db_new.USERS
             SELECT * FROM USERS"""
@@ -685,7 +685,7 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
-        db.execute("ATTACH DATABASE 'FA_new.db' AS db_new")
+        db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
         db.execute(
             f"""INSERT OR IGNORE INTO db_new.USERS
             SELECT * FROM USERS"""
@@ -746,7 +746,7 @@ def update_3_8_to_4(db: Connection) -> Connection:
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
-        db.execute("ATTACH DATABASE 'FA_new.db' AS db_new")
+        db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
         db.execute(
             f"""INSERT OR IGNORE INTO db_new.USERS
             SELECT * FROM USERS"""
