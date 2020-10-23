@@ -2,6 +2,10 @@
 
 Database functionality for [falocalrepo](https://gitlab.com/MatteoCampinoti94/falocalrepo).
 
+## Usage
+
+_Detailed usage and components documentation will be added in a future patch_ 
+
 ## Tables
 
 To store its information, the database uses four tables: `SETTINGS`, `USERS`, `SUBMISSIONS` and `JOURNALS`.
