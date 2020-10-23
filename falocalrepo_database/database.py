@@ -348,5 +348,5 @@ class FADatabase:
 
         self.commit()
 
-    def merge(self, db_b: 'FADatabase'):
+    def update(self, db_b: 'FADatabase'):
         merge_database(self.connection, dirname(self.database_path), db_b.connection, dirname(db_b.database_path))
