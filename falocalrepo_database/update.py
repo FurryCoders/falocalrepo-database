@@ -439,14 +439,16 @@ def update_2_7_to_3(db: Connection) -> Connection:
         print("Update submissions FILEEXT and FILESAVED and move to new location")
         sub_n: int = 0
         sub_not_found: List[int] = []
+        files_folder_old: str = path_join(dirname(db_path), "FA.files")
+        files_folder_new: str = path_join(dirname(db_path), "FA.files_new")
         for id_, location in db.execute("SELECT ID, LOCATION FROM SUBMISSIONS"):
             sub_n += 1
             print(sub_n, end="\r", flush=True)
-            if isdir(folder_old := path_join(dirname(db_path), "FA.files", location.strip("/"))):
+            if isdir(folder_old := path_join(files_folder_old, location.strip("/"))):
                 fileglob = glob(path_join(folder_old, "submission*"))
                 fileext = ""
                 if filename := fileglob[0] if fileglob else "":
-                    makedirs((folder_new := path_join(dirname(db_path), "FA.files_new", tiered_path(id_))), exist_ok=True)
+                    makedirs((folder_new := path_join(files_folder_new, tiered_path(id_))), exist_ok=True)
                     copy(filename, path_join(folder_new, (filename := basename(filename))))
                     fileext = filename.split(".")[-1] if "." in filename else ""
                 else:
