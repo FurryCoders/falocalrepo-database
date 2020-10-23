@@ -30,11 +30,11 @@ def make_users_table(db: Connection):
         f"""CREATE TABLE IF NOT EXISTS {users_table}
         (USERNAME TEXT UNIQUE NOT NULL,
         FOLDERS TEXT NOT NULL,
-        GALLERY TEXT,
-        SCRAPS TEXT,
-        FAVORITES TEXT,
-        MENTIONS TEXT,
-        JOURNALS TEXT,
+        GALLERY TEXT NOT NULL,
+        SCRAPS TEXT NOT NULL,
+        FAVORITES TEXT NOT NULL,
+        MENTIONS TEXT NOT NULL,
+        JOURNALS TEXT NOT NULL,
         PRIMARY KEY (USERNAME ASC));"""
     )
 

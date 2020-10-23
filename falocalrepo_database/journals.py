@@ -25,9 +25,9 @@ def make_journals_table(db: Connection):
         f"""CREATE TABLE IF NOT EXISTS {journals_table}
         (ID INT UNIQUE NOT NULL,
         AUTHOR TEXT NOT NULL,
-        TITLE TEXT,
+        TITLE TEXT NOT NULL,
         UDATE DATE NOT NULL,
-        CONTENT TEXT,
+        CONTENT TEXT NOT NULL,
         PRIMARY KEY (ID ASC));"""
     )
 

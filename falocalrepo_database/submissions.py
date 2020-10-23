@@ -38,17 +38,17 @@ def make_submissions_table(db: Connection):
         f"""CREATE TABLE IF NOT EXISTS {submissions_table}
         (ID INT UNIQUE NOT NULL,
         AUTHOR TEXT NOT NULL,
-        TITLE TEXT,
+        TITLE TEXT NOT NULL,
         DATE DATE NOT NULL,
-        DESCRIPTION TEXT,
-        TAGS TEXT,
-        CATEGORY TEXT,
-        SPECIES TEXT,
-        GENDER TEXT,
-        RATING TEXT,
-        FILELINK TEXT,
-        FILEEXT TEXT,
-        FILESAVED INT,
+        DESCRIPTION TEXT NOT NULL,
+        TAGS TEXT NOT NULL,
+        CATEGORY TEXT NOT NULL,
+        SPECIES TEXT NOT NULL,
+        GENDER TEXT NOT NULL,
+        RATING TEXT NOT NULL,
+        FILELINK TEXT NOT NULL,
+        FILEEXT TEXT NOT NULL,
+        FILESAVED INT NOT NULL,
         PRIMARY KEY (ID ASC));"""
     )
 
