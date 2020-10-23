@@ -24,11 +24,15 @@ from .__version__ import __version__
 
 def get_version(db: Connection) -> str:
     try:
-        # Database version 3.0.0 and above
-        return db.execute(f"SELECT SVALUE FROM SETTINGS WHERE SETTING = 'VERSION'").fetchone()[0]
+        # Database version 4.0.0 and above
+        return db.execute(f"SELECT VALUE FROM SETTINGS WHERE SETTING = 'VERSION'").fetchone()[0]
     except OperationalError:
-        # Database version 2.7.0
-        return db.execute(f"SELECT VALUE FROM SETTINGS WHERE FIELD = 'VERSION'").fetchone()[0]
+        try:
+            # Database version 3.0.0 to 3.8.x
+            return db.execute(f"SELECT SVALUE FROM SETTINGS WHERE SETTING = 'VERSION'").fetchone()[0]
+        except OperationalError:
+            # Database version 2.7.0
+            return db.execute(f"SELECT VALUE FROM SETTINGS WHERE FIELD = 'VERSION'").fetchone()[0]
 
 
 def compare_versions(a: str, b: str) -> int:
@@ -527,9 +531,8 @@ def update_3_to_3_1(db: Connection) -> Connection:
         )
         db.execute(
             """INSERT OR REPLACE INTO db_new.SETTINGS
-            SELECT * FROM SETTINGS"""
+            SELECT * FROM SETTINGS WHERE SETTING != "VERSION";"""
         )
-        db.execute("UPDATE db_new.SETTINGS SET SVALUE = '3.1.0' WHERE SETTING = 'VERSION'")
 
         db.commit()
         db_new.commit()
@@ -583,9 +586,8 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
         )
         db.execute(
             """INSERT OR REPLACE INTO db_new.SETTINGS
-            SELECT * FROM SETTINGS"""
+            SELECT * FROM SETTINGS WHERE SETTING != "VERSION";"""
         )
-        db.execute("UPDATE db_new.SETTINGS SET SVALUE = '3.2.0' WHERE SETTING = 'VERSION'")
         db.execute("UPDATE db_new.USERS SET JOURNALS = ''")
 
         db.commit()
@@ -639,9 +641,8 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
         )
         db.execute(
             f"""INSERT OR REPLACE INTO db_new.SETTINGS
-            SELECT * FROM SETTINGS WHERE SETTING != "LASTSTART" AND SETTING != "LASTUPDATE";"""
+            SELECT * FROM SETTINGS WHERE SETTING != "LASTSTART" AND SETTING != "LASTUPDATE" AND SETTING != "VERSION";"""
         )
-        db.execute("UPDATE db_new.SETTINGS SET SVALUE = '3.3.0' WHERE SETTING = 'VERSION'")
 
         # Add update to history
         last_update: str = db.execute("SELECT SVALUE FROM SETTINGS WHERE SETTING = 'LASTUPDATE'").fetchone()
@@ -700,9 +701,8 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
         )
         db.execute(
             f"""INSERT OR REPLACE INTO db_new.SETTINGS
-            SELECT * FROM SETTINGS WHERE SETTING != "HISTORY";"""
+            SELECT * FROM SETTINGS WHERE SETTING != "HISTORY" AND SETTING != "VERSION";"""
         )
-        db.execute("UPDATE db_new.SETTINGS SET SVALUE = '3.5.0' WHERE SETTING = 'VERSION'")
 
         # Update history
         history: List[List[str]] = json_loads(
