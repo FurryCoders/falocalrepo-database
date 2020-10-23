@@ -1,8 +1,6 @@
 from sqlite3 import Connection
-from sqlite3 import Cursor
 from typing import Dict
 from typing import List
-from typing import Union
 
 """
 Entries guide - JOURNALS
