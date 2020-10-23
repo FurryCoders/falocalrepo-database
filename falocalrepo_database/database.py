@@ -290,7 +290,11 @@ class FADatabase:
         self.database_path: str = database_path
         self.connection: Connection = connect(database_path)
 
-        self.make()
+        make_journals_table(self.connection)
+        make_settings_table(self.connection)
+        make_submissions_table(self.connection)
+        make_users_table(self.connection)
+
         self.connection = update_database(self.connection)
 
         self.journals: FADatabaseJournals = FADatabaseJournals(self, journals_table)
@@ -339,14 +343,6 @@ class FADatabase:
 
     def close(self):
         self.connection.close()
-
-    def make(self):
-        make_journals_table(self.connection)
-        make_settings_table(self.connection)
-        make_submissions_table(self.connection)
-        make_users_table(self.connection)
-
-        self.commit()
 
     def update(self, db_b: 'FADatabase'):
         merge_database(self.connection, dirname(self.database_path), db_b.connection, dirname(db_b.database_path))
