@@ -313,7 +313,7 @@ class FADatabase:
     def tables(self) -> List[str]:
         return [
             name
-            for name in self.connection.execute(
+            for [name] in self.connection.execute(
                 """SELECT name FROM sqlite_master 
                 WHERE type = 'table' 
                 AND name NOT LIKE 'sqlite_%'
