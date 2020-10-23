@@ -8,8 +8,8 @@ settings_table: str = "SETTINGS"
 def make_settings_table(db: Connection):
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS {settings_table}
-        (SETTING TEXT UNIQUE,
-        SVALUE TEXT,
+        (SETTING TEXT UNIQUE NOT NULL CHECK (length(SETTING) > 0),
+        SVALUE TEXT NOT NULL CHECK (length(SVALUE) > 0),
         PRIMARY KEY (SETTING ASC));"""
     )
 
