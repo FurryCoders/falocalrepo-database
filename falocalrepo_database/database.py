@@ -135,7 +135,7 @@ class FADatabaseTable:
         )
 
     def delete(self, key: Key):
-        self.__delitem__(key)
+        del self[key]
 
 
 class FADatabaseJournals(FADatabaseTable):
