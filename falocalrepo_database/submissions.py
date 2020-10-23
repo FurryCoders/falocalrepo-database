@@ -36,10 +36,10 @@ submissions_indexes: Dict[str, int] = {f: i for i, f in enumerate(submissions_fi
 def make_submissions_table(db: Connection):
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS {submissions_table}
-        (ID INT UNIQUE NOT NULL,
-        AUTHOR TEXT NOT NULL,
+        (ID INT UNIQUE NOT NULL CHECK (ID > 0),
+        AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
         TITLE TEXT NOT NULL,
-        DATE DATE NOT NULL,
+        DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%d',DATE)),
         DESCRIPTION TEXT NOT NULL,
         TAGS TEXT NOT NULL,
         CATEGORY TEXT NOT NULL,
@@ -48,7 +48,7 @@ def make_submissions_table(db: Connection):
         RATING TEXT NOT NULL,
         FILELINK TEXT NOT NULL,
         FILEEXT TEXT NOT NULL,
-        FILESAVED INT NOT NULL,
+        FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1)),
         PRIMARY KEY (ID ASC));"""
     )
 

@@ -28,7 +28,7 @@ users_indexes: Dict[str, int] = {f: i for i, f in enumerate(users_fields)}
 def make_users_table(db: Connection):
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS {users_table}
-        (USERNAME TEXT UNIQUE NOT NULL,
+        (USERNAME TEXT UNIQUE NOT NULL CHECK (length(USERNAME) > 0),
         FOLDERS TEXT NOT NULL,
         GALLERY TEXT NOT NULL,
         SCRAPS TEXT NOT NULL,
