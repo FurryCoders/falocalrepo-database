@@ -110,3 +110,7 @@ Changes in database functions, simply update `VERSION`.
 ### 3.8.x &rarr; 4.0.0
 
 Rename `UDATE` column in `SUBMISSIONS` and `JOURNALS` to `DATE`. Add automatic insertion checks to all tables.
+
+### 4.0.0 - 4.1.x &rarr; 4.2.0
+
+Changes in database functions, simply update `VERSION`.
