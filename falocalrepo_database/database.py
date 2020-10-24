@@ -281,8 +281,6 @@ class FADatabase:
         make_submissions_table(self.connection)
         make_users_table(self.connection)
 
-        self.connection = update_database(self.connection)
-
         self.journals: FADatabaseJournals = FADatabaseJournals(self, journals_table)
         self.settings: FADatabaseSettings = FADatabaseSettings(self, settings_table)
         self.submissions: FADatabaseSubmissions = FADatabaseSubmissions(self, submissions_table)
@@ -328,6 +326,15 @@ class FADatabase:
     @property
     def is_clean(self) -> bool:
         return self.total_changes == self.committed_changes
+
+    def upgrade(self):
+        self.connection = update_database(self.connection)
+
+        self.journals: FADatabaseJournals = FADatabaseJournals(self, journals_table)
+        self.settings: FADatabaseSettings = FADatabaseSettings(self, settings_table)
+        self.submissions: FADatabaseSubmissions = FADatabaseSubmissions(self, submissions_table)
+        self.users: FADatabaseUsers = FADatabaseUsers(self, users_table)
+        self.committed_changes: int = self.total_changes
 
     def commit(self):
         self.connection.commit()
