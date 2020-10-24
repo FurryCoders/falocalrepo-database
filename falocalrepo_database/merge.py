@@ -12,11 +12,11 @@ from typing import Tuple
 
 from .__version__ import __version__
 from .database import Connection
-from .journals import journals_table
-from .settings import settings_table
-from .submissions import submissions_table
+from .tables import journals_table
+from .tables import settings_table
+from .tables import submissions_table
+from .tables import users_table
 from .update import get_version
-from .users import users_table
 
 
 def merge_folders(src: str, dest: str):
