@@ -348,13 +348,7 @@ class FADatabase:
 
     def reset(self):
         self.close()
-        self.connection: Connection = connect(self.database_path)
-
-        self.journals: FADatabaseJournals = FADatabaseJournals(self, journals_table)
-        self.settings: FADatabaseSettings = FADatabaseSettings(self, settings_table)
-        self.submissions: FADatabaseSubmissions = FADatabaseSubmissions(self, submissions_table)
-        self.users: FADatabaseUsers = FADatabaseUsers(self, users_table)
-        self.committed_changes: int = self.total_changes
+        self.__init__(self.database_path)
 
     def close(self):
         self.connection.close()
