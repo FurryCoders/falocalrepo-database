@@ -59,17 +59,16 @@ def clean_username(username: str) -> str:
 class FADatabaseTable:
     def __init__(self, database: 'FADatabase', table: str):
         self.database: 'FADatabase' = database
-        self.connection: Connection = database.connection
         self.table: str = table
         self.columns_info: List[Tuple[str, str]] = [
             (info[1], info[-1])
-            for info in self.connection.execute(f"pragma table_info({self.table})")
+            for info in self.database.connection.execute(f"pragma table_info({self.table})")
         ]
         self.columns: List[str] = [name for name, _ in self.columns_info]
         self.column_id: str = [name for name, pk in self.columns_info if pk == 1][0]
 
     def __len__(self) -> int:
-        return self.connection.execute(f"SELECT COUNT({self.column_id}) FROM {self.table}").fetchone()[0]
+        return self.database.connection.execute(f"SELECT COUNT({self.column_id}) FROM {self.table}").fetchone()[0]
 
     def __getitem__(self, key: Union[Key, Dict[str, Union[List[Value], Value]]]) -> Optional[Dict[str, Value]]:
         key = key if isinstance(key, dict) else {self.column_id: key}
@@ -81,7 +80,7 @@ class FADatabaseTable:
         self.insert(values)
 
     def __delitem__(self, key: Key):
-        self.connection.execute(f"""DELETE FROM {self.table} WHERE {self.column_id} = ?""", (key,))
+        self.database.connection.execute(f"""DELETE FROM {self.table} WHERE {self.column_id} = ?""", (key,))
 
     def __contains__(self, key: Union[Key, Dict[str, Value]]) -> bool:
         return self[key] is not None
@@ -108,7 +107,7 @@ class FADatabaseTable:
             for k, vs in query.items()
         ]))
         order_str = ",".join(order)
-        return self.connection.execute(
+        return self.database.connection.execute(
             f"""SELECT {','.join(columns)} FROM {self.table}
             {f' WHERE {where_str} ' if where_str else ''}
             {f' ORDER BY {order_str} ' if order_str else ''}
@@ -122,7 +121,7 @@ class FADatabaseTable:
         return ({k.upper(): v for k, v in zip(columns, entry)} for entry in cursor)
 
     def insert(self, values: Dict[str, Value], replace: bool = True):
-        self.connection.execute(
+        self.database.connection.execute(
             f"""INSERT OR {'REPLACE' if replace else 'IGNORE'} INTO {self.table}
             ({','.join(col for col in values)}) VALUES ({','.join('?' for _ in values)})""",
             [v for v in values.values()]
@@ -131,7 +130,7 @@ class FADatabaseTable:
     def update(self, values: Dict[str, Value], key: Optional[Key] = None):
         update_columns: List[str] = [f"{col} = ?" for col in values]
         where_str: str = f"WHERE {self.column_id} = ?" if key else ""
-        self.connection.execute(
+        self.database.connection.execute(
             f"UPDATE {self.table} SET {','.join(update_columns)} {where_str}",
             [v for v in values.values()] + ([key] if key is not None else [])
         )
