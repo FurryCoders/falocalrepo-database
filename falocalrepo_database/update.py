@@ -24,15 +24,11 @@ from .__version__ import __version__
 
 def get_version(db: Connection) -> str:
     try:
-        # Database version 4.0.0 and above
-        return db.execute(f"SELECT VALUE FROM SETTINGS WHERE SETTING = 'VERSION'").fetchone()[0]
+        # Database version 3.0.0 and above
+        return db.execute(f"SELECT SVALUE FROM SETTINGS WHERE SETTING = 'VERSION'").fetchone()[0]
     except OperationalError:
-        try:
-            # Database version 3.0.0 to 3.8.x
-            return db.execute(f"SELECT SVALUE FROM SETTINGS WHERE SETTING = 'VERSION'").fetchone()[0]
-        except OperationalError:
-            # Database version 2.7.0
-            return db.execute(f"SELECT VALUE FROM SETTINGS WHERE FIELD = 'VERSION'").fetchone()[0]
+        # Database version 2.7.0
+        return db.execute(f"SELECT VALUE FROM SETTINGS WHERE FIELD = 'VERSION'").fetchone()[0]
 
 
 def compare_versions(a: str, b: str) -> int:
