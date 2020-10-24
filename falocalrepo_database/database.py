@@ -17,16 +17,16 @@ from typing import Union
 
 from filetype import guess_extension as filetype_guess_extension
 
-from .journals import journals_table
-from .journals import make_journals_table
 from .merge import merge_database
-from .settings import make_settings_table
-from .settings import settings_table
-from .submissions import make_submissions_table
-from .submissions import submissions_table
+from .tables import journals_table
+from .tables import make_journals_table
+from .tables import make_settings_table
+from .tables import make_submissions_table
+from .tables import make_users_table
+from .tables import settings_table
+from .tables import submissions_table
+from .tables import users_table
 from .update import update_database
-from .users import make_users_table
-from .users import users_table
 
 Key = Union[str, int, float]
 Value = Union[str, int, float, None]
