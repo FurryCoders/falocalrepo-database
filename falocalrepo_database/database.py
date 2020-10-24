@@ -279,10 +279,14 @@ class FADatabase:
         self.database_path: str = database_path
         self.connection: Connection = connect(database_path)
 
-        make_journals_table(self.connection)
-        make_settings_table(self.connection)
-        make_submissions_table(self.connection)
-        make_users_table(self.connection)
+        if journals_table not in (tables := self.tables):
+            make_journals_table(self.connection)
+        if settings_table not in tables:
+            make_settings_table(self.connection)
+        if submissions_table not in tables:
+            make_submissions_table(self.connection)
+        if users_table not in tables:
+            make_users_table(self.connection)
 
         self.journals: FADatabaseJournals = FADatabaseJournals(self, journals_table)
         self.settings: FADatabaseSettings = FADatabaseSettings(self, settings_table)
