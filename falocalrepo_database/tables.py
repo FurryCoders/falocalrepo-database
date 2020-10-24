@@ -47,38 +47,41 @@ users_table: str = "USERS"
 
 
 def make_journals_table(db: Connection):
-    db.execute(
-        f"""CREATE TABLE IF NOT EXISTS {journals_table}
+    db.executescript(
+        f"""BEGIN TRANSACTION;
+        CREATE TABLE IF NOT EXISTS {journals_table}
         (ID INT UNIQUE NOT NULL CHECK (ID > 0),
         AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
         TITLE TEXT NOT NULL,
         DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%d',DATE)),
         CONTENT TEXT NOT NULL,
-        PRIMARY KEY (ID ASC));"""
+        PRIMARY KEY (ID ASC));
+        COMMIT;""",
     )
 
 
 def make_settings_table(db: Connection):
-    db.execute(
-        f"""CREATE TABLE IF NOT EXISTS {settings_table}
+    db.executescript(
+        f"""BEGIN TRANSACTION;
+        CREATE TABLE IF NOT EXISTS {settings_table}
         (SETTING TEXT UNIQUE NOT NULL CHECK (length(SETTING) > 0),
         SVALUE TEXT NOT NULL CHECK (length(SVALUE) > 0),
-        PRIMARY KEY (SETTING ASC));"""
+        PRIMARY KEY (SETTING ASC));
+        INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('USRN', '0');
+        INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('SUBN', '0');
+        INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('JRNN', '0');
+        INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('HISTORY', '[]');
+        INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('COOKIES', '{'{}'}');
+        INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('FILESFOLDER', 'FA.files');
+        INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('VERSION', '{__version__}');
+        COMMIT;"""
     )
-
-    # Add settings
-    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["USRN", "0"])
-    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["SUBN", "0"])
-    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["JRNN", "0"])
-    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["HISTORY", "[]"])
-    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["COOKIES", "{}"])
-    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["FILESFOLDER", "FA.files"])
-    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["VERSION", __version__])
 
 
 def make_submissions_table(db: Connection):
-    db.execute(
-        f"""CREATE TABLE IF NOT EXISTS {submissions_table}
+    db.executescript(
+        f"""BEGIN TRANSACTION;
+        CREATE TABLE IF NOT EXISTS {submissions_table}
         (ID INT UNIQUE NOT NULL CHECK (ID > 0),
         AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
         TITLE TEXT NOT NULL,
@@ -92,13 +95,15 @@ def make_submissions_table(db: Connection):
         FILELINK TEXT NOT NULL,
         FILEEXT TEXT NOT NULL,
         FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1)),
-        PRIMARY KEY (ID ASC));"""
+        PRIMARY KEY (ID ASC));
+        COMMIT;"""
     )
 
 
 def make_users_table(db: Connection):
-    db.execute(
-        f"""CREATE TABLE IF NOT EXISTS {users_table}
+    db.executescript(
+        f"""BEGIN TRANSACTION;
+        CREATE TABLE IF NOT EXISTS {users_table}
         (USERNAME TEXT UNIQUE NOT NULL CHECK (length(USERNAME) > 0),
         FOLDERS TEXT NOT NULL,
         GALLERY TEXT NOT NULL,
@@ -106,5 +111,6 @@ def make_users_table(db: Connection):
         FAVORITES TEXT NOT NULL,
         MENTIONS TEXT NOT NULL,
         JOURNALS TEXT NOT NULL,
-        PRIMARY KEY (USERNAME ASC));"""
+        PRIMARY KEY (USERNAME ASC));
+        COMMIT;"""
     )
