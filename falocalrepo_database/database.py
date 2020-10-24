@@ -90,6 +90,9 @@ class FADatabaseTable:
         for entry in self.select():
             yield {k.upper(): v for k, v in zip(self.columns, entry)}
 
+    def reload(self):
+        self.__init__(self.database, self.table)
+
     def select(self, query: Dict[str, Union[List[Value], Value]] = None, columns: List[str] = None,
                query_and: bool = True, query_and_values: bool = False, like: bool = False,
                order: List[str] = None, limit: int = 0, offset: int = 0
