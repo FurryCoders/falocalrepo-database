@@ -333,10 +333,10 @@ class FADatabase:
     def upgrade(self):
         self.connection = update_database(self.connection)
 
-        self.journals: FADatabaseJournals = FADatabaseJournals(self, journals_table)
-        self.settings: FADatabaseSettings = FADatabaseSettings(self, settings_table)
-        self.submissions: FADatabaseSubmissions = FADatabaseSubmissions(self, submissions_table)
-        self.users: FADatabaseUsers = FADatabaseUsers(self, users_table)
+        self.journals.reload()
+        self.settings.reload()
+        self.submissions.reload()
+        self.users.reload()
         self.committed_changes: int = self.total_changes
 
     def commit(self):
