@@ -340,6 +340,9 @@ class FADatabase:
         self.connection.commit()
         self.committed_changes = self.total_changes
 
+    def rollback(self):
+        self.connection.execute("ROLLBACK")
+
     def reset(self):
         self.close()
         self.connection: Connection = connect(self.database_path)
