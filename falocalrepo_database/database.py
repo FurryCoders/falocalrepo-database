@@ -60,12 +60,9 @@ class FADatabaseTable:
     def __init__(self, database: 'FADatabase', table: str):
         self.database: 'FADatabase' = database
         self.table: str = table
-        self.columns_info: List[Tuple[str, str]] = [
-            (info[1], info[-1])
-            for info in self.database.connection.execute(f"pragma table_info({self.table})")
-        ]
-        self.columns: List[str] = [name for name, _ in self.columns_info]
-        self.column_id: str = [name for name, pk in self.columns_info if pk == 1][0]
+        self.columns_info_: List[Tuple[str, str]] = []
+        self.columns_: List[str] = []
+        self.column_id_: str = ""
 
     def __len__(self) -> int:
         return self.database.connection.execute(f"SELECT COUNT({self.column_id}) FROM {self.table}").fetchone()[0]
@@ -88,7 +85,28 @@ class FADatabaseTable:
     def __iter__(self) -> Generator[Dict[str, Value], None, None]:
         entry: Tuple[Value]
         for entry in self.select():
-            yield {k.upper(): v for k, v in zip(self.columns, entry)}
+            yield {k.upper(): v for k, v in zip(self.columns_, entry)}
+
+    @property
+    def columns_info(self) -> List[Tuple[str, str]]:
+        self.columns_info_ = [
+            info[1:]
+            for info in self.database.connection.execute(f"pragma table_info({self.table})")
+        ] if not self.columns_info_ else self.columns_info_
+        return self.columns_info_
+
+    @property
+    def columns(self) -> List[str]:
+        self.columns_ = [name for name, *_ in self.columns_info] if not self.columns_ else self.columns_
+        return self.columns_
+
+    @property
+    def column_id(self) -> str:
+        self.column_id_ = [
+            name
+            for name, *_, pk in self.columns_info if pk == 1
+        ][0]
+        return self.column_id_
 
     def reload(self):
         self.__init__(self.database, self.table)
@@ -192,7 +210,7 @@ class FADatabaseUsers(FADatabaseTable):
     def new_user(self, user: str):
         user = clean_username(user)
         if user not in self:
-            self[user] = {f: "" for f in self.columns}
+            self[user] = {f: "" for f in self.columns_}
 
     def enable_user(self, user: str):
         user = clean_username(user)
