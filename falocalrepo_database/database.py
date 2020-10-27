@@ -65,7 +65,7 @@ class FADatabaseTable:
         self.column_id_: str = ""
 
     def __len__(self) -> int:
-        return self.database.connection.execute(f"SELECT COUNT({self.column_id}) FROM {self.table}").fetchone()[0]
+        return self.database.connection.execute(f"SELECT COUNT(*) FROM {self.table}").fetchone()[0]
 
     def __getitem__(self, key: Union[Key, Dict[str, Union[List[Value], Value]]]) -> Optional[Dict[str, Value]]:
         key = key if isinstance(key, dict) else {self.column_id: key}
