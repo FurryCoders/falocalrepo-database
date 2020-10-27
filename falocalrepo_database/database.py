@@ -37,8 +37,8 @@ def guess_extension(file: bytes, default: str = "") -> str:
         return ""
     elif (file_type := filetype_guess_extension(file)) is None:
         return default
-    elif (file_ext := str(file_type)) == "zip":
-        return default if default != "zip" else file_ext
+    elif (file_ext := str(file_type)) in (exts := ("zip", "octet-stream")):
+        return default if default not in exts else file_ext
     else:
         return file_ext
 
