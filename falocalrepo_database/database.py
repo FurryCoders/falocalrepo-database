@@ -109,6 +109,10 @@ class FADatabaseTable:
     def reload(self):
         self.__init__(self.database, self.table)
 
+    def cursor_to_dict(self, cursor: Cursor, columns: List[str] = None) -> Generator[Dict[str, Value], None, None]:
+        columns = self.columns if columns is None else columns
+        return ({k.upper(): v for k, v in zip(columns, entry)} for entry in cursor)
+
     def select(self, query: Dict[str, Union[List[Value], Value]] = None, columns: List[str] = None,
                query_and: bool = True, query_and_values: bool = False, like: bool = False,
                order: List[str] = None, limit: int = 0, offset: int = 0
@@ -134,10 +138,6 @@ class FADatabaseTable:
             {f' OFFSET {offset} ' if limit > 0 and offset > 0 else ''}""",
             [v for values in query.values() for v in values]
         )
-
-    def cursor_to_dict(self, cursor: Cursor, columns: List[str] = None) -> Generator[Dict[str, Value], None, None]:
-        columns = self.columns if columns is None else columns
-        return ({k.upper(): v for k, v in zip(columns, entry)} for entry in cursor)
 
     def insert(self, values: Dict[str, Value], replace: bool = True):
         self.database.connection.execute(
