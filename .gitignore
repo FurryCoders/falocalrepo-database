@@ -110,7 +110,7 @@ ENV/
 
 
 # FA files/folders
-FA.*
+*FA.*
 
 # system files
 .DS_Store
