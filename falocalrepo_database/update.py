@@ -371,6 +371,63 @@ def make_database_4(db: Connection):
     db.commit()
 
 
+def make_database_4_3(db: Connection):
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS USERS
+        (USERNAME TEXT UNIQUE NOT NULL CHECK (length(USERNAME) > 0),
+        FOLDERS TEXT NOT NULL,
+        GALLERY TEXT NOT NULL,
+        SCRAPS TEXT NOT NULL,
+        FAVORITES TEXT NOT NULL,
+        MENTIONS TEXT NOT NULL,
+        JOURNALS TEXT NOT NULL,
+        PRIMARY KEY (USERNAME ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS SUBMISSIONS
+        (ID INT UNIQUE NOT NULL CHECK (ID > 0),
+        AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
+        TITLE TEXT NOT NULL,
+        DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%d',DATE)),
+        DESCRIPTION TEXT NOT NULL,
+        TAGS TEXT NOT NULL,
+        CATEGORY TEXT NOT NULL,
+        SPECIES TEXT NOT NULL,
+        GENDER TEXT NOT NULL,
+        RATING TEXT NOT NULL,
+        FILELINK TEXT NOT NULL,
+        FILEEXT TEXT NOT NULL,
+        FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1)),
+        PRIMARY KEY (ID ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS JOURNALS
+        (ID INT UNIQUE NOT NULL CHECK (ID > 0),
+        AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
+        TITLE TEXT NOT NULL,
+        DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%d',DATE)),
+        CONTENT TEXT NOT NULL,
+        PRIMARY KEY (ID ASC));"""
+    )
+
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS SETTINGS
+        (SETTING TEXT UNIQUE NOT NULL CHECK (length(SETTING) > 0),
+        SVALUE TEXT NOT NULL CHECK (length(SVALUE) > 0),
+        PRIMARY KEY (SETTING ASC));"""
+    )
+
+    # Add settings
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["HISTORY", "[]"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["COOKIES", "{}"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["FILESFOLDER", "FA.files"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["VERSION", "4.3.0"])
+
+    db.commit()
+
+
 def update_2_7_to_3(db: Connection) -> Connection:
     from .database import tiered_path
 
@@ -781,6 +838,58 @@ def update_3_8_to_4(db: Connection) -> Connection:
     return connect_database(db_path)
 
 
+def update_4_2_to_4_3(db: Connection) -> Connection:
+    print("Updating 4.2.0 to 4.3.0")
+    db_new: Optional[Connection] = None
+
+    db_path: str = dp if (dp := database_path(db)) else "FA.db"
+    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+
+    try:
+        db_new = connect_database(db_new_path)
+        make_database_4_3(db_new)
+
+        # Transfer common submissions and users data
+        print("Transfer common submissions and users data")
+        db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
+        db.execute(
+            f"""INSERT OR IGNORE INTO db_new.USERS
+            SELECT * FROM USERS"""
+        )
+        db.execute(
+            f"""INSERT OR IGNORE INTO db_new.SUBMISSIONS
+            SELECT * FROM SUBMISSIONS"""
+        )
+        db.execute(
+            f"""INSERT OR IGNORE INTO db_new.JOURNALS
+            SELECT * FROM JOURNALS"""
+        )
+        db.execute(
+            f"""INSERT OR REPLACE INTO db_new.SETTINGS
+            SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION', 'JRNN', 'SUBN', 'USRN');"""
+        )
+
+        # Close databases and replace old database
+        print("Close databases and replace old database")
+        db.commit()
+        db.close()
+        db_new.commit()
+        db_new.close()
+        move(db_path, path_join(dirname(db_path), "v4_2" + basename(db_path)))
+        move(db_new_path, db_path)
+    except (BaseException, Exception) as err:
+        print("Database update interrupted!")
+        if db is not None:
+            db.commit()
+            db.close()
+        if db_new is not None:
+            db_new.commit()
+            db_new.close()
+        raise err
+
+    return connect_database(db_path)
+
+
 def update_version(db: Connection, version: str, target_version: str) -> Connection:
     print(f"Updating {version} to {target_version}")
     db.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", [target_version])
@@ -813,6 +922,8 @@ def update_database(db: Connection) -> Connection:
         return update_database(update_version(db, db_version, "3.8.0"))  # 3.5.0-3.7.x to 3.8.0
     elif v >= 0 and (v := compare_versions(db_version, "4.0.0")) < 0:
         return update_database(update_3_8_to_4(db))  # 3.8.x to 4.0.0
+    elif v >= 0 and (v := compare_versions(db_version, "4.3.0")) < 0:
+        return update_database(update_4_2_to_4_3(db))  # 4.0.0-4.2.x to 4.3.0
     elif v >= 0 and compare_versions(db_version, __version__) < 0:
         return update_version(db, db_version, __version__)  # Update to latest patch
 
