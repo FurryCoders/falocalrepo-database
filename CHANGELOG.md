@@ -1,5 +1,9 @@
 # Changelog
 
+### 4.4.0
+
+Added `FAVORITE` column to `SUBMISSIONS` to hold users that have "faved" the submission 
+
 ### 4.3.0
 
 Removed `JRNN`, `SUBN`, and `USRN` counters from `SETTINGS`.
