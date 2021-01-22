@@ -196,6 +196,7 @@ class FADatabaseSubmissions(FADatabaseTable):
 
     def save_submission(self, submission: Dict[str, Union[int, str]], file: Optional[bytes] = None):
         submission = {k.upper(): v for k, v in submission.items()}
+        submission = {k: submission.get(k, "") for k in {*submission.keys(), *self.columns}}
 
         submission["FILEEXT"] = name.split(".")[-1] if "." in (name := submission["FILELINK"].split("/")[-1]) else ""
         submission["FILESAVED"] = bool(file)
