@@ -203,6 +203,15 @@ class FADatabaseSubmissions(FADatabaseTable):
 
         self[submission["ID"]] = submission
 
+    def set_favorite(self, submission_id: int, user: str):
+        user = clean_username(user)
+        assert len(user) > 0, "User cannot be empty"
+        fs_old: List[str] = self[submission_id]["FAVORITE"].split(",")
+        if user in fs_old:
+            return
+        fs_new: str = ",".join({user, *filter(bool, fs_old)})
+        self.update({"FAVORITE": fs_new}, submission_id)
+
 
 class FADatabaseUsers(FADatabaseTable):
     def new_user(self, user: str):
