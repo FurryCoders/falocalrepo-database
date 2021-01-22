@@ -17,6 +17,7 @@ from typing import Union
 
 from filetype import guess_extension as filetype_guess_extension
 
+from .__version__ import __version__
 from .database_update import update_database
 from .merge import merge_database
 from .tables import journals_table
@@ -359,7 +360,7 @@ class FADatabase:
         return self.total_changes == self.committed_changes
 
     def upgrade(self):
-        self.connection = update_database(self.connection)
+        self.connection = update_database(self.connection, __version__)
 
         self.journals.reload()
         self.settings.reload()
