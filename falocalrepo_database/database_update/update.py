@@ -19,7 +19,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-from .__version__ import __version__
+from falocalrepo_database.__version__ import __version__
 
 
 def get_version(db: Connection) -> str:
