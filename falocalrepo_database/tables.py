@@ -92,6 +92,7 @@ def make_submissions_table(db: Connection):
         FILELINK TEXT NOT NULL,
         FILEEXT TEXT NOT NULL,
         FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1)),
+        FAVORITE TEXT NOT NULL,
         PRIMARY KEY (ID ASC));"""
     )
 
