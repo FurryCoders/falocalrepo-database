@@ -140,6 +140,19 @@ class FADatabaseTable:
             [v for values in query.values() for v in values]
         )
 
+    def select_sql(self, where: str = "", values: List[Value] = None, columns: List[str] = None,
+                   order: List[str] = None, limit: int = 0, offset: int = 0) -> Cursor:
+        columns = self.columns if columns is None else columns
+        order = [] if order is None else order
+        return self.database.connection.execute(
+            f"""SELECT {','.join(columns)} FROM {self.table}
+            {f' WHERE {where} ' if where else ''}
+            {f' ORDER BY {",".join(order)}' if order else ''}
+            {f' LIMIT {limit}' if limit > 0 else ''}
+            {f' OFFSET {offset}' if limit > 0 and offset > 0 else ''}""",
+            [] if values is None else values
+        )
+
     def insert(self, values: Dict[str, Value], replace: bool = True):
         self.database.connection.execute(
             f"""INSERT OR {'REPLACE' if replace else 'IGNORE'} INTO {self.table}
