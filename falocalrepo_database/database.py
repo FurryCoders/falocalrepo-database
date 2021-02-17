@@ -107,7 +107,7 @@ class FADatabaseTable:
         ][0]
         return self.column_id_
 
-    def add_to_list(self, key: Key, values: Dict[str, List[Value]]):
+    def add_to_list(self, key: Key, values: Dict[str, List[Value]]) -> bool:
         item: Optional[dict] = self[key]
         if not item:
             return False
@@ -116,7 +116,7 @@ class FADatabaseTable:
         self.update(item_new, key) if item_new != item else None
         return item_new != item
 
-    def remove_from_list(self, key: Key, values: Dict[str, List[Value]]):
+    def remove_from_list(self, key: Key, values: Dict[str, List[Value]]) -> bool:
         item: Optional[dict] = self[key]
         if not item:
             return False
