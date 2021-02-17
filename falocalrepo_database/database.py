@@ -174,7 +174,7 @@ class FADatabaseTable:
     def insert(self, values: Dict[str, Value], replace: bool = True):
         self.database.connection.execute(
             f"""INSERT OR {'REPLACE' if replace else 'IGNORE'} INTO {self.table}
-            ({','.join(col for col in values)}) VALUES ({','.join('?' for _ in values)})""",
+            ({','.join(values.keys())}) VALUES ({','.join(['?'] * len(values))})""",
             [v for v in values.values()]
         )
 
