@@ -236,9 +236,10 @@ class FADatabaseSubmissions(FADatabaseTable):
 
         self[submission["ID"]] = submission
 
-    def set_folder(self, submission_id: int, folder: str):
+    def set_folder(self, submission_id: int, folder: str) -> bool:
         folder_old: str = self[submission_id]["FOLDER"]
         self.update({"FOLDER": folder}, submission_id) if folder_old != (folder := folder.lower().strip()) else None
+        return folder_old != folder
 
     def add_favorite(self, submission_id: int, user: str) -> bool:
         user = clean_username(user)
