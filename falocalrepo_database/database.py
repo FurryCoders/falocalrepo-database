@@ -236,14 +236,29 @@ class FADatabaseSubmissions(FADatabaseTable):
 
         self[submission["ID"]] = submission
 
-    def set_favorite(self, submission_id: int, user: str):
+    def set_folder(self, submission_id: int, folder: str):
+        folder_old: str = self[submission_id]["FOLDER"]
+        self.update({"FOLDER": folder}, submission_id) if folder_old != (folder := folder.lower().strip()) else None
+
+    def add_favorite(self, submission_id: int, user: str) -> bool:
         user = clean_username(user)
         assert len(user) > 0, "User cannot be empty"
-        fs_old: List[str] = self[submission_id]["FAVORITE"].split(",")
-        if user in fs_old:
-            return
-        fs_new: str = ",".join({user, *filter(bool, fs_old)})
-        self.update({"FAVORITE": fs_new}, submission_id)
+        return self.add_to_list(submission_id, {"FAVORITE": [user]})
+
+    def remove_favorite(self, submission_id: int, user: str) -> bool:
+        user = clean_username(user)
+        assert len(user) > 0, "User cannot be empty"
+        return self.remove_from_list(submission_id, {"FAVORITE": [user]})
+
+    def add_mention(self, submission_id: int, user: str) -> bool:
+        user = clean_username(user)
+        assert len(user) > 0, "User cannot be empty"
+        return self.add_to_list(submission_id, {"MENTIONS": [user]})
+
+    def remove_mention(self, submission_id: int, user: str) -> bool:
+        user = clean_username(user)
+        assert len(user) > 0, "User cannot be empty"
+        return self.remove_from_list(submission_id, {"MENTIONS": [user]})
 
 
 class FADatabaseUsers(FADatabaseTable):
