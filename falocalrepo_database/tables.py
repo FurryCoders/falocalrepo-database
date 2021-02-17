@@ -94,6 +94,7 @@ def make_submissions_table(db: Connection):
         FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1)),
         FAVORITE TEXT NOT NULL,
         MENTIONS TEXT NOT NULL,
+        FOLDER TEXT NOT NULL CHECK (FOLDER = 'gallery' OR FOLDER = 'scraps'),
         PRIMARY KEY (ID ASC));"""
     )
 
@@ -105,11 +106,6 @@ def make_users_table(db: Connection):
         f"""CREATE TABLE IF NOT EXISTS {users_table}
         (USERNAME TEXT UNIQUE NOT NULL CHECK (length(USERNAME) > 0),
         FOLDERS TEXT NOT NULL,
-        GALLERY TEXT NOT NULL,
-        SCRAPS TEXT NOT NULL,
-        FAVORITES TEXT NOT NULL,
-        MENTIONS TEXT NOT NULL,
-        JOURNALS TEXT NOT NULL,
         PRIMARY KEY (USERNAME ASC));"""
     )
 
