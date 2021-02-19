@@ -1,4 +1,5 @@
 from sqlite3 import Connection
+from json import dumps
 
 from .__version__ import __version__
 
@@ -68,10 +69,10 @@ def make_settings_table(db: Connection):
         PRIMARY KEY (SETTING ASC));"""
     )
 
-    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('HISTORY', '[]');")
-    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('COOKIES', '{}');")
-    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('FILESFOLDER', 'FA.files');")
-    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('VERSION', '{0}');".format(__version__))
+    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('HISTORY', ?);", (dumps([]),))
+    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('COOKIES', ?);", (dumps({}),))
+    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('FILESFOLDER', ?);", ("FA.files",))
+    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('VERSION', ?);", (__version__,))
 
     db.commit()
 
