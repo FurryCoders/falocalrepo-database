@@ -105,7 +105,6 @@ def make_users_table(db: Connection):
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS {users_table}
         (USERNAME TEXT UNIQUE NOT NULL CHECK (length(USERNAME) > 0),
-        NAME TEXT UNIQUE NOT NULL CHECK (length(USERNAME) > 0),
         FOLDERS TEXT NOT NULL,
         PRIMARY KEY (USERNAME ASC));"""
     )
