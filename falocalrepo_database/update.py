@@ -1026,27 +1026,27 @@ def update_database(db: Connection, version: str) -> Connection:
         raise DatabaseError("Database version is newer than program.")
     elif (v := compare_versions(db_version, "2.7.0")) < 0:
         raise DatabaseError("Update does not support versions lower than 2.11.2")
-    elif v >= 0 and (v := compare_versions(db_version, "3.0.0")) < 0:
+    elif v >= 0 > (v := compare_versions(db_version, "3.0.0")):
         return update_database(update_2_7_to_3(db), version)  # 2.7.x to 3.0.0
-    elif v >= 0 and (v := compare_versions(db_version, "3.1.0")) < 0:
+    elif v >= 0 > (v := compare_versions(db_version, "3.1.0")):
         return update_database(update_3_to_3_1(db), version)  # 3.0.x to 3.1.0
-    elif v >= 0 and (v := compare_versions(db_version, "3.2.0")) < 0:
+    elif v >= 0 > (v := compare_versions(db_version, "3.2.0")) < 0:
         return update_database(update_3_1_to_3_2(db), version)  # 3.1.x to 3.2.0
-    elif v >= 0 and (v := compare_versions(db_version, "3.3.0")) < 0:
+    elif v >= 0 > (v := compare_versions(db_version, "3.3.0")) < 0:
         return update_database(update_3_2_to_3_3(db), version)  # 3.2.x to 3.3.0
-    elif v >= 0 and (v := compare_versions(db_version, "3.4.0")) < 0:
+    elif v >= 0 > (v := compare_versions(db_version, "3.4.0")) < 0:
         return update_database(update_version(db, db_version, "3.4.0"), version)  # 3.3.x to 3.4.0
-    elif v >= 0 and (v := compare_versions(db_version, "3.5.0")) < 0:
+    elif v >= 0 > (v := compare_versions(db_version, "3.5.0")) < 0:
         return update_database(update_3_4_to_3_5(db), version)  # 3.4.x to 3.5.0
-    elif v >= 0 and (v := compare_versions(db_version, "3.8.0")) < 0:
+    elif v >= 0 > (v := compare_versions(db_version, "3.8.0")) < 0:
         return update_database(update_version(db, db_version, "3.8.0"), version)  # 3.5.0-3.7.x to 3.8.0
-    elif v >= 0 and (v := compare_versions(db_version, "4.0.0")) < 0:
+    elif v >= 0 > (v := compare_versions(db_version, "4.0.0")) < 0:
         return update_database(update_3_8_to_4(db), version)  # 3.8.x to 4.0.0
-    elif v >= 0 and (v := compare_versions(db_version, "4.3.0")) < 0:
+    elif v >= 0 > (v := compare_versions(db_version, "4.3.0")) < 0:
         return update_database(update_4_2_to_4_3(db), version)  # 4.0.0-4.2.x to 4.3.0
-    elif v >= 0 and (v := compare_versions(db_version, "4.4.0")) < 0:
+    elif v >= 0 > (v := compare_versions(db_version, "4.4.0")) < 0:
         return update_database(update_4_3_to_4_4(db), version)  # 4.3.x to 4.4.0
-    elif v >= 0 and compare_versions(db_version, version) < 0:
+    elif v >= 0 > compare_versions(db_version, version) < 0:
         return update_version(db, db_version, version)  # Update to latest patch
 
     return db
