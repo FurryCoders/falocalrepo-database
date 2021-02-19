@@ -285,67 +285,13 @@ class FADatabaseUsers(FADatabaseTable):
             for f in filter(bool, user_entry["FOLDERS"].split(","))
         ])}, user)
 
-    def add_item(self, user: str, folder: str, item: str) -> bool:
-        folder = folder.upper()
-        user = clean_username(user)
-        if (user_entry := self[user]) is None:
-            return False
-
-        if item not in (items := user_entry[folder].split(",")):
-            user_entry[folder] = ",".join(sorted([item, *filter(bool, items)]))
-            self.update(user_entry, user)
-            return True
-
-        return False
-
-    def remove_item(self, user: str, folder: str, item: str) -> bool:
-        folder = folder.upper()
-        user = clean_username(user)
-        if (user_entry := self[user]) is None:
-            return False
-
-        if item in (items := user_entry[folder].split(",")):
-            user_entry[folder] = ",".join(filter(lambda i: i != item, items))
-            self.update(user_entry, user)
-            return True
-
-        return False
-
     def add_user_folder(self, user: str, folder: str):
         folder = folder.lower()
-        self.add_item(clean_username(user), "FOLDERS", folder)
+        self.add_to_list(clean_username(user), {"FOLDERS": [folder]})
 
     def remove_user_folder(self, user: str, folder: str):
         folder = folder.lower()
-        self.remove_item(clean_username(user), "FOLDERS", folder)
-
-    def find_from_submission(self, submission_id: int) -> Cursor:
-        return self.select(
-            query=dict(zip(("GALLERY", "SCRAPS", "FAVORITES", "MENTIONS"), [f"%{submission_id:010}%"] * 4)),
-            query_and=False,
-            like=True
-        )
-
-    def find_from_journal(self, journal_id: int) -> Cursor:
-        return self.select({"JOURNALS": f"%{journal_id:010}%"}, like=True)
-
-    def add_submission(self, user: str, folder: str, submission_id: int):
-        folder = folder.upper()
-        self.add_item(clean_username(user), folder, f"{submission_id:010}")
-
-    def add_journal(self, user: str, journal_id: int):
-        self.add_item(clean_username(user), "JOURNALS", f"{journal_id:010}")
-
-    def remove_submission(self, user: str, submission_id: int):
-        user = clean_username(user)
-        submission_id_fmt: str = f"{submission_id:010}"
-        self.remove_item(user, "GALLERY", submission_id_fmt)
-        self.remove_item(user, "SCRAPS", submission_id_fmt)
-        self.remove_item(user, "FAVORITES", submission_id_fmt)
-        self.remove_item(user, "MENTIONS", submission_id_fmt)
-
-    def remove_journal(self, user: str, journal_id: int):
-        self.remove_item(clean_username(user), "JOURNALS", f"{journal_id:010}")
+        self.remove_from_list(clean_username(user), {"FOLDERS": [folder]})
 
 
 class FADatabase:
