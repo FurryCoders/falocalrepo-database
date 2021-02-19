@@ -1189,7 +1189,7 @@ def update_database(db: Connection, version: str) -> Connection:
     elif v >= 0 > (v := compare_versions(db_version, "4.4.0")) < 0:
         return update_database(update_4_3_to_4_4(db), version)  # 4.3.x to 4.4.0
     elif v >= 0 > (v := compare_versions(db_version, "4.5.0")) < 0:
-        return update_database(update_4_3_to_4_4(db), version)  # 4.5.x to 4.5.0
+        return update_database(update_4_4_to_4_5(db), version)  # 4.4.x to 4.5.0
     elif v >= 0 > compare_versions(db_version, version) < 0:
         return update_version(db, db_version, version)  # Update to latest patch
 
