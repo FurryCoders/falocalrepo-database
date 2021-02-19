@@ -21,7 +21,7 @@ The settings table contains settings for the program and statistics of the datab
 * `HISTORY` list of executed commands in the format `[[<time1>, "<command1>"], ..., [<timeN>, "<commandN>"]]` (UNIX time in seconds)
 * `COOKIES` cookies for the scraper, stored in JSON format
 * `FILESFOLDER` location of downloaded submission files
-* `VERSION` database version, this can differ from the program version
+* `VERSION` database version
 
 ### Users
 
