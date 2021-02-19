@@ -1,5 +1,9 @@
 # Changelog
 
+### 4.5.0
+
+Added `MENTIONS` and `FOLDER` to `SUBMISSIONS`. Removed `GALLERY`, `SCRAPS`, `FAVORITES`, `MENTIONS` from `USERS` table.
+
 ### 4.4.0
 
 Added `FAVORITE` column to `SUBMISSIONS` to hold users that have "faved" the submission 
