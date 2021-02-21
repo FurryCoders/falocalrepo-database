@@ -1143,7 +1143,7 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
         if double_folders:
             print("Double folders:", len(double_folders))
             print("                FA_v4_5_double_folders.txt")
-            missing_mentions.sort(key=lambda m_: (m_[0], m_[1]))
+            double_folders.sort(key=lambda m_: (m_[0], m_[1]))
             with open(path_join(dirname(db_path), "FA_v4_5_double_folders.txt"), "w") as f:
                 f.write("\n".join(f"{u} {s}" for u, s in double_folders))
 
