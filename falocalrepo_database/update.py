@@ -1120,7 +1120,6 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
         db_new.commit()
 
         for user, g, s, m in users_old:
-            user = clean_username(user)
             g_set: Set[int] = set(map(int, filter(bool, g.split(","))))
             s_set: Set[int] = set(map(int, filter(bool, s.split(","))))
             double_folders.extend((user, i) for i in g_set.intersection(s_set))
