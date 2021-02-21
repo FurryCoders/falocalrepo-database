@@ -1106,6 +1106,7 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
 
         users_old: List[Tuple[str, ...]] = db.execute("select USERNAME,GALLERY,SCRAPS,MENTIONS from USERS").fetchall()
         missing_mentions: List[Tuple[str, int]] = []
+        double_folders: List[Tuple[str, int]] = []
 
         db.close()
         db = None
@@ -1118,9 +1119,13 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
         db_new.commit()
 
         for user, g, s, m in users_old:
-            for i in map(int, filter(bool, g.split(","))):
+            gs = list(map(int, filter(bool, g.split(","))))
+            for i in gs:
                 db_new.execute("update SUBMISSIONS set FOLDER = ? where ID = ?", ("gallery", i))
             for i in map(int, filter(bool, s.split(","))):
+                if i in gs:
+                    print(f"Double folder: {user} {i}")
+                    double_folders.append((user, i))
                 db_new.execute("update SUBMISSIONS set FOLDER = ? where ID = ?", ("scraps", i))
             db_new.commit()
             for i in map(int, filter(bool, m.split(","))):
@@ -1134,6 +1139,11 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
             missing_mentions.sort(key=lambda m_: (m_[0], m_[1]))
             with open(path_join(dirname(db_path), "FA_v4_5_missing_mentions.txt"), "w") as f:
                 f.write("\n".join(f"{u} {s}" for u, s in missing_mentions))
+        if double_folders:
+            print(f"Missing submissions: {len(double_folders)}")
+            missing_mentions.sort(key=lambda m_: (m_[0], m_[1]))
+            with open(path_join(dirname(db_path), "FA_v4_5_double_folders.txt"), "w") as f:
+                f.write("\n".join(f"{u} {s}" for u, s in double_folders))
 
         db_new.commit()
         db_new.close()
