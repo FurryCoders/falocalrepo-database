@@ -20,6 +20,7 @@ from sqlite3 import connect as connect_database
 from typing import Collection
 from typing import List
 from typing import Optional
+from typing import Set
 from typing import Tuple
 from typing import Union
 
@@ -1119,28 +1120,29 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
         db_new.commit()
 
         for user, g, s, m in users_old:
-            gs = list(map(int, filter(bool, g.split(","))))
-            for i in gs:
+            user = clean_username(user)
+            g_set: Set[int] = set(map(int, filter(bool, g.split(","))))
+            s_set: Set[int] = set(map(int, filter(bool, s.split(","))))
+            double_folders.extend((user, i) for i in g_set.intersection(s_set))
+            for i in g_set:
                 db_new.execute("update SUBMISSIONS set FOLDER = ? where ID = ?", ("gallery", i))
-            for i in map(int, filter(bool, s.split(","))):
-                if i in gs:
-                    print(f"Double folder: {user} {i}")
-                    double_folders.append((user, i))
+            for i in s_set:
                 db_new.execute("update SUBMISSIONS set FOLDER = ? where ID = ?", ("scraps", i))
             db_new.commit()
             for i in map(int, filter(bool, m.split(","))):
                 ms: Optional[tuple] = db_new.execute("select MENTIONS from SUBMISSIONS where ID = ?", (i,)).fetchone()
-                if not ms or user.lower() not in map(str.lower, ms[0].split(",")):
-                    print(f"Missing mention: {user} {i}")
+                if not ms or user not in ms[0].split(","):
                     missing_mentions.append((user, i))
 
         if missing_mentions:
-            print(f"Missing submissions: {len(missing_mentions)}")
+            print("Missing submissions:", len(missing_mentions))
+            print("                     FA_v4_5_missing_mentions.txt")
             missing_mentions.sort(key=lambda m_: (m_[0], m_[1]))
             with open(path_join(dirname(db_path), "FA_v4_5_missing_mentions.txt"), "w") as f:
                 f.write("\n".join(f"{u} {s}" for u, s in missing_mentions))
         if double_folders:
-            print(f"Missing submissions: {len(double_folders)}")
+            print("Double folders:", len(double_folders))
+            print("                FA_v4_5_double_folders.txt")
             missing_mentions.sort(key=lambda m_: (m_[0], m_[1]))
             with open(path_join(dirname(db_path), "FA_v4_5_double_folders.txt"), "w") as f:
                 f.write("\n".join(f"{u} {s}" for u, s in double_folders))
