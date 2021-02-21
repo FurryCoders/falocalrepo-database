@@ -112,7 +112,8 @@ class FADatabaseTable:
         if not item:
             return False
         item = {k: item[k] for k in values.keys()}
-        item_new: Dict[str, str] = {k: ",".join(sorted(set(item[k].split(",") + v))) for k, v in values.items()}
+        item_new: Dict[str, str] = {k: ",".join(sorted(filter(bool, set(item[k].split(",") + v))))
+                                    for k, v in values.items()}
         self.update(item_new, key) if item_new != item else None
         return item_new != item
 
@@ -121,7 +122,8 @@ class FADatabaseTable:
         if not item:
             return False
         item = {k: item[k] for k in values.keys()}
-        item_new: Dict[str, str] = {k: ",".join(sorted(set(item[k].split(",")) - set(v))) for k, v in values.items()}
+        item_new: Dict[str, str] = {k: ",".join(sorted(filter(bool, set(item[k].split(",")) - set(v))))
+                                    for k, v in values.items()}
         self.update(item_new, key) if item_new != item else None
         return item_new != item
 
