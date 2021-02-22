@@ -69,10 +69,10 @@ def make_settings_table(db: Connection):
         PRIMARY KEY (SETTING ASC));"""
     )
 
-    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('HISTORY', ?);", (dumps([]),))
-    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('COOKIES', ?);", (dumps({}),))
-    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('FILESFOLDER', ?);", ("FA.files",))
-    db.execute("INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES ('VERSION', ?);", (__version__,))
+    db.execute(f"INSERT OR IGNORE INTO {settings_table} VALUES ('HISTORY', ?);", (dumps([]),))
+    db.execute(f"INSERT OR IGNORE INTO {settings_table} VALUES ('COOKIES', ?);", (dumps({}),))
+    db.execute(f"INSERT OR IGNORE INTO {settings_table} VALUES ('FILESFOLDER', ?);", ("FA.files",))
+    db.execute(f"INSERT OR IGNORE INTO {settings_table} VALUES ('VERSION', ?);", (__version__,))
 
     db.commit()
 
