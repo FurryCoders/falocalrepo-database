@@ -197,6 +197,16 @@ class FADatabaseJournals(FADatabaseTable):
         journal = {k.upper(): ",".join(map(str, v)) if isinstance(v, list) else v for k, v in journal.items()}
         self[journal["ID"]] = journal
 
+    def add_mention(self, journal_id: int, user: str) -> bool:
+        user = clean_username(user)
+        assert len(user) > 0, "User cannot be empty"
+        return self.add_to_list(journal_id, {"MENTIONS": [user]})
+
+    def remove_mention(self, journal_id: int, user: str) -> bool:
+        user = clean_username(user)
+        assert len(user) > 0, "User cannot be empty"
+        return self.remove_from_list(journal_id, {"MENTIONS": [user]})
+
 
 class FADatabaseSettings(FADatabaseTable):
     def __getitem__(self, setting: str) -> Optional[str]:
