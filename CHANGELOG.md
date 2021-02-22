@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.6.0
+
+Add `USERUPDATE` column to `SUBMISSIONS` and `JOURNALS` to track if an item was added as a user update or not
+
 ## 4.5.0
 
 Added `MENTIONS` and `FOLDER` to `SUBMISSIONS`. Removed `GALLERY`, `SCRAPS`, `FAVORITES`, `MENTIONS` from `USERS` table.
