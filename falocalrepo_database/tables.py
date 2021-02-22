@@ -55,6 +55,7 @@ def make_journals_table(db: Connection):
         TITLE TEXT NOT NULL,
         DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%d',DATE)),
         CONTENT TEXT NOT NULL,
+        USERUPDATE INT NOT NULL CHECK (USERUPDATE in (0, 1)),
         PRIMARY KEY (ID ASC));""",
     )
 
