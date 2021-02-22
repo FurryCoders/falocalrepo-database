@@ -1269,7 +1269,7 @@ def update_4_5_to_4_6(db: Connection) -> Connection:
             db_new.close()
         raise err
 
-    return connect_database(db_new_path)
+    return connect_database(db_path)
 
 
 def update_version(db: Connection, version: str, target_version: str) -> Connection:
