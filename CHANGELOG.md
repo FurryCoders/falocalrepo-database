@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.7.0
+
+Added `MENTIONS` to `JOURNALS` 
+
 ## 4.6.0
 
 Add `USERUPDATE` column to `SUBMISSIONS` and `JOURNALS` to track if an item was added as a user update or not
