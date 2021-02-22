@@ -96,6 +96,7 @@ def make_submissions_table(db: Connection):
         FAVORITE TEXT NOT NULL,
         MENTIONS TEXT NOT NULL,
         FOLDER TEXT NOT NULL CHECK (FOLDER = 'gallery' OR FOLDER = 'scraps'),
+        USERUPDATE INT NOT NULL CHECK (USERUPDATE in (0, 1)),
         PRIMARY KEY (ID ASC));"""
     )
 
