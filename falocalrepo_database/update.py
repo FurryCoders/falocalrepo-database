@@ -1238,7 +1238,11 @@ def update_4_5_to_4_6(db: Connection) -> Connection:
         )
         db.execute(
             """INSERT OR IGNORE INTO db_new.SUBMISSIONS
-            SELECT *, lower(replace(AUTHOR, '_', '')) IN (SELECT USERNAME FROM USERS) FROM SUBMISSIONS"""
+            SELECT *,
+                (SELECT 1 FROM USERS
+                WHERE USERNAME = lower(replace(AUTHOR, '_', '')) AND instr(FOLDERS, FOLDER)
+                ) IS NOT NULL
+            FROM SUBMISSIONS"""
         )
         db.execute(
             """INSERT OR IGNORE INTO db_new.JOURNALS
