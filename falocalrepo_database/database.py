@@ -293,8 +293,7 @@ class FADatabaseUsers(FADatabaseTable):
             return
 
         self.update({"FOLDERS": ",".join([
-            f"!{f}" if f.lower() in ("gallery", "scraps", "favorites") else f
-            for f in filter(bool, user_entry["FOLDERS"].split(","))
+            f"!{f.strip('!')}" for f in filter(bool, user_entry["FOLDERS"].split(","))
         ])}, user)
 
     def add_user_folder(self, user: str, folder: str):
