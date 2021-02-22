@@ -52,6 +52,7 @@ The submissions table contains the metadata of the submissions downloaded by the
 * `FAVORITE` a comma-separate list of users that have "faved" the submission
 * `MENTIONS` a comma-separate list of users that are mentioned in the submission description as links
 * `FOLDER` the folder of the submission (`gallery` or `scraps`)
+* `USERUPDATE` whether the submission was added as a user update or favorite/single entry
 
 ### Journals
 
@@ -62,6 +63,7 @@ The journals table contains the metadata of the journals downloaded by the progr
 * `TITLE`
 * `DATE` upload date in the format YYYY-MM-DD
 * `CONTENT` content in html format
+* `USERUPDATE` whether the journal was added as a user update or favorite/single entry
 
 ## Submission Files
 
