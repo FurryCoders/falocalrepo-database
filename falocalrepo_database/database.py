@@ -302,7 +302,11 @@ class FADatabaseUsers(FADatabaseTable):
 
     def add_user_folder(self, user: str, folder: str):
         folder = folder.lower()
-        self.add_to_list(clean_username(user), {"FOLDERS": [folder]})
+        if not (user_entry := self[(user := clean_username(user))]):
+            return
+        elif folder in map(lambda f: f.lstrip("!"), user_entry["FOLDERS"].split(",")):
+            self.remove_from_list(user, {"FOLDERS": [f"!{folder}"]})
+        self.add_to_list(user, {"FOLDERS": [folder]})
 
     def remove_user_folder(self, user: str, folder: str):
         folder = folder.lower()
