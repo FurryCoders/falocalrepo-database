@@ -285,16 +285,20 @@ class FADatabaseUsers(FADatabaseTable):
         if (user_entry := self[user]) is None:
             return
 
-        self.update({"FOLDERS": ",".join([f.strip("!") for f in filter(bool, user_entry["FOLDERS"].split(","))])}, user)
+        self.update({"FOLDERS": ",".join({
+            f.strip("!")
+            for f in filter(bool, user_entry["FOLDERS"].split(","))
+        })}, user)
 
     def disable_user(self, user: str):
         user = clean_username(user)
         if (user_entry := self[user]) is None:
             return
 
-        self.update({"FOLDERS": ",".join([
-            f"!{f.strip('!')}" for f in filter(bool, user_entry["FOLDERS"].split(","))
-        ])}, user)
+        self.update({"FOLDERS": ",".join({
+            f"!{f.strip('!')}"
+            for f in filter(bool, user_entry["FOLDERS"].split(","))
+        })}, user)
 
     def add_user_folder(self, user: str, folder: str):
         folder = folder.lower()
