@@ -108,8 +108,9 @@ class FADatabaseTable:
         return self.column_id_
 
     def add_to_list(self, key: Key, values: Dict[str, List[Value]]) -> bool:
-        item: Optional[dict] = self[key]
-        if not item:
+        if not (values := {k: v for k, v in values.items() if v}):
+            return False
+        elif not (item := self[key]):
             return False
         item = {k: item[k] for k in values.keys()}
         item_new: Dict[str, str] = {k: ",".join(sorted(filter(bool, set(item[k].split(",") + v))))
@@ -118,8 +119,9 @@ class FADatabaseTable:
         return item_new != item
 
     def remove_from_list(self, key: Key, values: Dict[str, List[Value]]) -> bool:
-        item: Optional[dict] = self[key]
-        if not item:
+        if not (values := {k: v for k, v in values.items() if v}):
+            return False
+        elif not (item := self[key]):
             return False
         item = {k: item[k] for k in values.keys()}
         item_new: Dict[str, str] = {k: ",".join(sorted(filter(bool, set(item[k].split(",")) - set(v))))
