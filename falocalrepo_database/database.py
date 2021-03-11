@@ -136,6 +136,11 @@ class FADatabaseTable:
         columns = self.columns if columns is None else columns
         return ({k.upper(): v for k, v in zip(columns, entry)} for entry in cursor)
 
+    def format_dict(self, obj: Dict[str, Union[List[Value], Value]]) -> Dict[str, Value]:
+        obj = {k.upper().replace("_", ""): ",".join(map(str, v)) if isinstance(v, list) else v for k, v in obj.items()}
+        obj = {k: obj.get(k, "") for k in self.columns}
+        return obj
+
     def select(self, query: Dict[str, Union[List[Value], Value]] = None, columns: List[str] = None,
                query_and: bool = True, query_and_values: bool = False, like: bool = False,
                order: List[str] = None, limit: int = 0, offset: int = 0
@@ -196,7 +201,7 @@ class FADatabaseTable:
 
 class FADatabaseJournals(FADatabaseTable):
     def save_journal(self, journal: Dict[str, Union[int, str, list]]):
-        journal = {k.upper(): ",".join(map(str, v)) if isinstance(v, list) else v for k, v in journal.items()}
+        journal = self.format_dict(journal)
         self[journal["ID"]] = journal
 
     def add_mention(self, journal_id: int, user: str) -> bool:
@@ -239,8 +244,7 @@ class FADatabaseSubmissions(FADatabaseTable):
         return ext
 
     def save_submission(self, submission: Dict[str, Union[int, str, list]], file: Optional[bytes] = None):
-        submission = {k.upper(): ",".join(map(str, v)) if isinstance(v, list) else v for k, v in submission.items()}
-        submission = {k: submission.get(k, "") for k in {*submission.keys(), *self.columns}}
+        submission = self.format_dict(submission)
 
         submission["FILEEXT"] = name.split(".")[-1] if "." in (name := submission["FILELINK"].split("/")[-1]) else ""
         submission["FILEEXT"] = self.save_submission_file(submission["ID"], file, submission["FILEEXT"])
