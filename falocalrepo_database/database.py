@@ -230,13 +230,13 @@ class FADatabaseSettings(FADatabaseTable):
 
 
 class FADatabaseSubmissions(FADatabaseTable):
-    def save_submission_file(self, submission_id: int, file: bytes, ext: str, guess_ext: bool = True) -> str:
+    def save_submission_file(self, submission_id: int, file: bytes, name: str, ext: str, guess_ext: bool = True) -> str:
         if not file:
             return ""
 
         ext = guess_extension(file, ext) if guess_ext else ext
         path = join(dirname(self.database.database_path), self.database.settings["FILESFOLDER"],
-                    tiered_path(submission_id), "submission" + f".{ext}" * bool(ext))
+                    tiered_path(submission_id), name + f".{ext}" * bool(ext))
 
         makedirs(dirname(path), exist_ok=True)
         open(path, "wb").write(file)
@@ -247,7 +247,7 @@ class FADatabaseSubmissions(FADatabaseTable):
         submission = self.format_dict(submission)
 
         submission["FILEEXT"] = name.split(".")[-1] if "." in (name := submission["FILELINK"].split("/")[-1]) else ""
-        submission["FILEEXT"] = self.save_submission_file(submission["ID"], file, submission["FILEEXT"])
+        submission["FILEEXT"] = self.save_submission_file(submission["ID"], file, "submission", submission["FILEEXT"])
         submission["FILESAVED"] = bool(file)
 
         self[submission["ID"]] = submission
