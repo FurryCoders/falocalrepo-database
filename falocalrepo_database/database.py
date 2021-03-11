@@ -38,10 +38,10 @@ def guess_extension(file: bytes, default: str = "") -> str:
         return ""
     elif (file_type := filetype_guess_extension(file)) is None:
         return default
-    elif (file_ext := str(file_type)) in (exts := ("zip", "octet-stream")):
-        return default if default not in exts else file_ext
+    elif (ext := str(file_type)) in (exts := ("zip", "octet-stream")):
+        return default if default not in exts else ext
     else:
-        return file_ext
+        return ext
 
 
 def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> str:
@@ -225,28 +225,26 @@ class FADatabaseSettings(FADatabaseTable):
 
 
 class FADatabaseSubmissions(FADatabaseTable):
-    def save_submission_file(self, submission_id: int, file_ext: str, file: bytes) -> str:
+    def save_submission_file(self, submission_id: int, file: bytes, ext: str) -> str:
         if not file:
             return ""
 
-        file_ext = guess_extension(file, file_ext)
-
+        ext = guess_extension(file, ext)
         path = join(dirname(self.database.database_path), self.database.settings["FILESFOLDER"],
-                    tiered_path(submission_id), f"submission.{file_ext}")
-        makedirs(dirname(path), exist_ok=True)
-        with open(path, "wb") as f:
-            f.write(file)
+                    tiered_path(submission_id), "submission" + f".{ext}" * bool(ext))
 
-        return file_ext
+        makedirs(dirname(path), exist_ok=True)
+        open(path, "wb").write(file)
+
+        return ext
 
     def save_submission(self, submission: Dict[str, Union[int, str, list]], file: Optional[bytes] = None):
         submission = {k.upper(): ",".join(map(str, v)) if isinstance(v, list) else v for k, v in submission.items()}
         submission = {k: submission.get(k, "") for k in {*submission.keys(), *self.columns}}
 
         submission["FILEEXT"] = name.split(".")[-1] if "." in (name := submission["FILELINK"].split("/")[-1]) else ""
+        submission["FILEEXT"] = self.save_submission_file(submission["ID"], file, submission["FILEEXT"])
         submission["FILESAVED"] = bool(file)
-
-        submission["FILEEXT"] = self.save_submission_file(submission["ID"], submission["FILEEXT"], file)
 
         self[submission["ID"]] = submission
 
