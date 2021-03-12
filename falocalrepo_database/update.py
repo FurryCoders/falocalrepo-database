@@ -1615,7 +1615,7 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
         db.close()
         db = None
 
-        for i, e, in db_new.execute("select ID, FILEEXT from SUBMISSIONS where TYPE = ''"):
+        for i, e, in db_new.execute("select ID, FILEEXT from SUBMISSIONS"):
             if (e := e.lower()) in ("jpg", "jpeg", "png", "gif", "tif", "tiff"):
                 pass
             elif e in ("mp3", "wav", "mid", "midi"):
