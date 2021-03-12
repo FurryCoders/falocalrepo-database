@@ -62,11 +62,11 @@ def clean_username(username: str) -> str:
 class FADatabaseTable:
     def __init__(self, database: 'FADatabase', table: str):
         self.database: 'FADatabase' = database
-        self.table: str = table
+        self.table: str = table.upper()
         self.columns_info_: List[Tuple[str, str]] = []
         self.columns_: List[str] = []
         self.column_id_: str = ""
-        self.list_columns: List[str] = list_columns.get(table, [])
+        self.list_columns: List[str] = list_columns.get(self.table, [])
 
     def __len__(self) -> int:
         return self.database.connection.execute(f"SELECT COUNT(*) FROM {self.table}").fetchone()[0]
