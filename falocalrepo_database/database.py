@@ -72,8 +72,7 @@ class FADatabaseTable:
 
     def __getitem__(self, key: Union[Key, Dict[str, Union[List[Value], Value]]]) -> Optional[Dict[str, Value]]:
         key = key if isinstance(key, dict) else {self.column_id: key}
-        entry: Optional[tuple] = self.select(key, self.columns).fetchone()
-        return {k.upper(): v for k, v in zip(self.columns, entry)} if entry is not None else None
+        return entry[0] if (entry := list(self.cursor_to_dict(self.select(key)))) else None
 
     def __setitem__(self, key: Key, values: Dict[str, Value]):
         values.update({self.column_id: key})
