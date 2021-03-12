@@ -101,6 +101,7 @@ def make_submissions_table(db: Connection):
         SPECIES TEXT NOT NULL,
         GENDER TEXT NOT NULL,
         RATING TEXT NOT NULL,
+        TYPE TEXT NOT NULL CHECK (TYPE IN ('image', 'music', 'text')),
         FILEURL TEXT NOT NULL,
         FILEEXT TEXT NOT NULL,
         FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1)),
