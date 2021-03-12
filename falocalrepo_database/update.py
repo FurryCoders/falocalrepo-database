@@ -1485,21 +1485,21 @@ def update_4_7_to_4_8(db: Connection) -> Connection:
         db = None
 
         for u, fs in db_new.execute("select USERNAME, FOLDERS from USERS"):
-            fs = "".join(sorted(f"|{f}|" for f in fs.split(",") if f))
+            fs = "".join(sorted((f"|{f}|" for f in fs.split(",") if f), key=str.lower))
             db_new.execute("update USERS set FOLDERS = ? where USERNAME = ?", (fs, u))
         db_new.commit()
         for i, ts, fs, ms in db_new.execute("select ID, TAGS, FAVORITE, MENTIONS from SUBMISSIONS"):
             if not ts and not fs and not ms:
                 continue
-            ts = "".join(sorted(f"|{t}|" for t in ts.split(",") if t))
-            fs = "".join(sorted(f"|{f}|" for f in fs.split(",") if f))
-            ms = "".join(sorted(f"|{m}|" for m in ms.split(",") if m))
+            ts = "".join(sorted((f"|{t}|" for t in ts.split(",") if t), key=str.lower))
+            fs = "".join(sorted((f"|{f}|" for f in fs.split(",") if f), key=str.lower))
+            ms = "".join(sorted((f"|{m}|" for m in ms.split(",") if m), key=str.lower))
             db_new.execute("update SUBMISSIONS set TAGS = ?, FAVORITE = ?, MENTIONS = ? where ID = ?", (ts, fs, ms, i))
         db_new.commit()
         for i, ms in db_new.execute("select ID, MENTIONS from JOURNALS where MENTIONS != ''"):
             if not ms:
                 continue
-            ms = "".join(sorted(f"|{m}|" for m in ms.split(",") if m))
+            ms = "".join(sorted((f"|{m}|" for m in ms.split(",") if m), key=str.lower))
             db_new.execute("update JOURNALS set MENTIONS = ? where ID = ?", (ms, i))
         db_new.commit()
 
