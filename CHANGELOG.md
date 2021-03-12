@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.8.0
+
+* Rename `FILELINK` to `FILEURL`
+* Use `|` to separate lists fields to better isolate all items
+
 ## 4.7.0
 
 * Added `MENTIONS` to `JOURNALS` 
