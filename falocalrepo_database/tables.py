@@ -1,5 +1,7 @@
 from sqlite3 import Connection
 from json import dumps
+from typing import Dict
+from typing import List
 
 from .__version__ import __version__
 
@@ -45,6 +47,13 @@ journals_table: str = "JOURNALS"
 settings_table: str = "SETTINGS"
 submissions_table: str = "SUBMISSIONS"
 users_table: str = "USERS"
+
+list_columns: Dict[str, List[str]] = {
+    journals_table: ["MENTIONS"],
+    settings_table: [],
+    submissions_table: ["TAGS", "FAVORITE", "MENTIONS"],
+    users_table: ["FOLDERS"],
+}
 
 
 def make_journals_table(db: Connection):
