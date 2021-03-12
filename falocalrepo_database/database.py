@@ -111,25 +111,23 @@ class FADatabaseTable:
         return self.column_id_
 
     def add_to_list(self, key: Key, values: Dict[str, List[Value]]) -> bool:
-        if not (values := {k: v for k, v in values.items() if v and k.upper() in self.list_columns}):
+        if not (values := {k.upper(): v for k, v in values.items() if v and k.upper() in self.list_columns}):
             return False
         elif not (item := self[key]):
             return False
         item = {k: item[k] for k in values.keys()}
-        item_new = {k: self.format_list(sorted(set(v + item[k]), key=str.lower))
-                    for k, v in values.items()}
-        self.update(item_new, key) if item_new != item else None
+        item_new = {k: sorted(set(item[k] + v), key=str.lower) for k, v in values.items()}
+        self.update({k: self.format_list(v) for k, v in item_new.items()}, key) if item_new != item else None
         return item_new != item
 
     def remove_from_list(self, key: Key, values: Dict[str, List[Value]]) -> bool:
-        if not (values := {k: v for k, v in values.items() if v and k.upper() in self.list_columns}):
+        if not (values := {k.upper(): v for k, v in values.items() if v and k.upper() in self.list_columns}):
             return False
         elif not (item := self[key]):
             return False
         item = {k: item[k] for k in values.keys()}
-        item_new = {k: self.format_list(sorted(set(v) - set(item[k]), key=str.lower))
-                    for k, v in values.items()}
-        self.update(item_new, key) if item_new != item else None
+        item_new = {k: sorted(set(item[k]) - set(v), key=str.lower) for k, v in values.items()}
+        self.update({k: self.format_list(v) for k, v in item_new.items()}, key) if item_new != item else None
         return item_new != item
 
     def reload(self):
