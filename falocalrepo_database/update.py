@@ -1587,7 +1587,7 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
 
     try:
         db_new = connect_database(db_new_path)
-        make_database_4_8(db_new)
+        make_database_4_9(db_new)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
