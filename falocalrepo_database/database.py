@@ -15,6 +15,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+from chardet import detect as detect_encoding
 from filetype import guess_extension as filetype_guess_extension
 
 from .__version__ import __version__
@@ -39,7 +40,7 @@ def guess_extension(file: bytes, default: str = "") -> str:
     if not file:
         return ""
     elif (file_type := filetype_guess_extension(file)) is None:
-        return default
+        return default if default else "txt" * (detect_encoding(file[:2048]).get("encoding", None) is not None)
     elif (ext := str(file_type)) in (exts := ("zip", "octet-stream")):
         return default if default not in exts else ext
     else:
