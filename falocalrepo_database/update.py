@@ -1534,7 +1534,7 @@ def update_4_7_to_4_8(db: Connection) -> Connection:
             SELECT * FROM JOURNALS"""
         )
         db.execute(
-            """INSERT OR IGNORE INTO db_new.SETTINGS
+            """INSERT OR REPLACE INTO db_new.SETTINGS
             SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION')"""
         )
 
@@ -1607,7 +1607,7 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
             SELECT * FROM JOURNALS"""
         )
         db.execute(
-            """INSERT OR IGNORE INTO db_new.SETTINGS
+            """INSERT OR REPLACE INTO db_new.SETTINGS
             SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION')"""
         )
 
