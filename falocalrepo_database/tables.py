@@ -1,5 +1,5 @@
-from sqlite3 import Connection
 from json import dumps
+from sqlite3 import Connection
 from typing import Dict
 from typing import List
 
