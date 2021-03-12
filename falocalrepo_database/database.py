@@ -294,12 +294,12 @@ class FADatabaseUsers(FADatabaseTable):
         if user not in self:
             self[user] = {f: "" for f in self.columns}
 
-    def enable_user(self, user: str):
+    def activate_user(self, user: str):
         if (user_entry := self[(user := clean_username(user))]) is None:
             return
         self.update({"FOLDERS": self.format_list([f.strip("!") for f in user_entry["FOLDERS"]])}, user)
 
-    def disable_user(self, user: str):
+    def deactivate_user(self, user: str):
         if (user_entry := self[(user := clean_username(user))]) is None:
             return
         self.update({"FOLDERS": self.format_list([f"!{f.strip('!')}" for f in user_entry["FOLDERS"]])}, user)
