@@ -138,11 +138,11 @@ class FADatabaseTable:
 
     @staticmethod
     def format_list(obj: List[Value]) -> str:
-        return ",".join(sorted(set(map(str, obj)), key=str.lower))
+        return "".join(f"|{e}|" for e in sorted(set(map(str, obj)), key=str.lower))
 
     @staticmethod
     def unpack_list(obj: str) -> List[str]:
-        return [e for e in obj.split(",") if e]
+        return [e for e in obj.split("|") if e]
 
     def format_dict(self, obj: Dict[str, Union[List[Value], Value]]) -> Dict[str, Value]:
         obj = {k.upper().replace("_", ""): self.format_list(v) if isinstance(v, list) else v for k, v in obj.items()}
