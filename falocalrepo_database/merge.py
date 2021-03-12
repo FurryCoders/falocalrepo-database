@@ -12,11 +12,11 @@ from typing import Tuple
 
 from .__version__ import __version__
 from .database import Connection
-from .update import get_version
 from .tables import journals_table
 from .tables import settings_table
 from .tables import submissions_table
 from .tables import users_table
+from .update import get_version
 
 
 def merge_folders(src: str, dest: str):
@@ -46,7 +46,8 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
     elif db_a_version != db_b_version:
         raise DatabaseError(f"Database versions do not match: DB A: {db_a_version}, DB B: {db_b_version}")
     elif db_a_version != __version__ or db_b_version != __version__:
-        raise DatabaseError(f"Database versions are not latest: {db_a_version} != {__version__}")
+        raise DatabaseError(
+            f"Database versions are not latest: DB A: {db_a_version}, DB B: {db_b_version}, LATEST: {__version__}")
 
     db_a_files_folder: str = join(db_a_folder, db_a.execute(
         f"SELECT SVALUE FROM {settings_table} WHERE SETTING = 'FILESFOLDER'").fetchone()[0])
@@ -70,17 +71,16 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
         )
 
     user_b: Tuple[str, ...]
-    for user_b in db_b.execute(f"SELECT * FROM {users_table}"):
-        user: str = user_b[0]
-        user_a: Optional[Tuple[str, ...]] = db_a.execute(
-            f"SELECT * FROM {users_table} WHERE USERNAME = ?", [user]).fetchone()
+    for user_b in db_b.execute(f"SELECT USERNAME, FOLDERS FROM {users_table}"):
         user_new: List[str] = list(user_b)
+        user_a: Optional[Tuple[str, str]] = db_a.execute(
+            f"SELECT USERNAME, FOLDERS FROM {users_table} WHERE USERNAME = ?", [user_b[0]]).fetchone()
 
         if user_a is not None:
-            for i, field_a in enumerate(user_a):
-                if (field_b := user_new[i]) != field_a:
-                    user_new[i] = ",".join(filter(bool, set(field_a.split(",") + field_b.split(","))))
+            fs_a: List[str] = user_a[1].split("|")
+            fs_b: List[str] = user_b[1].split("|")
+            user_new[1] = "".join(f"|{f}|" for f in sorted(set(filter(bool, fs_a + fs_b)), key=str.lower))
         db_a.execute(
-            f"INSERT OR REPLACE INTO {users_table} VALUES ({','.join(['?'] * len(user_new))})",
+            f"INSERT OR REPLACE INTO {users_table} (USERNAME,FOLDERS) VALUES ({','.join(['?'] * len(user_new))})",
             user_new
         )
