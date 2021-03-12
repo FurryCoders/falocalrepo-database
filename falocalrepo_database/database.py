@@ -294,39 +294,29 @@ class FADatabaseUsers(FADatabaseTable):
     def new_user(self, user: str):
         user = clean_username(user)
         if user not in self:
-            self[user] = {f: "" for f in self.columns_}
+            self[user] = {f: "" for f in self.columns}
 
     def enable_user(self, user: str):
-        user = clean_username(user)
-        if (user_entry := self[user]) is None:
+        if (user_entry := self[(user := clean_username(user))]) is None:
             return
-
-        self.update({"FOLDERS": ",".join({
-            f.strip("!")
-            for f in filter(bool, user_entry["FOLDERS"].split(","))
-        })}, user)
+        self.update({"FOLDERS": self.format_list([f.strip("!") for f in user_entry["FOLDERS"]])}, user)
 
     def disable_user(self, user: str):
-        user = clean_username(user)
-        if (user_entry := self[user]) is None:
+        if (user_entry := self[(user := clean_username(user))]) is None:
             return
-
-        self.update({"FOLDERS": ",".join({
-            f"!{f.strip('!')}"
-            for f in filter(bool, user_entry["FOLDERS"].split(","))
-        })}, user)
+        self.update({"FOLDERS": self.format_list([f"!{f.strip('!')}" for f in user_entry["FOLDERS"]])}, user)
 
     def add_user_folder(self, user: str, folder: str):
-        folder = folder.lower()
         if not (user_entry := self[(user := clean_username(user))]):
             return
-        elif folder in map(lambda f: f.lstrip("!"), user_entry["FOLDERS"].split(",")):
-            self.remove_from_list(user, {"FOLDERS": [f"!{folder}"]})
+        elif (folder := folder.lower()) in user_entry["FOLDERS"]:
+            return
+        elif f"!{folder}" in user_entry["FOLDERS"]:
+            self.remove_user_folder(user, f"!{folder}")
         self.add_to_list(user, {"FOLDERS": [folder]})
 
     def remove_user_folder(self, user: str, folder: str):
-        folder = folder.lower()
-        self.remove_from_list(clean_username(user), {"FOLDERS": [folder]})
+        self.remove_from_list(clean_username(user), {"FOLDERS": [folder.lower()]})
 
 
 class FADatabase:
