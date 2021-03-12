@@ -106,7 +106,7 @@ def make_submissions_table(db: Connection):
         FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1)),
         FAVORITE TEXT NOT NULL,
         MENTIONS TEXT NOT NULL,
-        FOLDER TEXT NOT NULL CHECK (FOLDER = 'gallery' OR FOLDER = 'scraps'),
+        FOLDER TEXT NOT NULL CHECK (FOLDER IN ('gallery', 'scraps')),
         USERUPDATE INT NOT NULL CHECK (USERUPDATE in (0, 1)),
         PRIMARY KEY (ID ASC));"""
     )
