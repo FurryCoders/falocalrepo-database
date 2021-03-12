@@ -48,7 +48,7 @@ The submissions table contains the metadata of the submissions downloaded by the
 * `SPECIES`
 * `GENDER`
 * `RATING`
-* `TYPE` image, text, or music
+* `TYPE` image, text, music, or flash
 * `FILEURL` the remote URL of the submission file
 * `FILEEXT` the extensions of the downloaded file. Can be empty if the file contained errors and could not be recognised upon download
 * `FILESAVED` 1 if the file was successfully downloaded and saved, 0 if there was an error during download
