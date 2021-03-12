@@ -256,7 +256,7 @@ class FADatabaseSubmissions(FADatabaseTable):
     def save_submission(self, submission: Dict[str, Union[int, str, list]], file: Optional[bytes] = None):
         submission = self.format_dict(submission)
 
-        submission["FILEEXT"] = name.split(".")[-1] if "." in (name := submission["FILELINK"].split("/")[-1]) else ""
+        submission["FILEEXT"] = name.split(".")[-1] if "." in (name := submission["FILEURL"].split("/")[-1]) else ""
         submission["FILEEXT"] = self.save_submission_file(submission["ID"], file, "submission", submission["FILEEXT"])
         submission["FILESAVED"] = bool(file)
 
