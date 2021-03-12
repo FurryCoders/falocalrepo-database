@@ -20,6 +20,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.8"
 filetype = "^1.0.7"
+chardet = "^4.0.0"
 
 [tool.poetry.dev-dependencies]
 
