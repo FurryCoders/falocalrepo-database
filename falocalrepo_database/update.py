@@ -737,7 +737,7 @@ def make_database_4_9(db: Connection):
         SPECIES TEXT NOT NULL,
         GENDER TEXT NOT NULL,
         RATING TEXT NOT NULL,
-        TYPE TEXT NOT NULL CHECK (TYPE IN ('image', 'music', 'text')),
+        TYPE TEXT NOT NULL CHECK (TYPE IN ('image', 'music', 'text', 'flash')),
         FILEURL TEXT NOT NULL,
         FILEEXT TEXT NOT NULL,
         FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1)),
@@ -1622,6 +1622,8 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
                 db_new.execute("update SUBMISSIONS set TYPE = ? where ID = ?", ("music", i))
             elif e in ("txt", "doc", "docx", "odt", "rtf", "pdf"):
                 db_new.execute("update SUBMISSIONS set TYPE = ? where ID = ?", ("text", i))
+            elif e == "swf":
+                db_new.execute("update SUBMISSIONS set TYPE = ? where ID = ?", ("flash", i))
             else:
                 print(f"Unknown extensions: {i} '{e}'")
 
