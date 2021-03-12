@@ -32,6 +32,7 @@ from .update import update_database
 
 Key = Union[str, int, float]
 Value = Union[str, int, float, None]
+Entry = Dict[str, Union[List[str], Value]]
 
 
 def guess_extension(file: bytes, default: str = "") -> str:
@@ -70,21 +71,22 @@ class FADatabaseTable:
     def __len__(self) -> int:
         return self.database.connection.execute(f"SELECT COUNT(*) FROM {self.table}").fetchone()[0]
 
-    def __getitem__(self, key: Union[Key, Dict[str, Union[List[Value], Value]]]) -> Optional[Dict[str, Value]]:
+    def __getitem__(self, key: Union[Key, Entry]) -> Optional[Entry]:
         key = key if isinstance(key, dict) else {self.column_id: key}
         return entry[0] if (entry := list(self.cursor_to_dict(self.select(key)))) else None
 
-    def __setitem__(self, key: Key, values: Dict[str, Value]):
-        values.update({self.column_id: key})
+    def __setitem__(self, key: Key, values: Entry):
+        values = {k.upper(): self.format_list(v) if isinstance(v, list) else v for k, v in values.items()}
+        values[self.column_id] = key
         self.insert(values)
 
     def __delitem__(self, key: Key):
         self.database.connection.execute(f"""DELETE FROM {self.table} WHERE {self.column_id} = ?""", (key,))
 
-    def __contains__(self, key: Union[Key, Dict[str, Value]]) -> bool:
+    def __contains__(self, key: Union[Key, Entry]) -> bool:
         return self[key] is not None
 
-    def __iter__(self) -> Generator[Dict[str, Value], None, None]:
+    def __iter__(self) -> Generator[Entry]:
         return self.cursor_to_dict(self.select())
 
     @property
@@ -109,31 +111,31 @@ class FADatabaseTable:
         return self.column_id_
 
     def add_to_list(self, key: Key, values: Dict[str, List[Value]]) -> bool:
-        if not (values := {k: v for k, v in values.items() if v}):
+        if not (values := {k: v for k, v in values.items() if v and k.upper() in self.list_columns}):
             return False
         elif not (item := self[key]):
             return False
         item = {k: item[k] for k in values.keys()}
-        item_new: Dict[str, str] = {k: ",".join(sorted(filter(bool, set(item[k].split(",") + v))))
-                                    for k, v in values.items()}
+        item_new = {k: self.format_list(sorted(set(v + item[k]), key=str.lower))
+                    for k, v in values.items()}
         self.update(item_new, key) if item_new != item else None
         return item_new != item
 
     def remove_from_list(self, key: Key, values: Dict[str, List[Value]]) -> bool:
-        if not (values := {k: v for k, v in values.items() if v}):
+        if not (values := {k: v for k, v in values.items() if v and k.upper() in self.list_columns}):
             return False
         elif not (item := self[key]):
             return False
         item = {k: item[k] for k in values.keys()}
-        item_new: Dict[str, str] = {k: ",".join(sorted(filter(bool, set(item[k].split(",")) - set(v))))
-                                    for k, v in values.items()}
+        item_new = {k: self.format_list(sorted(set(v) - set(item[k]), key=str.lower))
+                    for k, v in values.items()}
         self.update(item_new, key) if item_new != item else None
         return item_new != item
 
     def reload(self):
         self.__init__(self.database, self.table)
 
-    def cursor_to_dict(self, cursor: Cursor, columns: List[str] = None) -> Generator[Dict[str, Value], None, None]:
+    def cursor_to_dict(self, cursor: Cursor, columns: List[str] = None) -> Generator[Entry]:
         columns = map(str.upper, self.columns if columns is None else columns)
         return ({k: self.unpack_list(v) if k in self.list_columns else v for k, v in zip(columns, entry)}
                 for entry in cursor)
@@ -146,9 +148,9 @@ class FADatabaseTable:
     def unpack_list(obj: str) -> List[str]:
         return [e for e in obj.split("|") if e]
 
-    def format_dict(self, obj: Dict[str, Union[List[Value], Value]]) -> Dict[str, Value]:
-        obj = {k.upper().replace("_", ""): self.format_list(v) if isinstance(v, list) else v for k, v in obj.items()}
-        obj = {k: obj.get(k, "") for k in self.columns}
+    def format_dict(self, obj: Entry) -> Dict[str, Value]:
+        obj = {k.upper().replace("_", ""): v for k, v in obj.items()}
+        obj = {k: self.format_list(v) if isinstance(v := obj.get(k, ""), list) else v for k in self.columns}
         return obj
 
     def select(self, query: Dict[str, Union[List[Value], Value]] = None, columns: List[str] = None,
