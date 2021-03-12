@@ -84,7 +84,7 @@ class FADatabaseTable:
         return self[key] is not None
 
     def __iter__(self) -> Generator[Dict[str, Value], None, None]:
-        return ({k.upper(): v for k, v in zip(self.columns_, entry)} for entry in self.select())
+        return self.cursor_to_dict(self.select())
 
     @property
     def columns_info(self) -> List[Tuple[str, str]]:
