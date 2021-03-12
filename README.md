@@ -14,6 +14,8 @@ _Detailed usage and components documentation will be added in a future patch_
 
 To store its information, the database uses four tables: `SETTINGS`, `USERS`, `SUBMISSIONS` and `JOURNALS`.
 
+**Note**: bar-separated lists are formatted as `|item1||item2|` to properly isolate all elements
+
 ### Settings
 
 The settings table contains settings for the program and statistics of the database.
@@ -25,12 +27,12 @@ The settings table contains settings for the program and statistics of the datab
 
 ### Users
 
-The users table contains a list of all the users that have been download with the program, the folders that have been downloaded and the submissions found in each of those.
+The users table contains a list of all the users that have been download with the program, the folders that have been downloaded, and the submissions found in each of those.
 
 Each entry contains the following fields:
 
 * `USERNAME` The URL username of the user (no underscores or spaces)
-* `FOLDERS` the folders downloaded for that specific user
+* `FOLDERS` the folders downloaded for that specific user, sorted and bar-separated
 
 ### Submissions
 
@@ -41,16 +43,16 @@ The submissions table contains the metadata of the submissions downloaded by the
 * `TITLE`
 * `DATE` upload date in the format YYYY-MM-DD
 * `DESCRIPTION` description in html format
-* `TAGS` keywords sorted alphanumerically and comma-separated
+* `TAGS` keywords sorted alphanumerically and bar-separated
 * `CATEGORY`
 * `SPECIES`
 * `GENDER`
 * `RATING`
-* `FILELINK` the remote URL of the submission file
+* `FILEURL` the remote URL of the submission file
 * `FILEEXT` the extensions of the downloaded file. Can be empty if the file contained errors and could not be recognised upon download
 * `FILESAVED` 1 if the file was successfully downloaded and saved, 0 if there was an error during download
-* `FAVORITE` a comma-separate list of users that have "faved" the submission
-* `MENTIONS` a comma-separate list of users that are mentioned in the submission description as links
+* `FAVORITE` a bar-separated list of users that have "faved" the submission
+* `MENTIONS` a bar-separated list of users that are mentioned in the submission description as links
 * `FOLDER` the folder of the submission (`gallery` or `scraps`)
 * `USERUPDATE` whether the submission was added as a user update or favorite/single entry
 
@@ -63,7 +65,7 @@ The journals table contains the metadata of the journals downloaded by the progr
 * `TITLE`
 * `DATE` upload date in the format YYYY-MM-DD
 * `CONTENT` content in html format
-* `MENTIONS` a comma-separate list of users that are mentioned in the journal content as links
+* `MENTIONS` a bar-separated list of users that are mentioned in the journal content as links
 * `USERUPDATE` whether the journal was added as a user update or favorite/single entry
 
 ## Submission Files
