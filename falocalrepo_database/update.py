@@ -1629,7 +1629,7 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
 
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_7" + basename(db_path)))
+        move(db_path, path_join(dirname(db_path), "v4_8" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
