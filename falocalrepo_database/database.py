@@ -116,7 +116,7 @@ class FADatabaseTable:
         elif not (item := self[key]):
             return False
         item = {k: item[k] for k in values.keys()}
-        item_new = {k: sorted(set(item[k] + v), key=str.lower) for k, v in values.items()}
+        item_new = {k: sorted(filter(bool, set(item[k] + v)), key=str.lower) for k, v in values.items()}
         self.update({k: self.format_list(v) for k, v in item_new.items()}, key) if item_new != item else None
         return item_new != item
 
@@ -126,7 +126,7 @@ class FADatabaseTable:
         elif not (item := self[key]):
             return False
         item = {k: item[k] for k in values.keys()}
-        item_new = {k: sorted(set(item[k]) - set(v), key=str.lower) for k, v in values.items()}
+        item_new = {k: sorted(filter(bool, set(item[k]) - set(v)), key=str.lower) for k, v in values.items()}
         self.update({k: self.format_list(v) for k, v in item_new.items()}, key) if item_new != item else None
         return item_new != item
 
