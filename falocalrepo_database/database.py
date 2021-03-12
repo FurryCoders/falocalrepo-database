@@ -268,24 +268,16 @@ class FADatabaseSubmissions(FADatabaseTable):
         return folder_old != folder
 
     def add_favorite(self, submission_id: int, user: str) -> bool:
-        user = clean_username(user)
-        assert len(user) > 0, "User cannot be empty"
-        return self.add_to_list(submission_id, {"FAVORITE": [user]})
+        return self.add_to_list(submission_id, {"FAVORITE": [clean_username(user)]})
 
     def remove_favorite(self, submission_id: int, user: str) -> bool:
-        user = clean_username(user)
-        assert len(user) > 0, "User cannot be empty"
-        return self.remove_from_list(submission_id, {"FAVORITE": [user]})
+        return self.remove_from_list(submission_id, {"FAVORITE": [clean_username(user)]})
 
     def add_mention(self, submission_id: int, user: str) -> bool:
-        user = clean_username(user)
-        assert len(user) > 0, "User cannot be empty"
-        return self.add_to_list(submission_id, {"MENTIONS": [user]})
+        return self.add_to_list(submission_id, {"MENTIONS": [clean_username(user)]})
 
     def remove_mention(self, submission_id: int, user: str) -> bool:
-        user = clean_username(user)
-        assert len(user) > 0, "User cannot be empty"
-        return self.remove_from_list(submission_id, {"MENTIONS": [user]})
+        return self.remove_from_list(submission_id, {"MENTIONS": [clean_username(user)]})
 
 
 class FADatabaseUsers(FADatabaseTable):
