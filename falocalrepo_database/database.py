@@ -136,8 +136,16 @@ class FADatabaseTable:
         columns = self.columns if columns is None else columns
         return ({k.upper(): v for k, v in zip(columns, entry)} for entry in cursor)
 
+    @staticmethod
+    def format_list(obj: List[Value]) -> str:
+        return ",".join(sorted(set(map(str, obj)), key=str.lower))
+
+    @staticmethod
+    def unpack_list(obj: str) -> List[str]:
+        return [e for e in obj.split(",") if e]
+
     def format_dict(self, obj: Dict[str, Union[List[Value], Value]]) -> Dict[str, Value]:
-        obj = {k.upper().replace("_", ""): ",".join(map(str, v)) if isinstance(v, list) else v for k, v in obj.items()}
+        obj = {k.upper().replace("_", ""): self.format_list(v) if isinstance(v, list) else v for k, v in obj.items()}
         obj = {k: obj.get(k, "") for k in self.columns}
         return obj
 
