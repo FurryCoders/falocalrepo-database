@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.9.0
+
+* Add `TYPE` to `SUBMISSIONS`
+
 ## 4.8.0
 
 * Rename `FILELINK` to `FILEURL`
