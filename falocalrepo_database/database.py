@@ -20,6 +20,7 @@ from filetype import guess_extension as filetype_guess_extension
 from .__version__ import __version__
 from .merge import merge_database
 from .tables import journals_table
+from .tables import list_columns
 from .tables import make_journals_table
 from .tables import make_settings_table
 from .tables import make_submissions_table
@@ -64,6 +65,7 @@ class FADatabaseTable:
         self.columns_info_: List[Tuple[str, str]] = []
         self.columns_: List[str] = []
         self.column_id_: str = ""
+        self.list_columns: List[str] = list_columns.get(table, [])
 
     def __len__(self) -> int:
         return self.database.connection.execute(f"SELECT COUNT(*) FROM {self.table}").fetchone()[0]
@@ -133,8 +135,9 @@ class FADatabaseTable:
         self.__init__(self.database, self.table)
 
     def cursor_to_dict(self, cursor: Cursor, columns: List[str] = None) -> Generator[Dict[str, Value], None, None]:
-        columns = self.columns if columns is None else columns
-        return ({k.upper(): v for k, v in zip(columns, entry)} for entry in cursor)
+        columns = map(str.upper, self.columns if columns is None else columns)
+        return ({k: self.unpack_list(v) if k in self.list_columns else v for k, v in zip(columns, entry)}
+                for entry in cursor)
 
     @staticmethod
     def format_list(obj: List[Value]) -> str:
