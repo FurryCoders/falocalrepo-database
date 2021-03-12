@@ -134,7 +134,7 @@ class FADatabaseTable:
         self.__init__(self.database, self.table)
 
     def cursor_to_dict(self, cursor: Cursor, columns: List[str] = None) -> Generator[Entry, None, None]:
-        columns = map(str.upper, self.columns if columns is None else columns)
+        columns = list(map(str.upper, self.columns if columns is None else columns))
         return ({k: self.unpack_list(v) if k in self.list_columns else v for k, v in zip(columns, entry)}
                 for entry in cursor)
 
