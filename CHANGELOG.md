@@ -3,6 +3,7 @@
 ## 4.9.0
 
 * Add `TYPE` to `SUBMISSIONS`
+* Submissions file are now saved as `submission` instead of `submission.` if the extension is blank
 
 ## 4.8.0
 
