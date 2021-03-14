@@ -1618,7 +1618,8 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
         db = None
 
         unknown_extensions: List[Tuple[int, str]] = []
-        for i, e, in db_new.execute("select ID, FILEEXT from SUBMISSIONS"):
+        blank_extensions: List[Tuple[int, str]] = []
+        for i, e, s in db_new.execute("select ID, FILEEXT, FILESAVED from SUBMISSIONS"):
             if (e := e.lower()) in ("jpg", "jpeg", "png", "gif", "tif", "tiff"):
                 pass
             elif e in ("mp3", "wav", "mid", "midi"):
@@ -1630,12 +1631,21 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
             else:
                 print(f"Unknown extension: {i} '{e}'")
                 unknown_extensions.append((i, e))
+                if not e and s:
+                    print(f"Blank extension: {i} {(p := tiered_path(i))}")
+                    blank_extensions.append((i, p))
 
         if unknown_extensions:
             print("Unknown extensions:", len(unknown_extensions), "FA_v4_9_unknown_extensions.txt")
             unknown_extensions.sort(key=lambda e_: e_[0])
             with open(path_join(dirname(db_path), "FA_v4_9_unknown_extensions.txt"), "w") as f:
                 f.write("\n".join(f"{i} {e}" for i, e in unknown_extensions))
+        if blank_extensions:
+            print("Blank extensions:", len(blank_extensions), "FA_v4_9_blank_extensions.txt")
+            print("  Manually rename submission files in folders from 'submission.' to 'submission'")
+            blank_extensions.sort(key=lambda e_: e_[0])
+            with open(path_join(dirname(db_path), "FA_v4_9_blank_extensions.txt"), "w") as f:
+                f.write("\n".join(f"{i} {e}" for i, e in blank_extensions))
 
         db_new.commit()
         db_new.close()
