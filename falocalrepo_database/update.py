@@ -1227,7 +1227,7 @@ def update_4_2_to_4_3(db: Connection) -> Connection:
         db.close()
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_2" + basename(db_path)))
+        move(db_path, path_join(dirname(db_path), "v4_2_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1291,7 +1291,7 @@ def update_4_3_to_4_4(db: Connection) -> Connection:
         print("Close databases and replace old database")
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_3" + basename(db_path)))
+        move(db_path, path_join(dirname(db_path), "v4_3_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1379,7 +1379,7 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
 
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_4" + basename(db_path)))
+        move(db_path, path_join(dirname(db_path), "v4_4_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1437,7 +1437,7 @@ def update_4_5_to_4_6(db: Connection) -> Connection:
         db.close()
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_5" + basename(db_path)))
+        move(db_path, path_join(dirname(db_path), "v4_5_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1495,7 +1495,7 @@ def update_4_6_to_4_7(db: Connection) -> Connection:
 
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_6" + basename(db_path)))
+        move(db_path, path_join(dirname(db_path), "v4_6_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1566,7 +1566,7 @@ def update_4_7_to_4_8(db: Connection) -> Connection:
 
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_7" + basename(db_path)))
+        move(db_path, path_join(dirname(db_path), "v4_7_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1650,7 +1650,7 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
 
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_8" + basename(db_path)))
+        move(db_path, path_join(dirname(db_path), "v4_8_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
