@@ -1107,20 +1107,21 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
             f"""INSERT OR REPLACE INTO db_new.SETTINGS
             SELECT * FROM SETTINGS WHERE SETTING != "HISTORY" AND SETTING != "VERSION";"""
         )
+        db.commit()
 
         # Update history
         history: List[List[str]] = json_loads(
             db.execute("SELECT SVALUE FROM SETTINGS WHERE SETTING = 'HISTORY'").fetchone()[0]
         )
         history_new: List[Tuple[float, str]] = list(map(lambda th: (float(th[0]), th[1]), history))
-        db.commit()
-        db.close()
-        db = None
-        db_new.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'HISTORY'", json_dumps(history_new))
+        db.execute("UPDATE db_new.SETTINGS SET SVALUE = ? WHERE SETTING = 'HISTORY'", [json_dumps(history_new)])
+        db.execute("UPDATE db_new.SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", ["3.5.0"])
 
         # Close databases and replace old database
         print("Close databases and replace old database")
+        db.commit()
         db_new.commit()
+        db.close()
         db_new.close()
         move(db_path, path_join(dirname(db_path), "v3_4_" + basename(db_path)))
         move(db_new_path, db_path)
