@@ -5,6 +5,7 @@ from os import makedirs
 from os.path import basename
 from os.path import dirname
 from os.path import isdir
+from os.path import isfile
 from os.path import join as path_join
 from re import Pattern
 from re import compile as re_compile
@@ -1624,7 +1625,7 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
             elif e == "swf":
                 db_new.execute("update SUBMISSIONS set TYPE = ? where ID = ?", ("flash", i))
             else:
-                print(f"Unknown extensions: {i} '{e}'")
+                print(f"Unknown extension: {i} '{e}'")
                 unknown_extensions.append((i, e))
 
         if unknown_extensions:
