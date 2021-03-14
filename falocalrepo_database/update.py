@@ -91,6 +91,11 @@ def clean_username(user: str) -> str:
     return sub(r"[^a-z0-9.~-]", "", user.lower())
 
 
+def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> str:
+    id_str: str = str(int(id_)).zfill(depth * width)
+    return join(*[id_str[n:n + width] for n in range(0, depth * width, width)])
+
+
 def make_database_3(db: Connection):
     # Create submissions table
     db.execute(
@@ -777,8 +782,6 @@ def make_database_4_9(db: Connection):
 
 
 def update_2_7_to_3(db: Connection) -> Connection:
-    from .database import tiered_path
-
     print("Updating 2.7.0 to 3.0.0")
     db_new: Optional[Connection] = None
 
