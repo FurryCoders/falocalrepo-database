@@ -1615,6 +1615,7 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
         db.close()
         db = None
 
+        unknown_extensions: List[Tuple[int, str]] = []
         for i, e, in db_new.execute("select ID, FILEEXT from SUBMISSIONS"):
             if (e := e.lower()) in ("jpg", "jpeg", "png", "gif", "tif", "tiff"):
                 pass
@@ -1626,6 +1627,13 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
                 db_new.execute("update SUBMISSIONS set TYPE = ? where ID = ?", ("flash", i))
             else:
                 print(f"Unknown extensions: {i} '{e}'")
+                unknown_extensions.append((i, e))
+
+        if unknown_extensions:
+            print(f"Unknown extensions: {len(unknown_extensions)} FA_v4_9_unknown_extensions.txt")
+            unknown_extensions.sort(key=lambda e_: e_[0])
+            with open(path_join(dirname(db_path), "FA_v4_9_unknown_extensions.txt"), "w") as f:
+                f.write("\n".join(f"{i} {e}" for i, e in unknown_extensions))
 
         db_new.commit()
         db_new.close()
