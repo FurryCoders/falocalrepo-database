@@ -1362,14 +1362,12 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
                     missing_mentions.append((user, i))
 
         if missing_mentions:
-            print("Missing submissions:", len(missing_mentions))
-            print("                     FA_v4_5_missing_mentions.txt")
+            print("Missing submissions:", len(missing_mentions), "FA_v4_5_missing_mentions.txt")
             missing_mentions.sort(key=lambda m_: (m_[0], m_[1]))
             with open(path_join(dirname(db_path), "FA_v4_5_missing_mentions.txt"), "w") as f:
                 f.write("\n".join(f"{u} {s}" for u, s in missing_mentions))
         if double_folders:
-            print("Double folders:", len(double_folders))
-            print("                FA_v4_5_double_folders.txt")
+            print("Double folders:", len(double_folders), "FA_v4_5_double_folders.txt")
             double_folders.sort(key=lambda m_: (m_[0], m_[1]))
             with open(path_join(dirname(db_path), "FA_v4_5_double_folders.txt"), "w") as f:
                 f.write("\n".join(f"{u} {s}" for u, s in double_folders))
@@ -1630,7 +1628,7 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
                 unknown_extensions.append((i, e))
 
         if unknown_extensions:
-            print(f"Unknown extensions: {len(unknown_extensions)} FA_v4_9_unknown_extensions.txt")
+            print("Unknown extensions:", len(unknown_extensions), "FA_v4_9_unknown_extensions.txt")
             unknown_extensions.sort(key=lambda e_: e_[0])
             with open(path_join(dirname(db_path), "FA_v4_9_unknown_extensions.txt"), "w") as f:
                 f.write("\n".join(f"{i} {e}" for i, e in unknown_extensions))
