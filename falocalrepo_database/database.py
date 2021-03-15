@@ -234,7 +234,7 @@ class FADatabaseSettings(FADatabaseTable):
         self.insert({"SETTING": setting, "SVALUE": value})
 
     def read_history(self) -> List[Tuple[float, str]]:
-        return list(map(tuple, loads(h if (h := self["HISTORY"]) else [])))
+        return list(map(tuple, loads(h) if (h := self["HISTORY"]) else []))
 
     def add_history(self, command: str, time: float = 0):
         time = datetime.now().timestamp() if time <= 0 else time
