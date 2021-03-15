@@ -236,7 +236,8 @@ class FADatabaseSettings(FADatabaseTable):
     def read_history(self) -> List[Tuple[float, str]]:
         return list(map(tuple, loads(h if (h := self["HISTORY"]) else [])))
 
-    def add_history(self, command: str, time: float = datetime.now().timestamp()):
+    def add_history(self, command: str, time: float = 0):
+        time = datetime.now().timestamp() if time <= 0 else time
         self["HISTORY"] = dumps(sorted([*self.read_history(), (time, command)], key=lambda h: h[0]))
 
 
