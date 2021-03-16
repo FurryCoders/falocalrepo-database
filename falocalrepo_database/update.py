@@ -6,7 +6,7 @@ from os.path import basename
 from os.path import dirname
 from os.path import isdir
 from os.path import isfile
-from os.path import join as path_join
+from os.path import join
 from re import Pattern
 from re import compile as re_compile
 from re import findall
@@ -786,7 +786,7 @@ def update_2_7_to_3(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -843,23 +843,23 @@ def update_2_7_to_3(db: Connection) -> Connection:
         print("Update submissions FILEEXT and FILESAVED and move to new location")
         sub_n: int = 0
         sub_not_found: List[int] = []
-        files_folder_old: str = path_join(dirname(db_path), "FA.files")
-        files_folder_new: str = path_join(dirname(db_path), "FA.files_new")
+        files_folder_old: str = join(dirname(db_path), "FA.files")
+        files_folder_new: str = join(dirname(db_path), "FA.files_new")
         for id_, location in db.execute("SELECT ID, LOCATION FROM SUBMISSIONS"):
             sub_n += 1
             print(sub_n, end="\r", flush=True)
-            if isdir(folder_old := path_join(files_folder_old, location.strip("/"))):
-                fileglob = glob(path_join(folder_old, "submission*"))
+            if isdir(folder_old := join(files_folder_old, location.strip("/"))):
+                fileglob = glob(join(folder_old, "submission*"))
                 fileext = ""
                 if filename := fileglob[0] if fileglob else "":
-                    makedirs((folder_new := path_join(files_folder_new, tiered_path(id_))), exist_ok=True)
-                    copy(filename, path_join(folder_new, (filename := basename(filename))))
+                    makedirs((folder_new := join(files_folder_new, tiered_path(id_))), exist_ok=True)
+                    copy(filename, join(folder_new, (filename := basename(filename))))
                     fileext = filename.split(".")[-1] if "." in filename else ""
                 else:
                     sub_not_found.append(id_)
                 update(db_new, "SUBMISSIONS", ["FILEEXT", "FILESAVED"], [fileext, bool(filename)], "ID", id_)
                 rmtree(folder_old)
-            elif isdir(path_join("FA.files_new", tiered_path(id_))):
+            elif isdir(join("FA.files_new", tiered_path(id_))):
                 # if this block is reached, original folder was removed and database entry updated
                 continue
             else:
@@ -878,14 +878,14 @@ def update_2_7_to_3(db: Connection) -> Connection:
 
         # Replace older files folder with new
         print("Replace older files folder with new")
-        if isdir(f := path_join(dirname(db_path), "FA.files")):
+        if isdir(f := join(dirname(db_path), "FA.files")):
             if not sub_not_found:
                 rmtree(f)
             else:
                 print("Saving older FA.files to FA.files_old")
                 move(f, f + "_old")
-        if isdir(f := path_join(dirname(db_path), "FA.files_new")):
-            move(f, path_join(dirname(db_path), "FA.files"))
+        if isdir(f := join(dirname(db_path), "FA.files_new")):
+            move(f, join(dirname(db_path), "FA.files"))
 
         # Update counters for new database
         update(db, "SETTINGS", ["SVALUE"], [str(count(db_new, "SUBMISSIONS"))], "SETTING", "SUBN")
@@ -897,7 +897,7 @@ def update_2_7_to_3(db: Connection) -> Connection:
         db.close()
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v2_7_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v2_7_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -916,7 +916,7 @@ def update_3_to_3_1(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -952,7 +952,7 @@ def update_3_to_3_1(db: Connection) -> Connection:
         db.close()
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v3_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v3_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -971,7 +971,7 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -1003,7 +1003,7 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
         db.close()
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v3_1_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v3_1_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1022,7 +1022,7 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -1062,7 +1062,7 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
         print("Close databases and replace old database")
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v3_2_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v3_2_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1082,7 +1082,7 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -1123,7 +1123,7 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
         db_new.commit()
         db.close()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v3_4_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v3_4_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1143,7 +1143,7 @@ def update_3_8_to_4(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -1175,7 +1175,7 @@ def update_3_8_to_4(db: Connection) -> Connection:
         db.close()
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v3_8_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v3_8_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1195,7 +1195,7 @@ def update_4_2_to_4_3(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -1227,7 +1227,7 @@ def update_4_2_to_4_3(db: Connection) -> Connection:
         db.close()
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_2_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v4_2_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1247,7 +1247,7 @@ def update_4_3_to_4_4(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -1291,7 +1291,7 @@ def update_4_3_to_4_4(db: Connection) -> Connection:
         print("Close databases and replace old database")
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_3_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v4_3_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1311,7 +1311,7 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -1369,17 +1369,17 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
         if missing_mentions:
             print("Missing submissions:", len(missing_mentions), "FA_v4_5_missing_mentions.txt")
             missing_mentions.sort(key=lambda m_: (m_[0], m_[1]))
-            with open(path_join(dirname(db_path), "FA_v4_5_missing_mentions.txt"), "w") as f:
+            with open(join(dirname(db_path), "FA_v4_5_missing_mentions.txt"), "w") as f:
                 f.write("\n".join(f"{u} {s}" for u, s in missing_mentions))
         if double_folders:
             print("Double folders:", len(double_folders), "FA_v4_5_double_folders.txt")
             double_folders.sort(key=lambda m_: (m_[0], m_[1]))
-            with open(path_join(dirname(db_path), "FA_v4_5_double_folders.txt"), "w") as f:
+            with open(join(dirname(db_path), "FA_v4_5_double_folders.txt"), "w") as f:
                 f.write("\n".join(f"{u} {s}" for u, s in double_folders))
 
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_4_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v4_4_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1399,7 +1399,7 @@ def update_4_5_to_4_6(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -1437,7 +1437,7 @@ def update_4_5_to_4_6(db: Connection) -> Connection:
         db.close()
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_5_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v4_5_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1457,7 +1457,7 @@ def update_4_6_to_4_7(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -1495,7 +1495,7 @@ def update_4_6_to_4_7(db: Connection) -> Connection:
 
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_6_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v4_6_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1515,7 +1515,7 @@ def update_4_7_to_4_8(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -1566,7 +1566,7 @@ def update_4_7_to_4_8(db: Connection) -> Connection:
 
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_7_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v4_7_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
@@ -1586,7 +1586,7 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
     db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
-    db_new_path: str = path_join(dirname(db_path), "new_" + basename(db_path))
+    db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
         db_new = connect_database(db_new_path)
@@ -1639,18 +1639,18 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
         if unknown_extensions:
             print("Unknown extensions:", len(unknown_extensions), "FA_v4_9_unknown_extensions.txt")
             unknown_extensions.sort(key=lambda e_: e_[0])
-            with open(path_join(dirname(db_path), "FA_v4_9_unknown_extensions.txt"), "w") as f:
+            with open(join(dirname(db_path), "FA_v4_9_unknown_extensions.txt"), "w") as f:
                 f.write("\n".join(f"{i} {e}" for i, e in unknown_extensions))
         if blank_extensions:
             print("Blank extensions:", len(blank_extensions), "FA_v4_9_blank_extensions.txt")
             print("  Manually rename submission files in folders from 'submission.' to 'submission'")
             blank_extensions.sort(key=lambda e_: e_[0])
-            with open(path_join(dirname(db_path), "FA_v4_9_blank_extensions.txt"), "w") as f:
+            with open(join(dirname(db_path), "FA_v4_9_blank_extensions.txt"), "w") as f:
                 f.write("\n".join(f"{i} {e}" for i, e in blank_extensions))
 
         db_new.commit()
         db_new.close()
-        move(db_path, path_join(dirname(db_path), "v4_8_" + basename(db_path)))
+        move(db_path, join(dirname(db_path), "v4_8_" + basename(db_path)))
         move(db_new_path, db_path)
     except (BaseException, Exception) as err:
         print("Database update interrupted!")
