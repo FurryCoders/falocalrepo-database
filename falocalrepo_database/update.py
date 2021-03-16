@@ -2,9 +2,11 @@ from glob import glob
 from json import dumps as json_dumps
 from json import loads as json_loads
 from os import makedirs
+from os import remove
 from os.path import basename
 from os.path import dirname
 from os.path import isdir
+from os.path import isfile
 from os.path import join
 from re import Pattern
 from re import compile as re_compile
@@ -1595,6 +1597,10 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
 
         unknown_extensions: List[Tuple[int, str]] = []
         blank_extensions: List[Tuple[int, str]] = []
+        files_folder: str = join(
+            dirname(db_path),
+            db.execute("select SVALUE from SETTINGS where SETTING = 'FILESFOLDER'").fetchone()[0]
+        )
         for i, e, s in db.execute("select ID, FILEEXT, FILESAVED from SUBMISSIONS"):
             if (e := e.lower()) in ("jpg", "jpeg", "png", "gif", "tif", "tiff", "bmp"):
                 pass
@@ -1604,12 +1610,15 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
                 db.execute("update db_new.SUBMISSIONS set TYPE = ? where ID = ?", ("text", i))
             elif e == "swf":
                 db.execute("update db_new.SUBMISSIONS set TYPE = ? where ID = ?", ("flash", i))
-            else:
+            elif e:
                 print(f"Unknown extension: {i} '{e}'")
                 unknown_extensions.append((i, e))
-                if not e and s:
-                    print(f"Blank extension: {i} {(p := tiered_path(i))}")
-                    blank_extensions.append((i, p))
+            elif not e:
+                print(f"Blank extension: {i} {(p := tiered_path(i))}")
+                blank_extensions.append((i, p))
+                if isfile(sp := join(files_folder, tiered_path(i), "submission.")):
+                    copy(sp, sp.rstrip("."))
+                    remove(sp)
 
         if unknown_extensions:
             print("Unknown extensions:", len(unknown_extensions), "FA_v4_9_unknown_extensions.txt")
@@ -1618,7 +1627,7 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
                 f.write("\n".join(f"{i} {e}" for i, e in unknown_extensions))
         if blank_extensions:
             print("Blank extensions:", len(blank_extensions), "FA_v4_9_blank_extensions.txt")
-            print("  Manually rename submission files in folders from 'submission.' to 'submission'")
+            print("  Blank extensions files renamed to 'submission'")
             blank_extensions.sort(key=lambda e_: e_[0])
             with open(join(dirname(db_path), "FA_v4_9_blank_extensions.txt"), "w") as f:
                 f.write("\n".join(f"{i} {e}" for i, e in blank_extensions))
