@@ -70,7 +70,7 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
             journal
         )
 
-    user_b: Tuple[str, ...]
+    user_b: Tuple[str, str]
     for user_b in db_b.execute(f"SELECT USERNAME, FOLDERS FROM {users_table}"):
         user_new: List[str] = list(user_b)
         user_a: Optional[Tuple[str, str]] = db_a.execute(
