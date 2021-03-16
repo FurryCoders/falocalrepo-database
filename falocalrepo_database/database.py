@@ -2,6 +2,7 @@ from datetime import datetime
 from json import dumps
 from json import loads
 from os import makedirs
+from os.path import abspath
 from os.path import dirname
 from os.path import join
 from re import sub
@@ -316,7 +317,7 @@ class FADatabaseUsers(FADatabaseTable):
 
 class FADatabase:
     def __init__(self, database_path: str):
-        self.database_path: str = database_path
+        self.database_path: str = abspath(database_path)
         self.connection: Connection = connect(database_path)
 
         if journals_table not in (tables := self.tables):
