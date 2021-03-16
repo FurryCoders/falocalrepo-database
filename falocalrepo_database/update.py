@@ -5,7 +5,6 @@ from os import makedirs
 from os.path import basename
 from os.path import dirname
 from os.path import isdir
-from os.path import isfile
 from os.path import join
 from re import Pattern
 from re import compile as re_compile
@@ -18,6 +17,7 @@ from sqlite3 import Connection
 from sqlite3 import DatabaseError
 from sqlite3 import OperationalError
 from sqlite3 import connect as connect_database
+from typing import Callable
 from typing import Collection
 from typing import List
 from typing import Optional
@@ -56,20 +56,6 @@ def insert(db: Connection, table: str, keys: Collection[str], values: Collection
         ({",".join(keys)})
         VALUES ({",".join(["?"] * len(values))})""",
         values
-    )
-
-
-def update(db: Connection, table: str, fields: Collection[str], values: Collection[Union[int, str]], key: str,
-           key_value: str):
-    assert len(fields) == len(values) and len(fields) > 0
-
-    update_values: List[str] = [f"{u} = ?" for u in fields]
-
-    db.execute(
-        f"""UPDATE {table}
-        SET {",".join(update_values)}
-        WHERE {key} = ?""",
-        (*values, key_value,)
     )
 
 
@@ -781,16 +767,19 @@ def make_database_4_9(db: Connection):
     db.commit()
 
 
+def make_database(db_path, make_function: Callable[[Connection], None]):
+    make_function(db := connect_database(db_path))
+    db.close()
+
+
 def update_2_7_to_3(db: Connection) -> Connection:
     print("Updating 2.7.0 to 3.0.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_3(db_new)
+        make_database(db_new_path, make_database_3)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -809,14 +798,13 @@ def update_2_7_to_3(db: Connection) -> Connection:
         )
 
         db.commit()
-        db_new.commit()
 
         # Update users folders
         print("Update users folders")
         user: str
         folders: str
         user_n: int = 0
-        for user, folders in db_new.execute("SELECT USERNAME, FOLDERS FROM USERS"):
+        for user, folders in db.execute("SELECT USERNAME, FOLDERS FROM db_new.USERS"):
             user_n += 1
             print(user_n, end="\r", flush=True)
             folders_new: List[str] = []
@@ -834,9 +822,9 @@ def update_2_7_to_3(db: Connection) -> Connection:
                 elif folder == "E":
                     folder_new = "Extras"
                 folders_new.append(folder_new + ("!" if folder_disabled else ""))
-            update(db_new, "USERS", ["FOLDERS"], [",".join(folders_new)], "USERNAME", user)
-            db_new.commit() if user_n % 1000 == 0 else None
-        db_new.commit()
+            db.execute("update db_new.USERS set FOLDERS = ? where USERNAME = ?", [",".join(folders_new), user])
+            db.commit() if user_n % 1000 == 0 else None
+        db.commit()
         print()
 
         # Update submissions FILEEXT and FILESAVED and move to new location
@@ -857,16 +845,18 @@ def update_2_7_to_3(db: Connection) -> Connection:
                     fileext = filename.split(".")[-1] if "." in filename else ""
                 else:
                     sub_not_found.append(id_)
-                update(db_new, "SUBMISSIONS", ["FILEEXT", "FILESAVED"], [fileext, bool(filename)], "ID", id_)
+                db.execute("update db_new.SUBMISSIONS set FILEEXT = ?, FILESAVED = ? where ID = ?",
+                           [fileext, bool(filename), id_])
                 rmtree(folder_old)
             elif isdir(join("FA.files_new", tiered_path(id_))):
                 # if this block is reached, original folder was removed and database entry updated
                 continue
             else:
                 sub_not_found.append(id_)
-                update(db_new, "SUBMISSIONS", ["FILEEXT", "FILESAVED"], ["", False], "ID", id_)
-            db_new.commit() if sub_n % 10000 == 0 else None
-        db_new.commit()
+                db.execute("update db_new.SUBMISSIONS set FILEEXT = ?, FILESAVED = ? where ID = ?",
+                           ["", False, id_])
+            db.commit() if sub_n % 10000 == 0 else None
+        db.commit()
         print()
         if sub_not_found:
             print(f"{len(sub_not_found)} submissions not found in FA.files\n" +
@@ -888,39 +878,39 @@ def update_2_7_to_3(db: Connection) -> Connection:
             move(f, join(dirname(db_path), "FA.files"))
 
         # Update counters for new database
-        update(db, "SETTINGS", ["SVALUE"], [str(count(db_new, "SUBMISSIONS"))], "SETTING", "SUBN")
-        update(db, "SETTINGS", ["SVALUE"], [str(count(db_new, "USERS"))], "SETTING", "USRN")
+        db.execute("update db_new.SETTINGS set SVALUE = ?, where SETTING = 'SUBN'", [str(count(db, "SUBMISSIONS"))])
+        db.execute("update db_new.SETTINGS set SVALUE = ?, where SETTING = 'USRN'", [str(count(db, "USERS"))])
 
         # Close databases and replace old database
         print("Close databases and replace old database")
         db.commit()
         db.close()
-        db_new.commit()
-        db_new.close()
+        db = None
         move(db_path, join(dirname(db_path), "v2_7_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
-        db.commit()
-        db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
+        print("Database update error")
+        print("  " + repr(err))
         raise err
+    finally:
+        if db is not None:
+            db.commit()
+            db.close()
 
     return connect_database(db_path)
 
 
 def update_3_to_3_1(db: Connection) -> Connection:
     print("Updating 3.0.0 to 3.1.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_3_1(db_new)
+        make_database(db_new_path, make_database_3_1)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -939,43 +929,42 @@ def update_3_to_3_1(db: Connection) -> Connection:
         )
 
         db.commit()
-        db_new.commit()
 
         # Update users folders
         print("Update user folders")
-        db_new.execute("UPDATE USERS SET FOLDERS = replace(FOLDERS, 'extras', 'mentions')")
-        db_new.execute("UPDATE USERS SET FOLDERS = replace(FOLDERS, 'Extras', 'mentions_all')")
+        db.execute("UPDATE db_new.USERS SET FOLDERS = replace(FOLDERS, 'extras', 'mentions')")
+        db.execute("UPDATE db_new.USERS SET FOLDERS = replace(FOLDERS, 'Extras', 'mentions_all')")
 
         # Close databases and replace old database
         print("Close databases and replace old database")
         db.commit()
         db.close()
-        db_new.commit()
-        db_new.close()
+        db = None
         move(db_path, join(dirname(db_path), "v3_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
-        db.commit()
-        db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
+        print("Database update error")
+        print("  " + repr(err))
         raise err
+    finally:
+        if db is not None:
+            db.commit()
+            db.close()
 
     return connect_database(db_path)
 
 
 def update_3_1_to_3_2(db: Connection) -> Connection:
     print("Updating 3.1.0 to 3.2.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_3_2(db_new)
+        make_database(db_new_path, make_database_3_2)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -995,38 +984,37 @@ def update_3_1_to_3_2(db: Connection) -> Connection:
         db.execute("UPDATE db_new.USERS SET JOURNALS = ''")
 
         db.commit()
-        db_new.commit()
 
         # Close databases and replace old database
         print("Close databases and replace old database")
         db.commit()
         db.close()
-        db_new.commit()
-        db_new.close()
+        db = None
         move(db_path, join(dirname(db_path), "v3_1_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
-        db.commit()
-        db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
+        print("Database update error")
+        print("  " + repr(err))
         raise err
+    finally:
+        if db is not None:
+            db.commit()
+            db.close()
 
     return connect_database(db_path)
 
 
 def update_3_2_to_3_3(db: Connection) -> Connection:
     print("Updating 3.2.0 to 3.3.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_3_3(db_new)
+        make_database(db_new_path, make_database_3_3)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -1051,42 +1039,39 @@ def update_3_2_to_3_3(db: Connection) -> Connection:
         # Add update to history
         last_update: str = db.execute("SELECT SVALUE FROM SETTINGS WHERE SETTING = 'LASTUPDATE'").fetchone()
         if last_update and last_update[0] != "0":
-            # Commit and close databases to unlock
-            db.commit()
-            db.close()
-            db = None
-            db_new.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'HISTORY'",
-                           json_dumps([[float(last_update[0]), "update"]]))
+            db.execute("UPDATE db_new.SETTINGS SET SVALUE = ? WHERE SETTING = 'HISTORY'",
+                       json_dumps([[float(last_update[0]), "update"]]))
 
         # Close databases and replace old database
         print("Close databases and replace old database")
-        db_new.commit()
-        db_new.close()
+        db.commit()
+        db.close()
+        db = None
         move(db_path, join(dirname(db_path), "v3_2_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
+        print("Database update error")
+        print("  " + repr(err))
+        raise err
+    finally:
         if db is not None:
             db.commit()
             db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
-        raise err
 
     return connect_database("FA.db")
 
 
 def update_3_4_to_3_5(db: Connection) -> Connection:
     print("Updating 3.4.0 to 3.5.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_3_3(db_new)
+        make_database(db_new_path, make_database_3_3)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -1120,34 +1105,33 @@ def update_3_4_to_3_5(db: Connection) -> Connection:
         # Close databases and replace old database
         print("Close databases and replace old database")
         db.commit()
-        db_new.commit()
         db.close()
-        db_new.close()
+        db = None
         move(db_path, join(dirname(db_path), "v3_4_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
+        print("Database update error")
+        print("  " + repr(err))
+        raise err
+    finally:
         if db is not None:
             db.commit()
             db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
-        raise err
 
     return connect_database(db_path)
 
 
 def update_3_8_to_4(db: Connection) -> Connection:
     print("Updating 3.8.0 to 4.0.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_4(db_new)
+        make_database(db_new_path, make_database_4)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -1165,7 +1149,7 @@ def update_3_8_to_4(db: Connection) -> Connection:
             SELECT * FROM JOURNALS"""
         )
         db.execute(
-            f"""INSERT OR REPLACE INTO db_new.SETTINGS
+            """INSERT OR REPLACE INTO db_new.SETTINGS
             SELECT * FROM SETTINGS WHERE SETTING != 'VERSION';"""
         )
 
@@ -1173,33 +1157,32 @@ def update_3_8_to_4(db: Connection) -> Connection:
         print("Close databases and replace old database")
         db.commit()
         db.close()
-        db_new.commit()
-        db_new.close()
+        db = None
         move(db_path, join(dirname(db_path), "v3_8_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
+        print("Database update error")
+        print("  " + repr(err))
+        raise err
+    finally:
         if db is not None:
             db.commit()
             db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
-        raise err
 
     return connect_database(db_path)
 
 
 def update_4_2_to_4_3(db: Connection) -> Connection:
     print("Updating 4.2.0 to 4.3.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_4_3(db_new)
+        make_database(db_new_path, make_database_4_3)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -1225,33 +1208,32 @@ def update_4_2_to_4_3(db: Connection) -> Connection:
         print("Close databases and replace old database")
         db.commit()
         db.close()
-        db_new.commit()
-        db_new.close()
+        db = None
         move(db_path, join(dirname(db_path), "v4_2_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
+        print("Database update error")
+        print("  " + repr(err))
+        raise err
+    finally:
         if db is not None:
             db.commit()
             db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
-        raise err
 
     return connect_database(db_path)
 
 
 def update_4_3_to_4_4(db: Connection) -> Connection:
     print("Updating 4.3.0 to 4.4.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_4_4(db_new)
+        make_database(db_new_path, make_database_4_4)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -1273,49 +1255,48 @@ def update_4_3_to_4_4(db: Connection) -> Connection:
             SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION');"""
         )
         db.commit()
-        db.close()
-        db = None
 
-        for u, fs in db_new.execute("select USERNAME, FAVORITES from USERS where FAVORITES != ''"):
+        for u, fs in db.execute("select USERNAME, FAVORITES from db_new.USERS where FAVORITES != ''"):
             for f in map(int, filter(bool, fs.split(","))):
-                f_us: Optional[tuple] = db_new.execute(f"select FAVORITE from SUBMISSIONS where ID = {f}").fetchone()
+                f_us: Optional[tuple] = db.execute(f"select FAVORITE from db_new.SUBMISSIONS where ID = {f}").fetchone()
                 if not f_us:
                     continue
                 f_us_new: str = ",".join({u, *filter(bool, f_us[0].split(","))})
                 if f_us_new == f_us:
                     continue
-                db_new.execute(f"update SUBMISSIONS set FAVORITE = ? where ID = {f}", [f_us_new])
-            db_new.commit()
+                db.execute(f"update SUBMISSIONS set db_new.FAVORITE = ? where ID = {f}", [f_us_new])
+            db.commit()
 
         # Close databases and replace old database
         print("Close databases and replace old database")
-        db_new.commit()
-        db_new.close()
+        db.commit()
+        db.close()
+        db = None
         move(db_path, join(dirname(db_path), "v4_3_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
+        print("Database update error")
+        print("  " + repr(err))
+        raise err
+    finally:
         if db is not None:
             db.commit()
             db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
-        raise err
 
     return connect_database(db_path)
 
 
 def update_4_4_to_4_5(db: Connection) -> Connection:
     print("Updating 4.4.0 to 4.5.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_4_5(db_new)
+        make_database(db_new_path, make_database_4_5)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -1342,27 +1323,25 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
         missing_mentions: List[Tuple[str, int]] = []
         double_folders: List[Tuple[str, int]] = []
 
-        db.close()
-        db = None
-
         mentions_exp: Pattern = re_compile(r'<a[^>]*href="(?:(?:https?://)?(?:www.)?furaffinity.net)?/user/([^/">]+)"')
-        for i, d in db_new.execute("select ID, DESCRIPTION from SUBMISSIONS").fetchall():
+        for i, d in db.execute("select ID, DESCRIPTION from db_new.SUBMISSIONS").fetchall():
             mentions: list[str] = sorted(set(filter(bool, map(clean_username, findall(mentions_exp, d)))))
             if mentions:
-                db_new.execute("update SUBMISSIONS set MENTIONS = ? where ID = ?", (",".join(mentions), i))
-        db_new.commit()
+                db.execute("update db_new.SUBMISSIONS set MENTIONS = ? where ID = ?", (",".join(mentions), i))
+        db.commit()
 
         for user, g, s, m in users_old:
             g_set: Set[int] = set(map(int, filter(bool, g.split(","))))
             s_set: Set[int] = set(map(int, filter(bool, s.split(","))))
             double_folders.extend((user, i) for i in g_set.intersection(s_set))
             for i in g_set:
-                db_new.execute("update SUBMISSIONS set FOLDER = ? where ID = ?", ("gallery", i))
+                db.execute("update db_new.SUBMISSIONS set FOLDER = ? where ID = ?", ("gallery", i))
             for i in s_set:
-                db_new.execute("update SUBMISSIONS set FOLDER = ? where ID = ?", ("scraps", i))
-            db_new.commit()
+                db.execute("update db_new.SUBMISSIONS set FOLDER = ? where ID = ?", ("scraps", i))
+            db.commit()
             for i in map(int, filter(bool, m.split(","))):
-                ms: Optional[tuple] = db_new.execute("select MENTIONS from SUBMISSIONS where ID = ?", (i,)).fetchone()
+                ms: Optional[tuple] = db.execute("select MENTIONS from db_new.SUBMISSIONS where ID = ?",
+                                                 (i,)).fetchone()
                 if not ms or user not in ms[0].split(","):
                     missing_mentions.append((user, i))
 
@@ -1377,33 +1356,34 @@ def update_4_4_to_4_5(db: Connection) -> Connection:
             with open(join(dirname(db_path), "FA_v4_5_double_folders.txt"), "w") as f:
                 f.write("\n".join(f"{u} {s}" for u, s in double_folders))
 
-        db_new.commit()
-        db_new.close()
+        db.commit()
+        db.close()
+        db = None
         move(db_path, join(dirname(db_path), "v4_4_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
+        print("Database update error")
+        print("  " + repr(err))
+        raise err
+    finally:
         if db is not None:
             db.commit()
             db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
-        raise err
 
     return connect_database(db_path)
 
 
 def update_4_5_to_4_6(db: Connection) -> Connection:
     print("Updating 4.5.0 to 4.6.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_4_6(db_new)
+        make_database(db_new_path, make_database_4_6)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -1435,33 +1415,32 @@ def update_4_5_to_4_6(db: Connection) -> Connection:
 
         db.commit()
         db.close()
-        db_new.commit()
-        db_new.close()
+        db = None
         move(db_path, join(dirname(db_path), "v4_5_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
+        print("Database update error")
+        print("  " + repr(err))
+        raise err
+    finally:
         if db is not None:
             db.commit()
             db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
-        raise err
 
     return connect_database(db_path)
 
 
 def update_4_6_to_4_7(db: Connection) -> Connection:
     print("Updating 4.6.0 to 4.7.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_4_7(db_new)
+        make_database(db_new_path, make_database_4_7)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -1484,42 +1463,41 @@ def update_4_6_to_4_7(db: Connection) -> Connection:
         )
 
         db.commit()
-        db.close()
-        db = None
 
         mentions_exp: Pattern = re_compile(r'<a[^>]*href="(?:(?:https?://)?(?:www.)?furaffinity.net)?/user/([^/">]+)"')
-        for i, c in db_new.execute("select ID, CONTENT from JOURNALS").fetchall():
+        for i, c in db.execute("select ID, CONTENT from db_new.JOURNALS").fetchall():
             mentions: list[str] = sorted(set(filter(bool, map(clean_username, findall(mentions_exp, c)))))
             if mentions:
-                db_new.execute("update JOURNALS set MENTIONS = ? where ID = ?", (",".join(mentions), i))
+                db.execute("update db_new.JOURNALS set MENTIONS = ? where ID = ?", (",".join(mentions), i))
 
-        db_new.commit()
-        db_new.close()
+        db.commit()
+        db.close()
+        db = None
         move(db_path, join(dirname(db_path), "v4_6_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
+        print("Database update error")
+        print("  " + repr(err))
+        raise err
+    finally:
         if db is not None:
             db.commit()
             db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
-        raise err
 
     return connect_database(db_path)
 
 
 def update_4_7_to_4_8(db: Connection) -> Connection:
     print("Updating 4.7.0 to 4.8.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_4_8(db_new)
+        make_database(db_new_path, make_database_4_8)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -1542,55 +1520,54 @@ def update_4_7_to_4_8(db: Connection) -> Connection:
         )
 
         db.commit()
-        db.close()
-        db = None
 
-        for u, fs in db_new.execute("select USERNAME, FOLDERS from USERS"):
+        for u, fs in db.execute("select USERNAME, FOLDERS from USERS"):
             fs = "".join(sorted((f"|{f}|" for f in fs.split(",") if f), key=str.lower))
-            db_new.execute("update USERS set FOLDERS = ? where USERNAME = ?", (fs, u))
-        db_new.commit()
-        for i, ts, fs, ms in db_new.execute("select ID, TAGS, FAVORITE, MENTIONS from SUBMISSIONS"):
+            db.execute("update db_new.USERS set FOLDERS = ? where USERNAME = ?", (fs, u))
+        db.commit()
+        for i, ts, fs, ms in db.execute("select ID, TAGS, FAVORITE, MENTIONS from SUBMISSIONS"):
             if not ts and not fs and not ms:
                 continue
             ts = "".join(sorted((f"|{t}|" for t in ts.split(",") if t), key=str.lower))
             fs = "".join(sorted((f"|{f}|" for f in fs.split(",") if f), key=str.lower))
             ms = "".join(sorted((f"|{m}|" for m in ms.split(",") if m), key=str.lower))
-            db_new.execute("update SUBMISSIONS set TAGS = ?, FAVORITE = ?, MENTIONS = ? where ID = ?", (ts, fs, ms, i))
-        db_new.commit()
-        for i, ms in db_new.execute("select ID, MENTIONS from JOURNALS where MENTIONS != ''"):
+            db.execute("update db_new.SUBMISSIONS set TAGS = ?, FAVORITE = ?, MENTIONS = ? where ID = ?",
+                       (ts, fs, ms, i))
+        db.commit()
+        for i, ms in db.execute("select ID, MENTIONS from JOURNALS where MENTIONS != ''"):
             if not ms:
                 continue
             ms = "".join(sorted((f"|{m}|" for m in ms.split(",") if m), key=str.lower))
-            db_new.execute("update JOURNALS set MENTIONS = ? where ID = ?", (ms, i))
-        db_new.commit()
+            db.execute("update db_new.JOURNALS set MENTIONS = ? where ID = ?", (ms, i))
 
-        db_new.commit()
-        db_new.close()
+        db.commit()
+        db.close()
+        db = None
         move(db_path, join(dirname(db_path), "v4_7_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
+        print("Database update error")
+        print("  " + repr(err))
+        raise err
+    finally:
         if db is not None:
             db.commit()
             db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
-        raise err
 
     return connect_database(db_path)
 
 
 def update_4_8_to_4_9(db: Connection) -> Connection:
     print("Updating 4.8.0 to 4.9.0")
-    db_new: Optional[Connection] = None
 
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
 
     try:
-        db_new = connect_database(db_new_path)
-        make_database_4_9(db_new)
+        make_database(db_new_path, make_database_4_9)
 
         # Transfer common submissions and users data
         print("Transfer common submissions and users data")
@@ -1615,20 +1592,18 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
         )
 
         db.commit()
-        db.close()
-        db = None
 
         unknown_extensions: List[Tuple[int, str]] = []
         blank_extensions: List[Tuple[int, str]] = []
-        for i, e, s in db_new.execute("select ID, FILEEXT, FILESAVED from SUBMISSIONS"):
-            if (e := e.lower()) in ("jpg", "jpeg", "png", "gif", "tif", "tiff"):
+        for i, e, s in db.execute("select ID, FILEEXT, FILESAVED from SUBMISSIONS"):
+            if (e := e.lower()) in ("jpg", "jpeg", "png", "gif", "tif", "tiff", "bmp"):
                 pass
             elif e in ("mp3", "wav", "mid", "midi"):
-                db_new.execute("update SUBMISSIONS set TYPE = ? where ID = ?", ("music", i))
+                db.execute("update db_new.SUBMISSIONS set TYPE = ? where ID = ?", ("music", i))
             elif e in ("txt", "doc", "docx", "odt", "rtf", "pdf"):
-                db_new.execute("update SUBMISSIONS set TYPE = ? where ID = ?", ("text", i))
+                db.execute("update db_new.SUBMISSIONS set TYPE = ? where ID = ?", ("text", i))
             elif e == "swf":
-                db_new.execute("update SUBMISSIONS set TYPE = ? where ID = ?", ("flash", i))
+                db.execute("update db_new.SUBMISSIONS set TYPE = ? where ID = ?", ("flash", i))
             else:
                 print(f"Unknown extension: {i} '{e}'")
                 unknown_extensions.append((i, e))
@@ -1648,19 +1623,22 @@ def update_4_8_to_4_9(db: Connection) -> Connection:
             with open(join(dirname(db_path), "FA_v4_9_blank_extensions.txt"), "w") as f:
                 f.write("\n".join(f"{i} {e}" for i, e in blank_extensions))
 
-        db_new.commit()
-        db_new.close()
+        db.commit()
+        db.close()
+        db = None
         move(db_path, join(dirname(db_path), "v4_8_" + basename(db_path)))
         move(db_new_path, db_path)
+    except KeyboardInterrupt:
+        print("Database update interrupted")
+        raise
     except (BaseException, Exception) as err:
-        print("Database update interrupted!")
+        print("Database update error")
+        print("  " + repr(err))
+        raise err
+    finally:
         if db is not None:
             db.commit()
             db.close()
-        if db_new is not None:
-            db_new.commit()
-            db_new.close()
-        raise err
 
     return connect_database(db_path)
 
@@ -1682,36 +1660,36 @@ def update_database(db: Connection, version: str) -> Connection:
     elif compare_versions(db_version, "2.7.0") < 0:
         raise DatabaseError("Update does not support versions lower than 2.11.2")
     elif compare_versions(db_version, "3.0.0") < 0:
-        return update_database(update_2_7_to_3(db), version)  # 2.7.x to 3.0.0
+        db = update_2_7_to_3(db)  # 2.7.x to 3.0.0
     elif compare_versions(db_version, "3.1.0") < 0:
-        return update_database(update_3_to_3_1(db), version)  # 3.0.x to 3.1.0
+        db = update_3_to_3_1(db)  # 3.0.x to 3.1.0
     elif compare_versions(db_version, "3.2.0") < 0:
-        return update_database(update_3_1_to_3_2(db), version)  # 3.1.x to 3.2.0
+        db = update_3_1_to_3_2(db)  # 3.1.x to 3.2.0
     elif compare_versions(db_version, "3.3.0") < 0:
-        return update_database(update_3_2_to_3_3(db), version)  # 3.2.x to 3.3.0
+        db = update_3_2_to_3_3(db)  # 3.2.x to 3.3.0
     elif compare_versions(db_version, "3.4.0") < 0:
-        return update_database(update_version(db, db_version, "3.4.0"), version)  # 3.3.x to 3.4.0
+        db = update_version(db, db_version, "3.4.0")  # 3.3.x to 3.4.0
     elif compare_versions(db_version, "3.5.0") < 0:
-        return update_database(update_3_4_to_3_5(db), version)  # 3.4.x to 3.5.0
+        db = update_3_4_to_3_5(db)  # 3.4.x to 3.5.0
     elif compare_versions(db_version, "3.8.0") < 0:
-        return update_database(update_version(db, db_version, "3.8.0"), version)  # 3.5.0-3.7.x to 3.8.0
+        db = update_version(db, db_version, "3.8.0")  # 3.5.0-3.7.x to 3.8.0
     elif compare_versions(db_version, "4.0.0") < 0:
-        return update_database(update_3_8_to_4(db), version)  # 3.8.x to 4.0.0
+        db = update_3_8_to_4(db)  # 3.8.x to 4.0.0
     elif compare_versions(db_version, "4.3.0") < 0:
-        return update_database(update_4_2_to_4_3(db), version)  # 4.0.0-4.2.x to 4.3.0
+        db = update_4_2_to_4_3(db)  # 4.0.0-4.2.x to 4.3.0
     elif compare_versions(db_version, "4.4.0") < 0:
-        return update_database(update_4_3_to_4_4(db), version)  # 4.3.x to 4.4.0
+        db = update_4_3_to_4_4(db)  # 4.3.x to 4.4.0
     elif compare_versions(db_version, "4.5.0") < 0:
-        return update_database(update_4_4_to_4_5(db), version)  # 4.4.x to 4.5.0
+        db = update_4_4_to_4_5(db)  # 4.4.x to 4.5.0
     elif compare_versions(db_version, "4.6.0") < 0:
-        return update_database(update_4_5_to_4_6(db), version)  # 4.5.x to 4.6.0
+        db = update_4_5_to_4_6(db)  # 4.5.x to 4.6.0
     elif compare_versions(db_version, "4.7.0") < 0:
-        return update_database(update_4_6_to_4_7(db), version)  # 4.6.x to 4.7.0
+        db = update_4_6_to_4_7(db)  # 4.6.x to 4.7.0
     elif compare_versions(db_version, "4.8.0") < 0:
-        return update_database(update_4_7_to_4_8(db), version)  # 4.7.x to 4.8.0
+        db = update_4_7_to_4_8(db)  # 4.7.x to 4.8.0
     elif compare_versions(db_version, "4.9.0") < 0:
-        return update_database(update_4_8_to_4_9(db), version)  # 4.8.x to 4.9.0
+        db = update_4_8_to_4_9(db)  # 4.8.x to 4.9.0
     elif compare_versions(db_version, version) < 0:
         return update_version(db, db_version, version)  # Update to latest patch
 
-    return db
+    return update_database(db, version)
