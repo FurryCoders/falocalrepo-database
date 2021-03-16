@@ -5,13 +5,13 @@ from os.path import isdir
 from os.path import isfile
 from os.path import join
 from shutil import copy
+from sqlite3 import Connection
 from sqlite3 import DatabaseError
 from typing import List
 from typing import Optional
 from typing import Tuple
 
 from .__version__ import __version__
-from .database import Connection
 from .tables import journals_table
 from .tables import settings_table
 from .tables import submissions_table
