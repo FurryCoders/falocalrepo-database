@@ -1410,7 +1410,7 @@ def update_database(db: Connection, version: str) -> Connection:
     elif compare_versions(db_version, "4.8.0") < 0:
         db = update_wrapper(db, update_4_7_to_4_8, "v4_7_")  # 4.7.x to 4.8.0
     elif compare_versions(db_version, "4.9.0") < 0:
-        db = update_wrapper(db, update_4_8_to_4_9, "v4.8_")  # 4.8.x to 4.9.0
+        db = update_wrapper(db, update_4_8_to_4_9, "v4_8_")  # 4.8.x to 4.9.0
     elif compare_versions(db_version, version) < 0:
         return update_version(db, db_version, version)  # Update to latest patch
 
