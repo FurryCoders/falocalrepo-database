@@ -1324,7 +1324,7 @@ def update_4_8_to_4_9(db: Connection, db_path: str, db_new_path: str):
         elif not e and s:
             print(f"Blank extension: {i} {(p := tiered_path(i))}")
             blank_extensions.append((i, p))
-            if isfile(sp := join(files_folder, tiered_path(i), "submission.")):
+            if isfile(sp := join(files_folder, p, "submission.")):
                 copy(sp, sp.rstrip("."))
                 remove(sp)
 
