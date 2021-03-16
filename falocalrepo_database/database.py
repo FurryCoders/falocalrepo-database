@@ -395,7 +395,7 @@ class FADatabase:
     def close(self):
         self.connection.close()
 
-    def update(self, db_b: 'FADatabase'):
+    def merge(self, db_b: 'FADatabase'):
         merge_database(self.connection, dirname(self.database_path), db_b.connection, dirname(db_b.database_path))
 
     def vacuum(self):
