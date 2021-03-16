@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.10.0
+
+* Overhaul update functions with wrappers
+* Improve 4.8 to 4.9 update
+* Rename `FADatabase.update` to `merge`
+
 ## 4.9.0
 
 * Add `TYPE` to `SUBMISSIONS`
