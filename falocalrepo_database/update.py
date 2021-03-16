@@ -1103,7 +1103,7 @@ def update_4_3_to_4_4(db: Connection, db_path: str, db_new_path: str):
             f_us_new: str = ",".join({u, *filter(bool, f_us[0].split(","))})
             if f_us_new == f_us:
                 continue
-            db.execute(f"update SUBMISSIONS set db_new.FAVORITE = ? where ID = {f}", [f_us_new])
+            db.execute(f"update db_new.SUBMISSIONS set FAVORITE = ? where ID = {f}", [f_us_new])
 
 
 def update_4_4_to_4_5(db: Connection, db_path: str, db_new_path: str):
