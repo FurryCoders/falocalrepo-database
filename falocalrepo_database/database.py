@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import cached_property
 from json import dumps
 from json import loads
 from os import makedirs
@@ -65,9 +66,6 @@ class FADatabaseTable:
     def __init__(self, database: 'FADatabase', table: str):
         self.database: 'FADatabase' = database
         self.table: str = table.upper()
-        self.columns_info_: List[Tuple[str, str]] = []
-        self.columns_: List[str] = []
-        self.column_id_: str = ""
         self.list_columns: List[str] = list_columns.get(self.table, [])
 
     def __len__(self) -> int:
@@ -91,26 +89,23 @@ class FADatabaseTable:
     def __iter__(self) -> Generator[Entry, None, None]:
         return self.cursor_to_dict(self.select())
 
-    @property
+    @cached_property
     def columns_info(self) -> List[Tuple[str, str]]:
-        self.columns_info_ = [
+        return [
             info[1:]
             for info in self.database.connection.execute(f"pragma table_info({self.table})")
-        ] if not self.columns_info_ else self.columns_info_
-        return self.columns_info_
+        ]
 
-    @property
+    @cached_property
     def columns(self) -> List[str]:
-        self.columns_ = [name for name, *_ in self.columns_info] if not self.columns_ else self.columns_
-        return self.columns_
+        return [name for name, *_ in self.columns_info]
 
-    @property
+    @cached_property
     def column_id(self) -> str:
-        self.column_id_ = [
+        return [
             name
             for name, *_, pk in self.columns_info if pk == 1
         ][0]
-        return self.column_id_
 
     def add_to_list(self, key: Key, values: Dict[str, List[Value]]) -> bool:
         if not (values := {k.upper(): v for k, v in values.items() if v and k.upper() in self.list_columns}):
@@ -134,6 +129,8 @@ class FADatabaseTable:
 
     def reload(self):
         self.__init__(self.database, self.table)
+        for attr in filter(self.__dict__.__contains__, ("columns", "columns_info", "column_id")):
+            del self.__dict__[attr]
 
     def cursor_to_dict(self, cursor: Cursor, columns: List[str] = None) -> Generator[Entry, None, None]:
         columns = list(map(str.upper, self.columns if columns is None else columns))
