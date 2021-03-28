@@ -242,8 +242,9 @@ class FADatabaseSettings(FADatabaseTable):
 
 
 class FADatabaseSubmissions(FADatabaseTable):
-    def save_submission_file(self, submission_id: int, file: bytes, name: str, ext: str, guess_ext: bool = True) -> str:
-        if not file:
+    def save_submission_file(self, submission_id: int, file: Optional[bytes], name: str, ext: str,
+                             guess_ext: bool = True) -> str:
+        if file is None:
             return ""
 
         ext = guess_extension(file, ext) if guess_ext else ext
