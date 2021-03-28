@@ -38,9 +38,9 @@ Value = Union[str, int, float, None]
 Entry = Dict[str, Union[List[str], Value]]
 
 
-def guess_extension(file: bytes, default: str = "") -> str:
+def guess_extension(file: Optional[bytes], default: str = "") -> str:
     if not file:
-        return ""
+        return default
     elif (file_type := filetype_guess_extension(file)) is None:
         return default if default else "txt" * (detect_encoding(file[:2048]).get("encoding", None) is not None)
     elif (ext := str(file_type)) in (exts := ("zip", "octet-stream")):
