@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.11.0
+
+* `FILESAVED` stores information regarding both submission files and thumbnails
+* Migration to Python 3.9
+
 ## 4.10.0
 
 * Overhaul update functions with wrappers
