@@ -256,12 +256,17 @@ class FADatabaseSubmissions(FADatabaseTable):
 
         return ext
 
-    def save_submission(self, submission: Dict[str, Union[int, str, list]], file: Optional[bytes] = None):
+    def save_submission_thumbnail(self, submission_id: int, file: Optional[bytes]):
+        self.save_submission_file(submission_id, file, "thumbnail", "jpg", False)
+
+    def save_submission(self, submission: Dict[str, Union[int, str, list]], file: Optional[bytes] = None,
+                        thumbnail: Optional[bytes] = None):
         submission = self.format_dict(submission)
 
         submission["FILEEXT"] = name.split(".")[-1] if "." in (name := submission["FILEURL"].split("/")[-1]) else ""
         submission["FILEEXT"] = self.save_submission_file(submission["ID"], file, "submission", submission["FILEEXT"])
-        submission["FILESAVED"] = bool(file)
+        submission["FILESAVED"] = (10 * bool(file)) + bool(thumbnail)
+        self.save_submission_thumbnail(submission["ID"], thumbnail)
 
         self[submission["ID"]] = submission
 
