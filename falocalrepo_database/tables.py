@@ -1,7 +1,5 @@
 from json import dumps
 from sqlite3 import Connection
-from typing import Dict
-from typing import List
 
 from .__version__ import __version__
 
@@ -48,7 +46,7 @@ settings_table: str = "SETTINGS"
 submissions_table: str = "SUBMISSIONS"
 users_table: str = "USERS"
 
-list_columns: Dict[str, List[str]] = {
+list_columns: dict[str, list[str]] = {
     journals_table: ["MENTIONS"],
     settings_table: [],
     submissions_table: ["TAGS", "FAVORITE", "MENTIONS"],

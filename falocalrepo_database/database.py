@@ -10,11 +10,8 @@ from re import sub
 from sqlite3 import Connection
 from sqlite3 import Cursor
 from sqlite3 import connect
-from typing import Dict
 from typing import Generator
-from typing import List
 from typing import Optional
-from typing import Tuple
 from typing import Union
 
 from chardet import detect as detect_encoding
@@ -35,7 +32,7 @@ from .update import update_database
 
 Key = Union[str, int, float]
 Value = Union[str, int, float, None]
-Entry = Dict[str, Union[List[str], Value]]
+Entry = dict[str, Union[list[str], Value]]
 
 
 def guess_extension(file: Optional[bytes], default: str = "") -> str:
@@ -66,7 +63,7 @@ class FADatabaseTable:
     def __init__(self, database: 'FADatabase', table: str):
         self.database: 'FADatabase' = database
         self.table: str = table.upper()
-        self.list_columns: List[str] = list_columns.get(self.table, [])
+        self.list_columns: list[str] = list_columns.get(self.table, [])
 
     def __len__(self) -> int:
         return self.database.connection.execute(f"SELECT COUNT(*) FROM {self.table}").fetchone()[0]
@@ -90,14 +87,14 @@ class FADatabaseTable:
         return self.cursor_to_dict(self.select())
 
     @cached_property
-    def columns_info(self) -> List[Tuple[str, str]]:
+    def columns_info(self) -> list[tuple[str, str]]:
         return [
             info[1:]
             for info in self.database.connection.execute(f"pragma table_info({self.table})")
         ]
 
     @cached_property
-    def columns(self) -> List[str]:
+    def columns(self) -> list[str]:
         return [name for name, *_ in self.columns_info]
 
     @cached_property
@@ -107,7 +104,7 @@ class FADatabaseTable:
             for name, *_, pk in self.columns_info if pk == 1
         ][0]
 
-    def add_to_list(self, key: Key, values: Dict[str, List[Value]]) -> bool:
+    def add_to_list(self, key: Key, values: dict[str, list[Value]]) -> bool:
         if not (values := {k.upper(): v for k, v in values.items() if v and k.upper() in self.list_columns}):
             return False
         elif not (item := self[key]):
@@ -117,7 +114,7 @@ class FADatabaseTable:
         self.update({k: self.format_list(v) for k, v in item_new.items()}, key) if item_new != item else None
         return item_new != item
 
-    def remove_from_list(self, key: Key, values: Dict[str, List[Value]]) -> bool:
+    def remove_from_list(self, key: Key, values: dict[str, list[Value]]) -> bool:
         if not (values := {k.upper(): v for k, v in values.items() if v and k.upper() in self.list_columns}):
             return False
         elif not (item := self[key]):
@@ -132,27 +129,27 @@ class FADatabaseTable:
         for attr in filter(self.__dict__.__contains__, ("columns", "columns_info", "column_id")):
             del self.__dict__[attr]
 
-    def cursor_to_dict(self, cursor: Cursor, columns: List[str] = None) -> Generator[Entry, None, None]:
+    def cursor_to_dict(self, cursor: Cursor, columns: list[str] = None) -> Generator[Entry, None, None]:
         columns = list(map(str.upper, self.columns if columns is None else columns))
         return ({k: self.unpack_list(v) if k in self.list_columns else v for k, v in zip(columns, entry)}
                 for entry in cursor)
 
     @staticmethod
-    def format_list(obj: List[Value]) -> str:
+    def format_list(obj: list[Value]) -> str:
         return "".join(f"|{e}|" for e in sorted(set(map(str, obj)), key=str.lower))
 
     @staticmethod
-    def unpack_list(obj: str) -> List[str]:
+    def unpack_list(obj: str) -> list[str]:
         return [e for e in obj.split("|") if e]
 
-    def format_dict(self, obj: Entry) -> Dict[str, Value]:
+    def format_dict(self, obj: Entry) -> dict[str, Value]:
         obj = {k.upper().replace("_", ""): v for k, v in obj.items()}
         obj = {k: self.format_list(v) if isinstance(v := obj.get(k, ""), list) else v for k in self.columns}
         return obj
 
-    def select(self, query: Dict[str, Union[List[Value], Value]] = None, columns: List[str] = None,
+    def select(self, query: dict[str, Union[list[Value], Value]] = None, columns: list[str] = None,
                query_and: bool = True, query_and_values: bool = False, like: bool = False,
-               order: List[str] = None, limit: int = 0, offset: int = 0
+               order: list[str] = None, limit: int = 0, offset: int = 0
                ) -> Cursor:
         query = {} if query is None else query
         query = {k: [v] if not isinstance(v, list) else v for k, v in query.items()}
@@ -176,8 +173,8 @@ class FADatabaseTable:
             [v for values in query.values() for v in values]
         )
 
-    def select_sql(self, where: str = "", values: List[Value] = None, columns: List[str] = None,
-                   order: List[str] = None, limit: int = 0, offset: int = 0) -> Cursor:
+    def select_sql(self, where: str = "", values: list[Value] = None, columns: list[str] = None,
+                   order: list[str] = None, limit: int = 0, offset: int = 0) -> Cursor:
         columns = self.columns if columns is None else columns
         order = [] if order is None else order
         return self.database.connection.execute(
@@ -189,15 +186,15 @@ class FADatabaseTable:
             [] if values is None else values
         )
 
-    def insert(self, values: Dict[str, Value], replace: bool = True):
+    def insert(self, values: dict[str, Value], replace: bool = True):
         self.database.connection.execute(
             f"""INSERT OR {'REPLACE' if replace else 'IGNORE'} INTO {self.table}
             ({','.join(values.keys())}) VALUES ({','.join(['?'] * len(values))})""",
             [v for v in values.values()]
         )
 
-    def update(self, values: Dict[str, Value], key: Optional[Key] = None):
-        update_columns: List[str] = [f"{col} = ?" for col in values]
+    def update(self, values: dict[str, Value], key: Optional[Key] = None):
+        update_columns: list[str] = [f"{col} = ?" for col in values]
         where_str: str = f"WHERE {self.column_id} = ?" if key else ""
         self.database.connection.execute(
             f"UPDATE {self.table} SET {','.join(update_columns)} {where_str}",
@@ -209,7 +206,7 @@ class FADatabaseTable:
 
 
 class FADatabaseJournals(FADatabaseTable):
-    def save_journal(self, journal: Dict[str, Union[int, str, list]]):
+    def save_journal(self, journal: dict[str, Union[int, str, list]]):
         journal = self.format_dict(journal)
         self[journal["ID"]] = journal
 
@@ -231,7 +228,7 @@ class FADatabaseSettings(FADatabaseTable):
     def __setitem__(self, setting: str, value: str):
         self.insert({"SETTING": setting, "SVALUE": value})
 
-    def read_history(self) -> List[Tuple[float, str]]:
+    def read_history(self) -> list[tuple[float, str]]:
         return list(map(tuple, loads(h) if (h := self["HISTORY"]) else []))
 
     def add_history(self, command: str, time: float = 0):
@@ -259,7 +256,7 @@ class FADatabaseSubmissions(FADatabaseTable):
     def save_submission_thumbnail(self, submission_id: int, file: Optional[bytes]):
         self.save_submission_file(submission_id, file, "thumbnail", "jpg", False)
 
-    def save_submission(self, submission: Dict[str, Union[int, str, list]], file: Optional[bytes] = None,
+    def save_submission(self, submission: dict[str, Union[int, str, list]], file: Optional[bytes] = None,
                         thumbnail: Optional[bytes] = None):
         submission = self.format_dict(submission)
 
@@ -341,7 +338,7 @@ class FADatabase:
     def __getitem__(self, table: str):
         return FADatabaseTable(self, table)
 
-    def __iter__(self) -> Generator[Tuple[str, FADatabaseTable], None, None]:
+    def __iter__(self) -> Generator[tuple[str, FADatabaseTable], None, None]:
         return ((table, FADatabaseTable(self, table)) for table in self.tables)
 
     def __contains__(self, table: str) -> bool:
@@ -354,7 +351,7 @@ class FADatabase:
         self.close()
 
     @property
-    def tables(self) -> List[str]:
+    def tables(self) -> list[str]:
         return [
             name
             for [name] in self.connection.execute(

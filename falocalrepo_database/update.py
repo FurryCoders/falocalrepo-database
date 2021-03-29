@@ -21,10 +21,7 @@ from sqlite3 import OperationalError
 from sqlite3 import connect as connect_database
 from typing import Callable
 from typing import Collection
-from typing import List
 from typing import Optional
-from typing import Set
-from typing import Tuple
 from typing import Union
 
 DatabaseUpdater = Callable[[Connection, str, str], None]
@@ -888,7 +885,7 @@ def update_2_7_to_3(db: Connection, db_path: str, db_new_path: str):
     for user, folders in db.execute("SELECT USERNAME, FOLDERS FROM db_new.USERS"):
         user_n += 1
         print(user_n, end="\r", flush=True)
-        folders_new: List[str] = []
+        folders_new: list[str] = []
         for folder in folders.split(","):
             folder_new = ""
             folder_disabled = folder.endswith("!")
@@ -910,7 +907,7 @@ def update_2_7_to_3(db: Connection, db_path: str, db_new_path: str):
     # Update submissions FILEEXT and FILESAVED and move to new location
     print("Update submissions FILEEXT and FILESAVED and move to new location")
     sub_n: int = 0
-    sub_not_found: List[int] = []
+    sub_not_found: list[int] = []
     files_folder_old: str = join(dirname(db_path), "FA.files")
     files_folder_new: str = join(dirname(db_path), "FA.files_new")
     for id_, location in db.execute("SELECT ID, LOCATION FROM SUBMISSIONS"):
@@ -1070,10 +1067,10 @@ def update_3_4_to_3_5(db: Connection, db_path: str, db_new_path: str):
     )
 
     # Update history
-    history: List[List[str]] = json_loads(
+    history: list[list[str]] = json_loads(
         db.execute("SELECT SVALUE FROM SETTINGS WHERE SETTING = 'HISTORY'").fetchone()[0]
     )
-    history_new: List[Tuple[float, str]] = list(map(lambda th: (float(th[0]), th[1]), history))
+    history_new: list[tuple[float, str]] = list(map(lambda th: (float(th[0]), th[1]), history))
     db.execute("UPDATE db_new.SETTINGS SET SVALUE = ? WHERE SETTING = 'HISTORY'", [json_dumps(history_new)])
     db.execute("UPDATE db_new.SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", ["3.5.0"])
 
@@ -1191,9 +1188,9 @@ def update_4_4_to_4_5(db: Connection, db_path: str, db_new_path: str):
         SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION');"""
     )
 
-    users_old: List[Tuple[str, ...]] = db.execute("select USERNAME,GALLERY,SCRAPS,MENTIONS from USERS").fetchall()
-    missing_mentions: List[Tuple[str, int]] = []
-    double_folders: List[Tuple[str, int]] = []
+    users_old: list[tuple[str, ...]] = db.execute("select USERNAME,GALLERY,SCRAPS,MENTIONS from USERS").fetchall()
+    missing_mentions: list[tuple[str, int]] = []
+    double_folders: list[tuple[str, int]] = []
 
     mentions_exp: Pattern = re_compile(r'<a[^>]*href="(?:(?:https?://)?(?:www.)?furaffinity.net)?/user/([^/">]+)"')
     for i, d in db.execute("select ID, DESCRIPTION from db_new.SUBMISSIONS").fetchall():
@@ -1202,8 +1199,8 @@ def update_4_4_to_4_5(db: Connection, db_path: str, db_new_path: str):
             db.execute("update db_new.SUBMISSIONS set MENTIONS = ? where ID = ?", (",".join(mentions), i))
 
     for user, g, s, m in users_old:
-        g_set: Set[int] = set(map(int, filter(bool, g.split(","))))
-        s_set: Set[int] = set(map(int, filter(bool, s.split(","))))
+        g_set: set[int] = set(map(int, filter(bool, g.split(","))))
+        s_set: set[int] = set(map(int, filter(bool, s.split(","))))
         double_folders.extend((user, i) for i in g_set.intersection(s_set))
         for i in g_set:
             db.execute("update db_new.SUBMISSIONS set FOLDER = ? where ID = ?", ("gallery", i))
@@ -1363,8 +1360,8 @@ def update_4_8_to_4_9(db: Connection, db_path: str, db_new_path: str):
         SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION')"""
     )
 
-    unknown_extensions: List[Tuple[int, str]] = []
-    blank_extensions: List[Tuple[int, str]] = []
+    unknown_extensions: list[tuple[int, str]] = []
+    blank_extensions: list[tuple[int, str]] = []
     files_folder: str = join(
         dirname(db_path),
         db.execute("select SVALUE from SETTINGS where SETTING = 'FILESFOLDER'").fetchone()[0]

@@ -7,9 +7,7 @@ from os.path import join
 from shutil import copy
 from sqlite3 import Connection
 from sqlite3 import DatabaseError
-from typing import List
 from typing import Optional
-from typing import Tuple
 
 from .__version__ import __version__
 from .tables import journals_table
@@ -70,15 +68,15 @@ def merge_database(db_a: Connection, db_a_folder: str, db_b: Connection, db_b_fo
             journal
         )
 
-    user_b: Tuple[str, str]
+    user_b: tuple[str, str]
     for user_b in db_b.execute(f"SELECT USERNAME, FOLDERS FROM {users_table}"):
-        user_new: List[str] = list(user_b)
-        user_a: Optional[Tuple[str, str]] = db_a.execute(
+        user_new: list[str] = list(user_b)
+        user_a: Optional[tuple[str, str]] = db_a.execute(
             f"SELECT USERNAME, FOLDERS FROM {users_table} WHERE USERNAME = ?", [user_b[0]]).fetchone()
 
         if user_a is not None:
-            fs_a: List[str] = user_a[1].split("|")
-            fs_b: List[str] = user_b[1].split("|")
+            fs_a: list[str] = user_a[1].split("|")
+            fs_b: list[str] = user_b[1].split("|")
             user_new[1] = "".join(f"|{f}|" for f in sorted(set(filter(bool, fs_a + fs_b)), key=str.lower))
         db_a.execute(
             f"INSERT OR REPLACE INTO {users_table} (USERNAME,FOLDERS) VALUES ({','.join(['?'] * len(user_new))})",
