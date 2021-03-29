@@ -8,7 +8,6 @@ readme = "README.md"
 homepage = "https://gitlab.com/MatteoCampinoti94/falocalrepo-database"
 repository = "https://gitlab.com/MatteoCampinoti94/falocalrepo-database"
 classifiers = [
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Operating System :: OS Independent",
     "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
@@ -18,7 +17,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 filetype = "^1.0.7"
 chardet = "^4.0.0"
 
