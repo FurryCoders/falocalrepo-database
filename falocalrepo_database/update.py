@@ -795,6 +795,66 @@ def make_database_4_9(db: Connection) -> Connection:
     return db
 
 
+def make_database_4_11(db: Connection) -> Connection:
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS USERS
+        (USERNAME TEXT UNIQUE NOT NULL CHECK (length(USERNAME) > 0),
+        FOLDERS TEXT NOT NULL,
+        PRIMARY KEY (USERNAME ASC));"""
+    )
+
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS SUBMISSIONS
+        (ID INT UNIQUE NOT NULL CHECK (ID > 0),
+        AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
+        TITLE TEXT NOT NULL,
+        DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%d',DATE)),
+        DESCRIPTION TEXT NOT NULL,
+        TAGS TEXT NOT NULL,
+        CATEGORY TEXT NOT NULL,
+        SPECIES TEXT NOT NULL,
+        GENDER TEXT NOT NULL,
+        RATING TEXT NOT NULL,
+        TYPE TEXT NOT NULL CHECK (TYPE IN ('image', 'music', 'text', 'flash')),
+        FILEURL TEXT NOT NULL,
+        FILEEXT TEXT NOT NULL,
+        FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1, 10, 11)),
+        FAVORITE TEXT NOT NULL,
+        MENTIONS TEXT NOT NULL,
+        FOLDER TEXT NOT NULL CHECK (FOLDER IN ('gallery', 'scraps')),
+        USERUPDATE INT NOT NULL CHECK (USERUPDATE in (0, 1)),
+        PRIMARY KEY (ID ASC));"""
+    )
+
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS JOURNALS
+        (ID INT UNIQUE NOT NULL CHECK (ID > 0),
+        AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
+        TITLE TEXT NOT NULL,
+        DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%d',DATE)),
+        CONTENT TEXT NOT NULL,
+        MENTIONS TEXT NOT NULL,
+        USERUPDATE INT NOT NULL CHECK (USERUPDATE in (0, 1)),
+        PRIMARY KEY (ID ASC));""",
+    )
+
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS SETTINGS
+        (SETTING TEXT UNIQUE NOT NULL CHECK (length(SETTING) > 0),
+        SVALUE TEXT NOT NULL CHECK (length(SVALUE) > 0),
+        PRIMARY KEY (SETTING ASC));"""
+    )
+
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["HISTORY", "[]"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["COOKIES", "{}"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["FILESFOLDER", "FA.files"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["VERSION", "4.11.0"])
+
+    db.commit()
+
+    return db
+
+
 def make_database(path: str, make_function: Callable[[Connection], Connection]):
     make_function(connect_database(path)).close()
 
@@ -1341,6 +1401,29 @@ def update_4_8_to_4_9(db: Connection, db_path: str, db_new_path: str):
             f.write("\n".join(f"{i} {e}" for i, e in blank_extensions))
 
 
+def update_4_10_4_11(db: Connection, db_path: str, db_new_path: str):
+    print("Updating 4.10.0 to 4.11.0")
+
+    make_database(db_new_path, make_database_4_11)
+
+    # Transfer common submissions and users data
+    print("Transfer common submissions and users data")
+    db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
+    db.execute("INSERT OR IGNORE INTO db_new.USERS SELECT * FROM USERS")
+    db.execute("INSERT OR IGNORE INTO db_new.SUBMISSIONS SELECT * FROM SUBMISSIONS")
+    db.execute("INSERT OR IGNORE INTO db_new.JOURNALS SELECT * FROM JOURNALS")
+    db.execute("INSERT OR REPLACE INTO db_new.SETTINGS SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION')")
+
+    files_folder: str = join(
+        dirname(db_path),
+        db.execute("select SVALUE from SETTINGS where SETTING = 'FILESFOLDER'").fetchone()[0]
+    )
+    for i, f in db.execute("SELECT ID, FILESAVED FROM SUBMISSIONS"):
+        f *= 10
+        f += isfile(join(files_folder, tiered_path(i), "thumbnail.jpg"))
+        db.execute("UPDATE db_new.SUBMISSIONS SET FILESAVED = ? WHERE ID = ?", (f, i))
+
+
 def update_wrapper(db: Connection, function: DatabaseUpdater, prefix_old: str) -> Connection:
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
@@ -1411,6 +1494,10 @@ def update_database(db: Connection, version: str) -> Connection:
         db = update_wrapper(db, update_4_7_to_4_8, "v4_7_")  # 4.7.x to 4.8.0
     elif compare_versions(db_version, "4.9.0") < 0:
         db = update_wrapper(db, update_4_8_to_4_9, "v4_8_")  # 4.8.x to 4.9.0
+    elif compare_versions(db_version, "4.10.0") < 0:
+        db = update_version(db, db_version, "4.10.0")  # 4.9.x to 4.10.0
+    elif compare_versions(db_version, "4.11.0") < 0:
+        db = update_wrapper(db, update_4_10_4_11, "v4_10_")  # 4.10.x to 4.11.0
     elif compare_versions(db_version, version) < 0:
         return update_version(db, db_version, version)  # Update to latest patch
 
