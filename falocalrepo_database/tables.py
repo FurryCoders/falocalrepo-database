@@ -104,7 +104,7 @@ def make_submissions_table(db: Connection):
         TYPE TEXT NOT NULL CHECK (TYPE IN ('image', 'music', 'text', 'flash')),
         FILEURL TEXT NOT NULL,
         FILEEXT TEXT NOT NULL,
-        FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1)),
+        FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1, 10, 11)),
         FAVORITE TEXT NOT NULL,
         MENTIONS TEXT NOT NULL,
         FOLDER TEXT NOT NULL CHECK (FOLDER IN ('gallery', 'scraps')),
