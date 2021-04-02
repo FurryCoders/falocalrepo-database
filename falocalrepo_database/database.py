@@ -17,6 +17,11 @@ from typing import Union
 
 from chardet import detect as detect_encoding
 from filetype import guess_extension as filetype_guess_extension
+from psutil import AccessDenied
+from psutil import Error
+from psutil import NoSuchProcess
+from psutil import Process
+from psutil import process_iter
 
 from .__version__ import __version__
 from .merge import merge_database
@@ -399,6 +404,18 @@ class FADatabase:
         if err is not None and raise_for_error:
             raise err
         return err
+
+    def check_connection(self, raise_for_error: bool = True) -> list[Process]:
+        ps: list[Process] = []
+        for process in process_iter():
+            try:
+                if process.is_running() and any(self.database_path == path for path, _fd in process.open_files()):
+                    ps.append(process)
+            except (NoSuchProcess, AccessDenied):
+                pass
+        if len(ps) > 1 and raise_for_error:
+            raise Error(f"Multiple connections to database: {ps}")
+        return ps
 
     def commit(self):
         self.connection.commit()
