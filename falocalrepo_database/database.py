@@ -9,6 +9,7 @@ from os.path import join
 from re import sub
 from sqlite3 import Connection
 from sqlite3 import Cursor
+from sqlite3 import DatabaseError
 from sqlite3 import connect
 from typing import Generator
 from typing import Optional
@@ -382,6 +383,22 @@ class FADatabase:
         self.submissions.reload()
         self.users.reload()
         self.committed_changes: int = self.total_changes
+
+    def check_version(self, raise_for_error: bool = True) -> Optional[DatabaseError]:
+        err: Optional[DatabaseError] = None
+        if (v := self.version) == __version__:
+            return None
+        elif not v:
+            err = DatabaseError(f"version error: {v}")
+        elif (v_db := v.split("."))[0] != (v_md := __version__.split("."))[0]:
+            err = DatabaseError(f"major version is not latest: {v_db[0]} != {v_md[0]}")
+        elif v_db[1] != v_md[1]:
+            err = DatabaseError(f"minor version is not latest: {v_db[1]} != {v_md[1]}")
+        elif v_db[2] != v_md[2]:
+            err = DatabaseError(f"patch version is not latest: {v_db[2]} != {v_md[2]}")
+        if err is not None and raise_for_error:
+            raise err
+        return err
 
     def commit(self):
         self.connection.commit()
