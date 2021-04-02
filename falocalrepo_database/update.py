@@ -24,8 +24,6 @@ from typing import Collection
 from typing import Optional
 from typing import Union
 
-DatabaseUpdater = Callable[[Connection, str, str], None]
-
 
 def get_version(db: Connection) -> str:
     try:
@@ -1421,7 +1419,7 @@ def update_4_10_4_11(db: Connection, db_path: str, db_new_path: str):
         db.execute("UPDATE db_new.SUBMISSIONS SET FILESAVED = ? WHERE ID = ?", (f, i))
 
 
-def update_wrapper(db: Connection, function: DatabaseUpdater, prefix_old: str) -> Connection:
+def update_wrapper(db: Connection, function: Callable[[Connection, str, str], None], prefix_old: str) -> Connection:
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
     try:
