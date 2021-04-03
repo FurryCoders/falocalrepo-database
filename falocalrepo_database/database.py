@@ -412,10 +412,10 @@ class FADatabase:
             try:
                 if process.is_running() and any(self.database_path == f.path for f in process.open_files()):
                     ps.append(process)
+                if len(ps) > 1 and raise_for_error:
+                    raise Error(f"Multiple connections to database: {ps}")
             except (NoSuchProcess, AccessDenied):
                 pass
-        if len(ps) > 1 and raise_for_error:
-            raise Error(f"Multiple connections to database: {ps}")
         return ps
 
     def commit(self):
