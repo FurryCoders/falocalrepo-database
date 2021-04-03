@@ -410,7 +410,7 @@ class FADatabase:
         ps: list[Process] = []
         for process in process_iter():
             try:
-                if process.is_running() and any(self.database_path == path for path, _fd in process.open_files()):
+                if process.is_running() and any(self.database_path == f.path for f in process.open_files()):
                     ps.append(process)
             except (NoSuchProcess, AccessDenied):
                 pass
