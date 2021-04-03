@@ -859,8 +859,8 @@ def update_2_7_to_3(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_3)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         """INSERT OR IGNORE INTO
@@ -876,13 +876,11 @@ def update_2_7_to_3(db: Connection, db_path: str, db_new_path: str):
     )
 
     # Update users folders
-    print("Update users folders")
+    print("Updating users folders")
     user: str
     folders: str
-    user_n: int = 0
-    for user, folders in db.execute("SELECT USERNAME, FOLDERS FROM db_new.USERS"):
-        user_n += 1
-        print(user_n, end="\r", flush=True)
+    for n, user, folders in db.execute("SELECT row_number() over (), USERNAME, FOLDERS FROM db_new.USERS"):
+        print(n, end="\r", flush=True)
         folders_new: list[str] = []
         for folder in folders.split(","):
             folder_new = ""
@@ -899,18 +897,16 @@ def update_2_7_to_3(db: Connection, db_path: str, db_new_path: str):
                 folder_new = "Extras"
             folders_new.append(folder_new + ("!" if folder_disabled else ""))
         db.execute("update db_new.USERS set FOLDERS = ? where USERNAME = ?", [",".join(folders_new), user])
-        db.commit() if user_n % 1000 == 0 else None
+        db.commit() if n % 1000 == 0 else None
     print()
 
     # Update submissions FILEEXT and FILESAVED and move to new location
-    print("Update submissions FILEEXT and FILESAVED and move to new location")
-    sub_n: int = 0
+    print("Updating submissions entries and moving files to new location")
     sub_not_found: list[int] = []
     files_folder_old: str = join(dirname(db_path), "FA.files")
     files_folder_new: str = join(dirname(db_path), "FA.files_new")
-    for id_, location in db.execute("SELECT ID, LOCATION FROM SUBMISSIONS"):
-        sub_n += 1
-        print(sub_n, end="\r", flush=True)
+    for n, id_, location in db.execute("SELECT row_number() over (), ID, LOCATION FROM SUBMISSIONS"):
+        print(n, end="\r", flush=True)
         if isdir(folder_old := join(files_folder_old, location.strip("/"))):
             fileglob = glob(join(folder_old, "submission*"))
             fileext = ""
@@ -930,7 +926,7 @@ def update_2_7_to_3(db: Connection, db_path: str, db_new_path: str):
             sub_not_found.append(id_)
             db.execute("update db_new.SUBMISSIONS set FILEEXT = ?, FILESAVED = ? where ID = ?",
                        ["", False, id_])
-        db.commit() if sub_n % 10000 == 0 else None
+        db.commit() if n % 10000 == 0 else None
     db.commit()
     print()
     if sub_not_found:
@@ -942,7 +938,7 @@ def update_2_7_to_3(db: Connection, db_path: str, db_new_path: str):
                 f.write(str(sub) + "\n")
 
     # Replace older files folder with new
-    print("Replace older files folder with new")
+    print("Replacing older files folder with new")
     if isdir(f := join(dirname(db_path), "FA.files")):
         if not sub_not_found:
             rmtree(f)
@@ -962,8 +958,8 @@ def update_3_0_to_3_1(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_3_1)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         """INSERT OR IGNORE INTO db_new.SUBMISSIONS
@@ -979,7 +975,7 @@ def update_3_0_to_3_1(db: Connection, db_path: str, db_new_path: str):
     )
 
     # Update users folders
-    print("Update user folders")
+    print("Updating users folders")
     db.execute("UPDATE db_new.USERS SET FOLDERS = replace(FOLDERS, 'extras', 'mentions')")
     db.execute("UPDATE db_new.USERS SET FOLDERS = replace(FOLDERS, 'Extras', 'mentions_all')")
 
@@ -989,8 +985,8 @@ def update_3_1_to_3_2(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_3_2)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         """INSERT OR IGNORE INTO db_new.SUBMISSIONS
@@ -1012,8 +1008,8 @@ def update_3_2_to_3_3(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_3_3)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         f"""INSERT OR IGNORE INTO db_new.USERS
@@ -1033,6 +1029,7 @@ def update_3_2_to_3_3(db: Connection, db_path: str, db_new_path: str):
     )
 
     # Add update to history
+    print("Adding history")
     last_update: str = db.execute("SELECT SVALUE FROM SETTINGS WHERE SETTING = 'LASTUPDATE'").fetchone()
     if last_update and last_update[0] != "0":
         db.execute("UPDATE db_new.SETTINGS SET SVALUE = ? WHERE SETTING = 'HISTORY'",
@@ -1044,8 +1041,8 @@ def update_3_4_to_3_5(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_3_3)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         f"""INSERT OR IGNORE INTO db_new.USERS
@@ -1065,6 +1062,7 @@ def update_3_4_to_3_5(db: Connection, db_path: str, db_new_path: str):
     )
 
     # Update history
+    print("Updating history")
     history: list[list[str]] = json_loads(
         db.execute("SELECT SVALUE FROM SETTINGS WHERE SETTING = 'HISTORY'").fetchone()[0]
     )
@@ -1078,8 +1076,8 @@ def update_3_8_to_4(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_4)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         """INSERT OR IGNORE INTO db_new.USERS
@@ -1104,8 +1102,8 @@ def update_4_2_to_4_3(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_4_3)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         f"""INSERT OR IGNORE INTO db_new.USERS
@@ -1130,8 +1128,8 @@ def update_4_3_to_4_4(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_4_4)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         """INSERT OR IGNORE INTO db_new.USERS
@@ -1150,7 +1148,9 @@ def update_4_3_to_4_4(db: Connection, db_path: str, db_new_path: str):
         SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION');"""
     )
 
-    for u, fs in db.execute("select USERNAME, FAVORITES from db_new.USERS where FAVORITES != ''"):
+    print("Updating favorites from users entries")
+    for n, u, fs in db.execute("select row_number() over (), USERNAME, FAVORITES from db_new.USERS where FAVORITES != ''"):
+        print(n, end="\r", flush=True)
         for f in map(int, filter(bool, fs.split(","))):
             f_us: Optional[tuple] = db.execute(f"select FAVORITE from db_new.SUBMISSIONS where ID = {f}").fetchone()
             if not f_us:
@@ -1166,8 +1166,8 @@ def update_4_4_to_4_5(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_4_5)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         """INSERT OR IGNORE INTO db_new.USERS
@@ -1186,17 +1186,19 @@ def update_4_4_to_4_5(db: Connection, db_path: str, db_new_path: str):
         SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION');"""
     )
 
-    users_old: list[tuple[str, ...]] = db.execute("select USERNAME,GALLERY,SCRAPS,MENTIONS from USERS").fetchall()
-    missing_mentions: list[tuple[str, int]] = []
-    double_folders: list[tuple[str, int]] = []
-
+    print("Parsing submissions mentions")
     mentions_exp: Pattern = re_compile(r'<a[^>]*href="(?:(?:https?://)?(?:www.)?furaffinity.net)?/user/([^/">]+)"')
-    for i, d in db.execute("select ID, DESCRIPTION from db_new.SUBMISSIONS").fetchall():
+    for n, i, d in db.execute("select row_number() over (), ID, DESCRIPTION from db_new.SUBMISSIONS").fetchall():
+        print(n, end="\r", flush=True)
         mentions: list[str] = sorted(set(filter(bool, map(clean_username, findall(mentions_exp, d)))))
         if mentions:
             db.execute("update db_new.SUBMISSIONS set MENTIONS = ? where ID = ?", (",".join(mentions), i))
 
-    for user, g, s, m in users_old:
+    print("Updating folders from users entries")
+    missing_mentions: list[tuple[str, int]] = []
+    double_folders: list[tuple[str, int]] = []
+    for n, user, g, s, m in db.execute("select row_number() over (), USERNAME,GALLERY,SCRAPS,MENTIONS from USERS"):
+        print(n, end="\r", flush=True)
         g_set: set[int] = set(map(int, filter(bool, g.split(","))))
         s_set: set[int] = set(map(int, filter(bool, s.split(","))))
         double_folders.extend((user, i) for i in g_set.intersection(s_set))
@@ -1227,8 +1229,8 @@ def update_4_5_to_4_6(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_4_6)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         """INSERT OR IGNORE INTO db_new.USERS
@@ -1261,8 +1263,8 @@ def update_4_6_to_4_7(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_4_7)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         """INSERT OR IGNORE INTO db_new.USERS
@@ -1281,8 +1283,10 @@ def update_4_6_to_4_7(db: Connection, db_path: str, db_new_path: str):
         SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION');"""
     )
 
+    print("Parsing journals mentions")
     mentions_exp: Pattern = re_compile(r'<a[^>]*href="(?:(?:https?://)?(?:www.)?furaffinity.net)?/user/([^/">]+)"')
-    for i, c in db.execute("select ID, CONTENT from db_new.JOURNALS").fetchall():
+    for n, i, c in db.execute("select row_number() over (), ID, CONTENT from db_new.JOURNALS").fetchall():
+        print(n, end="\r", flush=True)
         mentions: list[str] = sorted(set(filter(bool, map(clean_username, findall(mentions_exp, c)))))
         if mentions:
             db.execute("update db_new.JOURNALS set MENTIONS = ? where ID = ?", (",".join(mentions), i))
@@ -1293,8 +1297,8 @@ def update_4_7_to_4_8(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_4_8)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         """INSERT OR IGNORE INTO db_new.USERS
@@ -1313,10 +1317,14 @@ def update_4_7_to_4_8(db: Connection, db_path: str, db_new_path: str):
         SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION')"""
     )
 
-    for u, fs in db.execute("select USERNAME, FOLDERS from USERS"):
+    print("Updating users entries")
+    for n, u, fs in db.execute("select row_number() over (), USERNAME, FOLDERS from USERS"):
+        print(n, end="\r", flush=True)
         fs = "".join(sorted((f"|{f}|" for f in fs.split(",") if f), key=str.lower))
         db.execute("update db_new.USERS set FOLDERS = ? where USERNAME = ?", (fs, u))
-    for i, ts, fs, ms in db.execute("select ID, TAGS, FAVORITE, MENTIONS from SUBMISSIONS"):
+    print("Updating submissions entries")
+    for n, i, ts, fs, ms in db.execute("select row_number() over (), ID, TAGS, FAVORITE, MENTIONS from SUBMISSIONS"):
+        print(n, end="\r", flush=True)
         if not ts and not fs and not ms:
             continue
         ts = "".join(sorted((f"|{t}|" for t in ts.split(",") if t), key=str.lower))
@@ -1336,8 +1344,8 @@ def update_4_8_to_4_9(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_4_9)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute(
         """INSERT OR IGNORE INTO db_new.USERS
@@ -1358,13 +1366,15 @@ def update_4_8_to_4_9(db: Connection, db_path: str, db_new_path: str):
         SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION')"""
     )
 
+    print("Updating submissions types")
     unknown_extensions: list[tuple[int, str]] = []
     blank_extensions: list[tuple[int, str]] = []
     files_folder: str = join(
         dirname(db_path),
         db.execute("select SVALUE from SETTINGS where SETTING = 'FILESFOLDER'").fetchone()[0]
     )
-    for i, e, s in db.execute("select ID, FILEEXT, FILESAVED from SUBMISSIONS"):
+    for n, i, e, s in db.execute("select row_number() over (), ID, FILEEXT, FILESAVED from SUBMISSIONS"):
+        print(n, end="\r", flush=True)
         if (e := e.lower()) in ("jpg", "jpeg", "png", "gif", "tif", "tiff", "bmp"):
             pass
         elif e in ("mp3", "wav", "mid", "midi"):
@@ -1401,19 +1411,21 @@ def update_4_10_4_11(db: Connection, db_path: str, db_new_path: str):
 
     make_database(db_new_path, make_database_4_11)
 
-    # Transfer common submissions and users data
-    print("Transfer common submissions and users data")
+    # Transferring entries
+    print("Transferring entries")
     db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
     db.execute("INSERT OR IGNORE INTO db_new.USERS SELECT * FROM USERS")
     db.execute("INSERT OR IGNORE INTO db_new.SUBMISSIONS SELECT * FROM SUBMISSIONS")
     db.execute("INSERT OR IGNORE INTO db_new.JOURNALS SELECT * FROM JOURNALS")
     db.execute("INSERT OR REPLACE INTO db_new.SETTINGS SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION')")
 
+    print("Checking submission thumbnails")
     files_folder: str = join(
         dirname(db_path),
         db.execute("select SVALUE from SETTINGS where SETTING = 'FILESFOLDER'").fetchone()[0]
     )
-    for i, f in db.execute("SELECT ID, FILESAVED FROM SUBMISSIONS"):
+    for n, i, f in db.execute("SELECT row_number() OVER (ORDER BY ID), ID, FILESAVED FROM SUBMISSIONS ORDER BY ID"):
+        print(n, end="\r", flush=True)
         f *= 10
         f += isfile(join(files_folder, tiered_path(i), "thumbnail.jpg"))
         db.execute("UPDATE db_new.SUBMISSIONS SET FILESAVED = ? WHERE ID = ?", (f, i))
