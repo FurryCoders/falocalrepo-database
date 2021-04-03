@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.12.0
+
+* Add method to check database version against the library's with optional exception raised on error
+* Add method to check if a database has multiple connections with optional exception raised on error
+
 ## 4.11.0
 
 * `FILESAVED` stores information regarding both submission files and thumbnails
