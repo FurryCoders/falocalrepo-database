@@ -953,8 +953,8 @@ def update_2_7_to_3(db: Connection, db_path: str, db_new_path: str):
         move(f, join(dirname(db_path), "FA.files"))
 
     # Update counters for new database
-    db.execute("update db_new.SETTINGS set SVALUE = ?, where SETTING = 'SUBN'", [str(count(db, "SUBMISSIONS"))])
-    db.execute("update db_new.SETTINGS set SVALUE = ?, where SETTING = 'USRN'", [str(count(db, "USERS"))])
+    db.execute("update db_new.SETTINGS set SVALUE = ? where SETTING = 'SUBN'", [str(count(db, "SUBMISSIONS"))])
+    db.execute("update db_new.SETTINGS set SVALUE = ? where SETTING = 'USRN'", [str(count(db, "USERS"))])
 
 
 def update_3_0_to_3_1(db: Connection, db_path: str, db_new_path: str):
