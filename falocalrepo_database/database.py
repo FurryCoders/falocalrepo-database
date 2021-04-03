@@ -389,18 +389,19 @@ class FADatabase:
         self.users.reload()
         self.committed_changes: int = self.total_changes
 
-    def check_version(self, raise_for_error: bool = True) -> Optional[DatabaseError]:
+    def check_version(self, raise_for_error: bool = True, *, major: bool = True, minor: bool = True, patch: bool = True
+                      ) -> Optional[DatabaseError]:
         err: Optional[DatabaseError] = None
         if (v := self.version) == __version__:
             return None
-        elif not v:
+        if not v:
             err = DatabaseError(f"version error: {v}")
-        elif (v_db := v.split("."))[0] != (v_md := __version__.split("."))[0]:
-            err = DatabaseError(f"major version is not latest: {v_db[0]} != {v_md[0]}")
+        if (v_db := v.split("."))[0] != (v_md := __version__.split("."))[0]:
+            err = DatabaseError(f"major version is not latest: {v_db[0]} != {v_md[0]}") if major else None
         elif v_db[1] != v_md[1]:
-            err = DatabaseError(f"minor version is not latest: {v_db[1]} != {v_md[1]}")
+            err = DatabaseError(f"minor version is not latest: {v_db[1]} != {v_md[1]}") if minor else None
         elif v_db[2] != v_md[2]:
-            err = DatabaseError(f"patch version is not latest: {v_db[2]} != {v_md[2]}")
+            err = DatabaseError(f"patch version is not latest: {v_db[2]} != {v_md[2]}") if patch else None
         if err is not None and raise_for_error:
             raise err
         return err
