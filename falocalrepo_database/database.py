@@ -77,6 +77,14 @@ def clean_username(username: str) -> str:
     return str(sub(r"[^a-zA-Z0-9\-.~,]", "", username.lower().strip()))
 
 
+def format_list(obj: list[Value]) -> str:
+    return "".join(f"|{e}|" for e in sorted(set(map(str, obj)), key=str.lower))
+
+
+def unpack_list(obj: str) -> list[str]:
+    return [e for e in obj.split("|") if e]
+
+
 class FADatabaseTable:
     def __init__(self, database: 'FADatabase', table: str):
         self.database: 'FADatabase' = database
@@ -88,10 +96,10 @@ class FADatabaseTable:
 
     def __getitem__(self, key: Union[Key, Entry]) -> Optional[Entry]:
         key = key if isinstance(key, dict) else {self.column_id: key}
-        return entry[0] if (entry := list(self.cursor_to_dict(self.select(key)))) else None
+        return entry[0] if (entry := list(self.select(key))) else None
 
     def __setitem__(self, key: Key, values: Entry):
-        values = {k.upper(): self.format_list(v) if isinstance(v, list) else v for k, v in values.items()}
+        values = {k.upper(): format_list(v) if isinstance(v, list) else v for k, v in values.items()}
         values[self.column_id] = key
         self.insert(values)
 
@@ -102,7 +110,7 @@ class FADatabaseTable:
         return self[key] is not None
 
     def __iter__(self) -> Generator[Entry, None, None]:
-        return self.cursor_to_dict(self.select())
+        return self.select().__iter__()
 
     @cached_property
     def columns_info(self) -> list[tuple[str, str]]:
@@ -129,7 +137,7 @@ class FADatabaseTable:
             return False
         item = {k: item[k] for k in values.keys()}
         item_new = {k: sorted(filter(bool, set(item[k] + v)), key=str.lower) for k, v in values.items()}
-        self.update({k: self.format_list(v) for k, v in item_new.items()}, key) if item_new != item else None
+        self.update({k: format_list(v) for k, v in item_new.items()}, key) if item_new != item else None
         return item_new != item
 
     def remove_from_list(self, key: Key, values: dict[str, list[Value]]) -> bool:
@@ -139,7 +147,7 @@ class FADatabaseTable:
             return False
         item = {k: item[k] for k in values.keys()}
         item_new = {k: sorted(filter(bool, set(item[k]) - set(v)), key=str.lower) for k, v in values.items()}
-        self.update({k: self.format_list(v) for k, v in item_new.items()}, key) if item_new != item else None
+        self.update({k: format_list(v) for k, v in item_new.items()}, key) if item_new != item else None
         return item_new != item
 
     def reload(self):
@@ -147,22 +155,9 @@ class FADatabaseTable:
         for attr in filter(self.__dict__.__contains__, ("columns", "columns_info", "column_id")):
             del self.__dict__[attr]
 
-    def cursor_to_dict(self, cursor: 'FADatabaseCursor') -> Generator[Entry, None, None]:
-        columns = list(map(str.upper, cursor.columns))
-        return ({k: self.unpack_list(v) if k in cursor.table.list_columns else v for k, v in zip(columns, entry)}
-                for entry in cursor)
-
-    @staticmethod
-    def format_list(obj: list[Value]) -> str:
-        return "".join(f"|{e}|" for e in sorted(set(map(str, obj)), key=str.lower))
-
-    @staticmethod
-    def unpack_list(obj: str) -> list[str]:
-        return [e for e in obj.split("|") if e]
-
     def format_dict(self, obj: Entry) -> dict[str, Value]:
         obj = {k.upper().replace("_", ""): v for k, v in obj.items()}
-        obj = {k: self.format_list(v) if isinstance(v := obj.get(k, ""), list) else v for k in self.columns}
+        obj = {k: format_list(v) if isinstance(v := obj.get(k, ""), list) else v for k in self.columns}
         return obj
 
     def select(self, query: dict[str, Union[list[Value], Value]] = None, columns: list[str] = None,
@@ -315,12 +310,12 @@ class FADatabaseUsers(FADatabaseTable):
     def activate_user(self, user: str):
         if (user_entry := self[(user := clean_username(user))]) is None:
             return
-        self.update({"FOLDERS": self.format_list([f.strip("!") for f in user_entry["FOLDERS"]])}, user)
+        self.update({"FOLDERS": format_list([f.strip("!") for f in user_entry["FOLDERS"]])}, user)
 
     def deactivate_user(self, user: str):
         if (user_entry := self[(user := clean_username(user))]) is None:
             return
-        self.update({"FOLDERS": self.format_list([f"!{f.strip('!')}" for f in user_entry["FOLDERS"]])}, user)
+        self.update({"FOLDERS": format_list([f"!{f.strip('!')}" for f in user_entry["FOLDERS"]])}, user)
 
     def add_user_folder(self, user: str, folder: str):
         if not (user_entry := self[(user := clean_username(user))]):
@@ -341,11 +336,10 @@ class FADatabaseCursor:
         self.cursor: Cursor = cursor
         self.columns: list[str] = columns
 
-    def __iter__(self):
-        self.cursor.__iter__()
-
-    def dict(self) -> Generator[Entry, None, None]:
-        return self.table.cursor_to_dict(self)
+    def __iter__(self) -> Generator[Entry, None, None]:
+        columns = list(map(str.upper, self.columns))
+        return ({k: unpack_list(v) if k in self.table.list_columns else v for k, v in zip(columns, entry)}
+                for entry in self.cursor)
 
 
 class FADatabase:
