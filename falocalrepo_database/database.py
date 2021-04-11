@@ -302,8 +302,7 @@ class FADatabaseSubmissions(FADatabaseTable):
 
 class FADatabaseUsers(FADatabaseTable):
     def new_user(self, user: str) -> str:
-        user = clean_username(user)
-        if user not in self:
+        if (user := clean_username(user)) not in self:
             self[user] = {}
         return user
 
