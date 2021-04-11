@@ -241,7 +241,7 @@ class FADatabaseSettings(FADatabaseTable):
         return (super().__getitem__(setting) or {}).get("SVALUE", None)
 
     def __setitem__(self, setting: str, value: str):
-        self.insert({"SETTING": setting, "SVALUE": value})
+        super().__setitem__(setting, {"SVALUE": value})
 
     def read_history(self) -> list[tuple[float, str]]:
         return list(map(tuple, loads(h) if (h := self["HISTORY"]) else []))
