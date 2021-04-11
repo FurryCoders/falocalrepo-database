@@ -135,9 +135,9 @@ class FADatabaseTable:
         for attr in filter(self.__dict__.__contains__, ("columns", "columns_info", "column_id")):
             del self.__dict__[attr]
 
-    def cursor_to_dict(self, cursor: Cursor, columns: list[str] = None) -> Generator[Entry, None, None]:
-        columns = list(map(str.upper, self.columns if columns is None else columns))
-        return ({k: self.unpack_list(v) if k in self.list_columns else v for k, v in zip(columns, entry)}
+    def cursor_to_dict(self, cursor: 'FADatabaseCursor') -> Generator[Entry, None, None]:
+        columns = list(map(str.upper, cursor.columns))
+        return ({k: self.unpack_list(v) if k in cursor.table.list_columns else v for k, v in zip(columns, entry)}
                 for entry in cursor)
 
     @staticmethod
@@ -156,7 +156,7 @@ class FADatabaseTable:
     def select(self, query: dict[str, Union[list[Value], Value]] = None, columns: list[str] = None,
                query_and: bool = True, query_and_values: bool = False, like: bool = False,
                order: list[str] = None, limit: int = 0, offset: int = 0
-               ) -> Cursor:
+               ) -> 'FADatabaseCursor':
         query = {} if query is None else query
         query = {k: [v] if not isinstance(v, list) else v for k, v in query.items()}
         query = {k: vs for k, vs in query.items() if vs}
@@ -170,7 +170,7 @@ class FADatabaseTable:
             for k, vs in query.items()
         ]))
         order_str = ",".join(order)
-        return self.database.connection.execute(
+        cursor: Cursor = self.database.connection.execute(
             f"""SELECT {','.join(columns)} FROM {self.table}
             {f' WHERE {where_str} ' if where_str else ''}
             {f' ORDER BY {order_str} ' if order_str else ''}
@@ -178,12 +178,13 @@ class FADatabaseTable:
             {f' OFFSET {offset} ' if limit > 0 and offset > 0 else ''}""",
             [v for values in query.values() for v in values]
         )
+        return FADatabaseCursor(cursor, columns, self)
 
     def select_sql(self, where: str = "", values: list[Value] = None, columns: list[str] = None,
-                   order: list[str] = None, limit: int = 0, offset: int = 0) -> Cursor:
+                   order: list[str] = None, limit: int = 0, offset: int = 0) -> 'FADatabaseCursor':
         columns = self.columns if columns is None else columns
         order = [] if order is None else order
-        return self.database.connection.execute(
+        cursor: Cursor = self.database.connection.execute(
             f"""SELECT {','.join(columns)} FROM {self.table}
             {f' WHERE {where} ' if where else ''}
             {f' ORDER BY {",".join(order)}' if order else ''}
@@ -191,6 +192,7 @@ class FADatabaseTable:
             {f' OFFSET {offset}' if limit > 0 and offset > 0 else ''}""",
             [] if values is None else values
         )
+        return FADatabaseCursor(cursor, columns, self)
 
     def insert(self, values: dict[str, Value], replace: bool = True):
         self.database.connection.execute(
@@ -319,6 +321,19 @@ class FADatabaseUsers(FADatabaseTable):
 
     def remove_user_folder(self, user: str, folder: str):
         self.remove_from_list(clean_username(user), {"FOLDERS": [folder.lower()]})
+
+
+class FADatabaseCursor:
+    def __init__(self, cursor: Cursor, columns: list[str], table: FADatabaseTable):
+        self.table: FADatabaseTable = table
+        self.cursor: Cursor = cursor
+        self.columns: list[str] = columns
+
+    def __iter__(self):
+        self.cursor.__iter__()
+
+    def dict(self) -> Generator[Entry, None, None]:
+        return self.table.cursor_to_dict(self)
 
 
 class FADatabase:
