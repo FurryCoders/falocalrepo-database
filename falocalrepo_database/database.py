@@ -478,6 +478,10 @@ class FADatabase:
         """
         A -> B
         """
+        assert all(c.table.database.database_path == self.database_path for c in cursors), \
+            "Cursors must point to database calling copy"
+        self.check_version(patch=False, version=db_b.version)
+        self.check_version(patch=False)
 
         cursors = cursors or [self.journals.select(), self.submissions.select(), self.users.select()]
         db_a_files_folder: str = join(dirname(self.database_path), self.settings["FILESFOLDER"])
