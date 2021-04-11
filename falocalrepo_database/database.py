@@ -404,14 +404,15 @@ class FADatabase:
         self.users.reload()
         self.committed_changes: int = self.total_changes
 
-    def check_version(self, raise_for_error: bool = True, *, major: bool = True, minor: bool = True, patch: bool = True
+    def check_version(self, raise_for_error: bool = True, *, major: bool = True, minor: bool = True, patch: bool = True,
+                      version: str = __version__
                       ) -> Optional[DatabaseError]:
         err: Optional[DatabaseError] = None
-        if (v := self.version) == __version__:
+        if (v := self.version) == version:
             return None
         if not v:
             err = DatabaseError(f"version error: {v}")
-        if (v_db := v.split("."))[0] != (v_md := __version__.split("."))[0]:
+        if (v_db := v.split("."))[0] != (v_md := version.split("."))[0]:
             err = DatabaseError(f"major version is not latest: {v_db[0]} != {v_md[0]}") if major else None
         elif v_db[1] != v_md[1]:
             err = DatabaseError(f"minor version is not latest: {v_db[1]} != {v_md[1]}") if minor else None
