@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.13.0
+
+* Use custom class to handle cursors and `SELECT` results
+* Add copy method to database class to copy cursors to a second database
+
 ## 4.12.0
 
 * Add method to check database version against the library's with optional exception raised on error
