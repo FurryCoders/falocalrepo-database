@@ -64,10 +64,10 @@ def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> str:
     return join(*[id_str[n:n + width] for n in range(0, depth * width, width)])
 
 
-def merge_folders(src: str, dest: str):
+def copy_folder(src: str, dest: str):
     if isdir(src):
         for item in listdir(src):
-            merge_folders(join(src, item), join(dest, item))
+            copy_folder(join(src, item), join(dest, item))
     elif isfile(src) and not isfile(dest):
         makedirs(dirname(dest), exist_ok=True)
         copy(src, dest)
@@ -467,8 +467,8 @@ class FADatabase:
 
         self.check_version(patch=False, version=db_b.version)
 
-        merge_folders(join(dirname(self.database_path), self.settings["FILESFOLDER"]),
-                      join(dirname(db_b.database_path), db_b.settings["FILESFOLDER"]))
+        copy_folder(join(dirname(self.database_path), self.settings["FILESFOLDER"]),
+                    join(dirname(db_b.database_path), db_b.settings["FILESFOLDER"]))
 
         for submission in db_b.submissions:
             self.submissions.insert(db_b.submissions.format_dict(submission), replace=True)
