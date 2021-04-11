@@ -473,9 +473,8 @@ class FADatabase:
 
         for submission in db_b.submissions:
             self.submissions.insert(db_b.submissions.format_dict(submission), replace=False)
-
-        for submission in db_b.journals:
-            self.journals.insert(db_b.journals.format_dict(submission), replace=False)
+        for journal in db_b.journals:
+            self.journals.insert(db_b.journals.format_dict(journal), replace=False)
 
         for user_b in db_b.users:
             if (user_a := self.users[user_b["USERNAME"]]) is not None:
