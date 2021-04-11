@@ -461,8 +461,8 @@ class FADatabase:
 
         self.check_version(patch=False, version=db_b.version)
 
-        copy_folder(join(dirname(self.database_path), self.settings["FILESFOLDER"]),
-                    join(dirname(db_b.database_path), db_b.settings["FILESFOLDER"]))
+        copy_folder(join(dirname(db_b.database_path), db_b.settings["FILESFOLDER"]),
+                    join(dirname(self.database_path), self.settings["FILESFOLDER"]))
 
         for submission in db_b.submissions:
             self.submissions.insert(db_b.submissions.format_dict(submission), replace=True)
