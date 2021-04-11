@@ -304,7 +304,7 @@ class FADatabaseUsers(FADatabaseTable):
     def new_user(self, user: str) -> str:
         user = clean_username(user)
         if user not in self:
-            self[user] = {f: "" for f in self.columns}
+            self[user] = {}
         return user
 
     def activate_user(self, user: str):
