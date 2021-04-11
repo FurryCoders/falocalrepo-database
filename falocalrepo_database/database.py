@@ -99,7 +99,7 @@ class FADatabaseTable:
         return entry[0] if (entry := list(self.select(key))) else None
 
     def __setitem__(self, key: Key, values: Entry):
-        values = {k.upper(): format_list(v) if isinstance(v, list) else v for k, v in values.items()}
+        values = self.format_dict(values)
         values[self.column_id] = key
         self.insert(values)
 
@@ -164,11 +164,11 @@ class FADatabaseTable:
                query_and: bool = True, query_and_values: bool = False, like: bool = False,
                order: list[str] = None, limit: int = 0, offset: int = 0
                ) -> 'FADatabaseCursor':
-        query = {} if query is None else query
+        query = query or {}
         query = {k: [v] if not isinstance(v, list) else v for k, v in query.items()}
         query = {k: vs for k, vs in query.items() if vs}
-        order = [] if order is None else order
-        columns = self.columns if columns is None else columns
+        order = order or []
+        columns = columns or self.columns
         op: str = "like" if like else "="
         logic: str = "AND" if query_and else "OR"
         logic_values: str = "AND" if query_and_values else "OR"
@@ -189,8 +189,8 @@ class FADatabaseTable:
 
     def select_sql(self, where: str = "", values: list[Value] = None, columns: list[str] = None,
                    order: list[str] = None, limit: int = 0, offset: int = 0) -> 'FADatabaseCursor':
-        columns = self.columns if columns is None else columns
-        order = [] if order is None else order
+        columns = columns or self.columns
+        order = order or []
         cursor: Cursor = self.database.connection.execute(
             f"""SELECT {','.join(columns)} FROM {self.table}
             {f' WHERE {where} ' if where else ''}
@@ -238,7 +238,7 @@ class FADatabaseJournals(FADatabaseTable):
 
 class FADatabaseSettings(FADatabaseTable):
     def __getitem__(self, setting: str) -> Optional[str]:
-        return entry["SVALUE"] if (entry := super().__getitem__(setting)) is not None else None
+        return (super().__getitem__(setting) or {}).get("SVALUE", None)
 
     def __setitem__(self, setting: str, value: str):
         self.insert({"SETTING": setting, "SVALUE": value})
