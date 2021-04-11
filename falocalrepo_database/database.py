@@ -2,11 +2,15 @@ from datetime import datetime
 from functools import cached_property
 from json import dumps
 from json import loads
+from os import listdir
 from os import makedirs
 from os.path import abspath
 from os.path import dirname
+from os.path import isdir
+from os.path import isfile
 from os.path import join
 from re import sub
+from shutil import copy
 from sqlite3 import Connection
 from sqlite3 import Cursor
 from sqlite3 import DatabaseError
@@ -24,7 +28,6 @@ from psutil import Process
 from psutil import process_iter
 
 from .__version__ import __version__
-from .merge import merge_database
 from .tables import journals_table
 from .tables import list_columns
 from .tables import make_journals_table
@@ -59,6 +62,15 @@ def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> str:
 
     id_str: str = str(int(id_)).zfill(depth * width)
     return join(*[id_str[n:n + width] for n in range(0, depth * width, width)])
+
+
+def merge_folders(src: str, dest: str):
+    if isdir(src):
+        for item in listdir(src):
+            merge_folders(join(src, item), join(dest, item))
+    elif isfile(src) and not isfile(dest):
+        makedirs(dirname(dest), exist_ok=True)
+        copy(src, dest)
 
 
 def clean_username(username: str) -> str:
@@ -449,7 +461,26 @@ class FADatabase:
         self.connection.close()
 
     def merge(self, db_b: 'FADatabase'):
-        merge_database(self.connection, dirname(self.database_path), db_b.connection, dirname(db_b.database_path))
+        """
+        B -> A\n
+        B.files -> A.files
+        """
+
+        self.check_version(patch=False, version=db_b.version)
+
+        merge_folders(join(dirname(self.database_path), self.settings["FILESFOLDER"]),
+                      join(dirname(db_b.database_path), db_b.settings["FILESFOLDER"]))
+
+        for submission in db_b.submissions:
+            self.submissions.insert(db_b.submissions.format_dict(submission), replace=False)
+
+        for submission in db_b.journals:
+            self.journals.insert(db_b.journals.format_dict(submission), replace=False)
+
+        for user_b in db_b.users:
+            if (user_a := self.users[user_b["USERNAME"]]) is not None:
+                user_b["FOLDERS"] = list(set(user_a["FOLDERS"] + user_b["FOLDERS"]))
+            self.users.insert(db_b.users.format_dict(user_b)) if user_a != user_b else None
 
     def vacuum(self):
         self.connection.execute("VACUUM")
