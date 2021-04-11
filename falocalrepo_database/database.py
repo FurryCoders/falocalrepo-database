@@ -462,8 +462,7 @@ class FADatabase:
 
     def merge(self, db_b: 'FADatabase'):
         """
-        B -> A\n
-        B.files -> A.files
+        B -> A
         """
 
         self.check_version(patch=False, version=db_b.version)
