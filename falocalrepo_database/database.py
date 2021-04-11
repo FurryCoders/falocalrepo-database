@@ -479,8 +479,7 @@ class FADatabase:
         A -> B
         """
 
-        cursors = [self.journals.select(), self.submissions.select(), self.users.select()] if not cursors else cursors
-
+        cursors = cursors or [self.journals.select(), self.submissions.select(), self.users.select()]
         db_a_files_folder: str = join(dirname(self.database_path), self.settings["FILESFOLDER"])
         db_b_files_folder: str = join(dirname(db_b.database_path), db_b.settings["FILESFOLDER"])
 
