@@ -465,14 +465,15 @@ class FADatabase:
                     join(dirname(self.database_path), self.settings["FILESFOLDER"]))
 
         for submission in db_b.submissions:
-            self.submissions.insert(db_b.submissions.format_dict(submission), replace=True)
+            self.submissions[submission["ID"]] = submission
         for journal in db_b.journals:
-            self.journals.insert(db_b.journals.format_dict(journal), replace=True)
+            self.journals[journal["ID"]] = journal
 
         for user_b in db_b.users:
             if (user_a := self.users[user_b["USERNAME"]]) is not None:
                 user_b["FOLDERS"] = list(set(user_a["FOLDERS"] + user_b["FOLDERS"]))
-            self.users.insert(db_b.users.format_dict(user_b), replace=True) if user_a != user_b else None
+            if user_a != user_b:
+                self.users[user_b["USERNAME"]] = user_b
 
     def copy(self, db_b: 'FADatabase', *cursors: FADatabaseCursor):
         """
