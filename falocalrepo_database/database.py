@@ -472,14 +472,14 @@ class FADatabase:
                       join(dirname(db_b.database_path), db_b.settings["FILESFOLDER"]))
 
         for submission in db_b.submissions:
-            self.submissions.insert(db_b.submissions.format_dict(submission), replace=False)
+            self.submissions.insert(db_b.submissions.format_dict(submission), replace=True)
         for journal in db_b.journals:
-            self.journals.insert(db_b.journals.format_dict(journal), replace=False)
+            self.journals.insert(db_b.journals.format_dict(journal), replace=True)
 
         for user_b in db_b.users:
             if (user_a := self.users[user_b["USERNAME"]]) is not None:
                 user_b["FOLDERS"] = list(set(user_a["FOLDERS"] + user_b["FOLDERS"]))
-            self.users.insert(db_b.users.format_dict(user_b)) if user_a != user_b else None
+            self.users.insert(db_b.users.format_dict(user_b), replace=True) if user_a != user_b else None
 
     def vacuum(self):
         self.connection.execute("VACUUM")
