@@ -89,7 +89,7 @@ class FADatabaseTable:
     def __init__(self, database: 'FADatabase', table: str):
         self.database: 'FADatabase' = database
         self.table: str = table.upper()
-        self.list_columns: list[str] = list_columns.get(self.table, [])
+        self.list_columns: list[str] = list(map(str.upper, list_columns.get(self.table, [])))
 
     def __len__(self) -> int:
         return self.database.connection.execute(f"SELECT COUNT(*) FROM {self.table}").fetchone()[0]
@@ -113,9 +113,9 @@ class FADatabaseTable:
         return self.select().__iter__()
 
     @cached_property
-    def columns_info(self) -> list[tuple[str, str]]:
+    def columns_info(self) -> list[tuple[str, ...]]:
         return [
-            info[1:]
+            (info[1].upper(), *info[2:])
             for info in self.database.connection.execute(f"pragma table_info({self.table})")
         ]
 
