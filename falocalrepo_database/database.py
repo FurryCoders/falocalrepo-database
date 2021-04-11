@@ -474,5 +474,23 @@ class FADatabase:
                 user_b["FOLDERS"] = list(set(user_a["FOLDERS"] + user_b["FOLDERS"]))
             self.users.insert(db_b.users.format_dict(user_b), replace=True) if user_a != user_b else None
 
+    def copy(self, db_b: 'FADatabase', *cursors: FADatabaseCursor):
+        """
+        A -> B
+        """
+
+        if not cursors:
+            return
+
+        db_a_files_folder: str = join(dirname(self.database_path), self.settings["FILESFOLDER"])
+        db_b_files_folder: str = join(dirname(db_b.database_path), db_b.settings["FILESFOLDER"])
+
+        for cursor in cursors:
+            table: FADatabaseTable = db_b[cursor.table.table]
+            for entry in cursor:
+                table.insert(cursor.table.format_dict(entry), replace=True)
+                if table.table == submissions_table:
+                    copy_folder(join(db_a_files_folder, p := tiered_path(entry["ID"])), join(db_b_files_folder, p))
+
     def vacuum(self):
         self.connection.execute("VACUUM")
