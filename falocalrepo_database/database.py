@@ -480,6 +480,7 @@ class FADatabase:
         """
         assert all(c.table.database.database_path == self.database_path for c in cursors), \
             "Cursors must point to database calling copy"
+        assert all(set(c.columns) == set(c.table.columns) for c in cursors), "Cursors must contain all table columns"
         self.check_version(patch=False, version=db_b.version)
         self.check_version(patch=False)
 
