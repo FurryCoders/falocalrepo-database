@@ -64,6 +64,25 @@ def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> str:
     return join(*[id_str[n:n + width] for n in range(0, depth * width, width)])
 
 
+def check_version(version_a: str, raise_for_error: bool = True, *, major: bool = True, minor: bool = True,
+                  patch: bool = True, version_b: str = __version__
+                  ) -> Optional[DatabaseError]:
+    err: Optional[DatabaseError] = None
+    if version_a == version_b:
+        return None
+    elif not version_a:
+        err = DatabaseError(f"version error: {version_a}")
+    elif (v_a := version_a.split("."))[0] != (v_b := version_b.split("."))[0]:
+        err = DatabaseError(f"major version is not latest: {v_a[0]} != {v_b[0]}") if major else None
+    elif v_a[1] != v_b[1]:
+        err = DatabaseError(f"minor version is not latest: {v_a[1]} != {v_b[1]}") if minor else None
+    elif v_a[2] != v_b[2]:
+        err = DatabaseError(f"patch version is not latest: {v_a[2]} != {v_b[2]}") if patch else None
+    if err is not None and raise_for_error:
+        raise err
+    return err
+
+
 def copy_folder(src: str, dest: str):
     if isdir(src):
         for item in listdir(src):
@@ -439,20 +458,8 @@ class FADatabase:
     def check_version(self, raise_for_error: bool = True, *, major: bool = True, minor: bool = True, patch: bool = True,
                       version: str = __version__
                       ) -> Optional[DatabaseError]:
-        err: Optional[DatabaseError] = None
-        if (v := self.version) == version:
-            return None
-        if not v:
-            err = DatabaseError(f"version error: {v}")
-        if (v_db := v.split("."))[0] != (v_md := version.split("."))[0]:
-            err = DatabaseError(f"major version is not latest: {v_db[0]} != {v_md[0]}") if major else None
-        elif v_db[1] != v_md[1]:
-            err = DatabaseError(f"minor version is not latest: {v_db[1]} != {v_md[1]}") if minor else None
-        elif v_db[2] != v_md[2]:
-            err = DatabaseError(f"patch version is not latest: {v_db[2]} != {v_md[2]}") if patch else None
-        if err is not None and raise_for_error:
-            raise err
-        return err
+        return check_version(self.version, raise_for_error=raise_for_error, major=major, minor=minor, patch=patch,
+                             version_b=version)
 
     def check_connection(self, raise_for_error: bool = True) -> list[Process]:
         ps: list[Process] = []
