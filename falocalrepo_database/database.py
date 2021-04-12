@@ -100,15 +100,17 @@ def copy_cursors(db_a: 'FADatabase', db_b: 'FADatabase', *cursors: 'FADatabaseCu
     """
     A -> B
     """
+    v_a, v_b = db_a.version, db_b.version
+    assert (e := check_version(v_a, raise_for_error=False, patch=False)) is None, \
+        f"Database A is not up to date. {e.args[0]}"
+    assert check_version(v_a, raise_for_error=False, patch=False, version_b=v_b) is None, \
+        f"Database versions do not match: {v_a} != {v_b}"
     assert all(c.table.database.database_path == db_a.database_path for c in cursors), \
         "Cursors must point to database A"
-    assert all(db_a.check_version(patch=False, version=c.table.database.version) for c in cursors), \
-        "Cursors must point to a database with the same version as database A"
-    assert all(db_b.check_version(patch=False, version=c.table.database.version) for c in cursors), \
-        "Cursors must point to a database with the same version as database B"
+    assert all(
+        check_version(c.table.database.version, raise_for_error=False, patch=False, version_b=v_a) is None
+        for c in cursors), "Cursors must point to a database with the same version as database A and B"
     assert all(set(c.columns) == set(c.table.columns) for c in cursors), "Cursors must contain all table columns"
-    db_a.check_version(patch=False, version=db_b.version)
-    db_a.check_version(patch=False)
 
     db_a_files_folder: str = join(dirname(db_a.database_path), db_a.settings["FILESFOLDER"])
     db_b_files_folder: str = join(dirname(db_b.database_path), db_b.settings["FILESFOLDER"])
