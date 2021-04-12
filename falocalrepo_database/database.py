@@ -82,7 +82,9 @@ def copy_cursors(db_a: 'FADatabase', db_b: 'FADatabase', *cursors: 'FADatabaseCu
     A -> B
     """
     assert all(c.table.database.database_path == db_a.database_path for c in cursors), \
-        "Cursors must point to the database calling copy"
+        "Cursors must point to database A"
+    assert all(db_b.check_version(patch=False, version=c.table.database.version) for c in cursors), \
+        "Cursors must point to a database with the same version as database B "
     assert all(set(c.columns) == set(c.table.columns) for c in cursors), "Cursors must contain all table columns"
     db_a.check_version(patch=False, version=db_b.version)
     db_a.check_version(patch=False)
