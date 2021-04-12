@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.14.0
+
+* Change behaviour of `FADatabase.merge` to accept cursors like `FADatabase.copy`
+
 ## 4.13.0
 
 * Use custom class to handle cursors and `SELECT` results
