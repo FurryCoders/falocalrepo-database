@@ -109,8 +109,9 @@ ENV/
 .mypy_cache/
 
 
-# FA files/folders
-*FA.*
+# FA files/database
+FA*.files
+FA*.db
 
 # system files
 .DS_Store
