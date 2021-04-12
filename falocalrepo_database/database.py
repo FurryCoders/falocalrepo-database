@@ -96,33 +96,30 @@ def clean_username(username: str) -> str:
     return str(sub(r"[^a-zA-Z0-9\-.~,]", "", username.lower().strip()))
 
 
-def copy_cursors(db_a: 'FADatabase', db_b: 'FADatabase', *cursors: 'FADatabaseCursor', replace: bool = True):
-    """
-    A -> B
-    """
-    v_a, v_b = db_a.version, db_b.version
-    assert (e := check_version(v_a, raise_for_error=False, patch=False)) is None, \
-        f"Database A is not up to date. {e.args[0]}"
-    assert check_version(v_a, raise_for_error=False, patch=False, version_b=v_b) is None, \
-        f"Database versions do not match: {v_a} != {v_b}"
-    assert all(c.table.database.database_path == db_a.database_path for c in cursors), \
-        "Cursors must point to database A"
+def copy_cursors(db_dest: 'FADatabase', cursors: list['FADatabaseCursor'] = None, replace: bool = True):
+    if not cursors:
+        return
+    assert (e := check_version(version_dest := db_dest.version, raise_for_error=False, patch=False)) is None, \
+        f"Destination database is not up to date. {e.args[0]}"
     assert all(
-        check_version(c.table.database.version, raise_for_error=False, patch=False, version_b=v_a) is None
-        for c in cursors), "Cursors must point to a database with the same version as database A and B"
+        check_version(c.table.database.version, raise_for_error=False, patch=False, version_b=version_dest) is None
+        for c in cursors), "Cursors must point to a database with the same version as the destination database"
     assert all(set(c.columns) == set(c.table.columns) for c in cursors), "Cursors must contain all table columns"
 
-    db_a_files_folder: str = join(dirname(db_a.database_path), db_a.settings["FILESFOLDER"])
-    db_b_files_folder: str = join(dirname(db_b.database_path), db_b.settings["FILESFOLDER"])
+    dest_files: str = join(dirname(db_dest.database_path), db_dest.settings["FILESFOLDER"])
+    cursor_files: str = ""
 
     for cursor in cursors:
-        table_b: FADatabaseTable = db_b[cursor.table.table]
+        table_dest: FADatabaseTable = db_dest[cursor.table.table]
+        if cursor.table.table == submissions_table:
+            cursor_files = join(dirname(cursor.table.database.database_path),
+                                cursor.table.database.settings["FILESFOLDER"])
         for entry in cursor:
-            if not replace and table_b.table == users_table and (entry_b := table_b[entry[table_b.column_id]]):
+            if not replace and table_dest.table == users_table and (entry_b := table_dest[entry[table_dest.column_id]]):
                 entry["FOLDERS"] = list(set(entry["FOLDERS"] + entry_b["FOLDERS"]))
-            if table_b.table == submissions_table:
-                copy_folder(join(db_a_files_folder, p := tiered_path(entry["ID"])), join(db_b_files_folder, p))
-            table_b.insert(cursor.table.format_dict(entry), replace=True)
+            if table_dest.table == submissions_table:
+                copy_folder(join(cursor_files, p := tiered_path(entry["ID"])), join(dest_files, p))
+            table_dest.insert(cursor.table.format_dict(entry), replace=True)
 
 
 def format_list(obj: list[Value]) -> str:
@@ -490,11 +487,10 @@ class FADatabase:
         self.connection.close()
 
     def merge(self, db_b: 'FADatabase', *cursors: FADatabaseCursor):
-        copy_cursors(db_b, self, *cursors or (db_b.users.select(), db_b.submissions.select(), db_b.journals.select()),
-                     replace=False)
+        copy_cursors(self, cursors or [db_b.users.select(), db_b.submissions.select(), db_b.journals.select()], False)
 
     def copy(self, db_b: 'FADatabase', *cursors: FADatabaseCursor):
-        copy_cursors(self, db_b, *cursors or (self.users.select(), self.submissions.select(), self.journals.select()))
+        copy_cursors(db_b, cursors or [self.users.select(), self.submissions.select(), self.journals.select()])
 
     def vacuum(self):
         self.connection.execute("VACUUM")
