@@ -299,6 +299,17 @@ class FADatabaseSettings(FADatabaseTable):
 
 
 class FADatabaseSubmissions(FADatabaseTable):
+    def get_submission_files(self, submission_id: int) -> tuple[Optional[bytes], Optional[bytes]]:
+        if (entry := self[submission_id]) is None:
+            return None, None
+        elif (f := entry["FILESAVED"]) == 0:
+            return None, None
+        folder: str = join(dirname(self.database.database_path), self.database.settings["FILESFOLDER"],
+                           tiered_path(submission_id))
+        file: str = join(folder, "submission" + f".{(ext := entry['FILEEXT'])}" * bool(ext)) if f >= 10 else None
+        thumb: str = join(folder, "thumbnail.jpg") if f % 10 == 1 else None
+        return open(file, "rb").read() if file else None, open(thumb, "rb").read() if thumb else None
+
     def save_submission_file(self, submission_id: int, file: Optional[bytes], name: str, ext: str,
                              guess_ext: bool = True) -> str:
         if file is None:
