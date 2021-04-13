@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.15.0
+
+* Add `FADatabaseSubmissions.get_submissions_files` to retrieve submissions files and thumbnails
+* Add `FADatabase.files_folder` to compute files folder path
+
 ## 4.14.0
 
 * Change behaviour of `FADatabase.merge` to accept cursors like `FADatabase.copy`
