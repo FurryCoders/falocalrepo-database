@@ -1187,7 +1187,7 @@ def update_4_4_to_4_5(db: Connection, db_path: str, db_new_path: str):
     )
 
     print("Parsing submissions mentions")
-    mentions_exp: Pattern = re_compile(r'<a[^>]*href="(?:(?:https?://)?(?:www.)?furaffinity.net)?/user/([^/">]+)"')
+    mentions_exp: Pattern = re_compile(r'<a[^>]*href="(?:(?:https?://)?(?:www.)?furaffinity.net)?/user/([^/">]+)/?"')
     for n, i, d in db.execute("select row_number() over (), ID, DESCRIPTION from db_new.SUBMISSIONS").fetchall():
         print(n, end="\r", flush=True)
         mentions: list[str] = sorted(set(filter(bool, map(clean_username, findall(mentions_exp, d)))))
