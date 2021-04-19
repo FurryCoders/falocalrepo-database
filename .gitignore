@@ -110,8 +110,9 @@ ENV/
 
 
 # FA files/database
-FA*.files
-FA*.db
+*.files
+*.db
+*.db-journal
 
 # system files
 .DS_Store
