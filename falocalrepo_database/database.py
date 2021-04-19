@@ -4,8 +4,6 @@ from json import dumps
 from json import loads
 from os import PathLike
 from os import makedirs
-from os.path import dirname
-from os.path import join
 from pathlib import Path
 from re import sub
 from shutil import copy
@@ -105,7 +103,7 @@ def copy_cursors(db_dest: 'FADatabase', cursors: list['FADatabaseCursor'] = None
         for c in cursors), "Cursors must point to a database with the same version as the destination database"
     assert all(set(c.columns) == set(c.table.columns) for c in cursors), "Cursors must contain all table columns"
 
-    dest_files: str = join(dirname(db_dest.database_path), db_dest.settings["FILESFOLDER"])
+    dest_files: Path = db_dest.files_folder
     cursor_files: Optional[Path] = None
 
     for cursor in cursors:
