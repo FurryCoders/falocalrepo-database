@@ -2,12 +2,9 @@ from datetime import datetime
 from functools import cached_property
 from json import dumps
 from json import loads
-from os import listdir
+from os import PathLike
 from os import makedirs
-from os.path import abspath
 from os.path import dirname
-from os.path import isdir
-from os.path import isfile
 from os.path import join
 from pathlib import Path
 from re import sub
@@ -56,13 +53,13 @@ def guess_extension(file: Optional[bytes], default: str = "") -> str:
         return ext
 
 
-def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> str:
+def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> Path:
     assert isinstance(id_, int) or (isinstance(id_, str) and id_.isdigit()), "id not an integer"
     assert isinstance(depth, int) and depth > 0, "depth lower than 0"
     assert isinstance(width, int) and width > 0, "depth lower than 0"
 
     id_str: str = str(int(id_)).zfill(depth * width)
-    return join(*[id_str[n:n + width] for n in range(0, depth * width, width)])
+    return Path(*[id_str[n:n + width] for n in range(0, depth * width, width)])
 
 
 def check_version(version_a: str, raise_for_error: bool = True, *, major: bool = True, minor: bool = True,
@@ -84,12 +81,12 @@ def check_version(version_a: str, raise_for_error: bool = True, *, major: bool =
     return err
 
 
-def copy_folder(src: str, dest: str):
-    if isdir(src):
-        for item in listdir(src):
-            copy_folder(join(src, item), join(dest, item))
-    elif isfile(src) and not isfile(dest):
-        makedirs(dirname(dest), exist_ok=True)
+def copy_folder(src: Path, dest: Path):
+    if src.is_dir():
+        for item in src.iterdir():
+            copy_folder(item, dest / item.name)
+    elif src.is_file and not dest.is_file():
+        makedirs(dest.parent, exist_ok=True)
         copy(src, dest)
 
 
@@ -108,18 +105,17 @@ def copy_cursors(db_dest: 'FADatabase', cursors: list['FADatabaseCursor'] = None
     assert all(set(c.columns) == set(c.table.columns) for c in cursors), "Cursors must contain all table columns"
 
     dest_files: str = join(dirname(db_dest.database_path), db_dest.settings["FILESFOLDER"])
-    cursor_files: str = ""
+    cursor_files: Optional[Path] = None
 
     for cursor in cursors:
         table_dest: FADatabaseTable = db_dest[cursor.table.table]
         if cursor.table.table == submissions_table:
-            cursor_files = join(dirname(cursor.table.database.database_path),
-                                cursor.table.database.settings["FILESFOLDER"])
+            cursor_files = cursor.table.database.files_folder
         for entry in cursor:
             if not replace and table_dest.table == users_table and (entry_b := table_dest[entry[table_dest.column_id]]):
                 entry["FOLDERS"] = list(set(entry["FOLDERS"] + entry_b["FOLDERS"]))
             if table_dest.table == submissions_table:
-                copy_folder(join(cursor_files, p := tiered_path(entry["ID"])), join(dest_files, p))
+                copy_folder(cursor_files / (p := tiered_path(entry["ID"])), dest_files / p)
             table_dest.insert(cursor.table.format_dict(entry), replace=True)
 
 
@@ -314,11 +310,9 @@ class FADatabaseSubmissions(FADatabaseTable):
             return ""
 
         ext = guess_extension(file, ext) if guess_ext else ext
-        path: str = join(dirname(self.database.database_path), self.database.settings["FILESFOLDER"],
-                         tiered_path(submission_id), name + f".{ext}" * bool(ext))
-
-        makedirs(dirname(path), exist_ok=True)
-        open(path, "wb").write(file)
+        folder: Path = self.database.files_folder / tiered_path(submission_id)
+        makedirs(folder, exist_ok=True)
+        open(folder / (name + f".{ext}" * bool(ext)), "wb").write(file)
 
         return ext
 
@@ -396,9 +390,9 @@ class FADatabaseCursor:
 
 
 class FADatabase:
-    def __init__(self, database_path: str):
-        self.database_path: str = abspath(database_path)
-        self.connection: Connection = connect(database_path)
+    def __init__(self, database_path: Union[str, PathLike]):
+        self.database_path: Path = Path(database_path).resolve()
+        self.connection: Connection = connect(self.database_path)
 
         if journals_table not in (tables := self.tables):
             make_journals_table(self.connection)
@@ -455,8 +449,8 @@ class FADatabase:
         return self.total_changes == self.committed_changes
 
     @property
-    def files_folder(self) -> str:
-        return join(dirname(self.database_path), self.settings["FILESFOLDER"])
+    def files_folder(self) -> Path:
+        return self.database_path.parent / self.settings["FILESFOLDER"]
 
     def upgrade(self):
         self.connection = update_database(self.connection, __version__)
