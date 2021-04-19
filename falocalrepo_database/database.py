@@ -9,6 +9,7 @@ from os.path import join
 from pathlib import Path
 from re import sub
 from shutil import copy
+from shutil import move
 from sqlite3 import Connection
 from sqlite3 import Cursor
 from sqlite3 import DatabaseError
@@ -451,6 +452,13 @@ class FADatabase:
     @property
     def files_folder(self) -> Path:
         return self.database_path.parent / self.settings["FILESFOLDER"]
+
+    def move_files_folder(self, new_folder: Union[str, PathLike]) -> Path:
+        new_folder = Path(new_folder)
+        new_folder = new_folder if new_folder.is_absolute() else (self.database_path.parent / new_folder)
+        move(self.files_folder, new_folder)
+        self.settings["FILESFOLDER"] = str(new_folder.relative_to(self.database_path.parent))
+        return new_folder
 
     def upgrade(self):
         self.connection = update_database(self.connection, __version__)
