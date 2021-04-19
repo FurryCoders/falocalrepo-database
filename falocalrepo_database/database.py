@@ -297,12 +297,12 @@ class FADatabaseSettings(FADatabaseTable):
 
 
 class FADatabaseSubmissions(FADatabaseTable):
-    def get_submission_files(self, submission_id: int) -> tuple[Optional[str], Optional[str]]:
+    def get_submission_files(self, submission_id: int) -> tuple[Optional[Path], Optional[Path]]:
         if (entry := self[submission_id]) is None or (f := entry["FILESAVED"]) == 0:
             return None, None
-        folder: str = join(self.database.files_folder, tiered_path(submission_id))
-        file: str = join(folder, "submission" + f".{(ext := entry['FILEEXT'])}" * bool(ext)) if f >= 10 else None
-        thumb: str = join(folder, "thumbnail.jpg") if f % 10 == 1 else None
+        folder: Path = self.database.files_folder / tiered_path(submission_id)
+        file: Path = folder / ("submission" + f".{(ext := entry['FILEEXT'])}" * bool(ext)) if f >= 10 else None
+        thumb: Path = folder / "thumbnail.jpg" if f % 10 == 1 else None
         return file, thumb
 
     def save_submission_file(self, submission_id: int, file: Optional[bytes], name: str, ext: str,
@@ -383,11 +383,16 @@ class FADatabaseCursor:
         self.table: FADatabaseTable = table
         self.cursor: Cursor = cursor
         self.columns: list[str] = columns
+        self.entries: Generator[Entry, None, None] = (
+            {k: unpack_list(v) if k in self.table.list_columns else v for k, v in zip(columns, entry)}
+            for entry in self.cursor
+        )
+
+    def __next__(self) -> Entry:
+        return next(self.entries)
 
     def __iter__(self) -> Generator[Entry, None, None]:
-        columns = list(map(str.upper, self.columns))
-        return ({k: unpack_list(v) if k in self.table.list_columns else v for k, v in zip(columns, entry)}
-                for entry in self.cursor)
+        return self.entries
 
 
 class FADatabase:
