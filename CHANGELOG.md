@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.16.0
+
+* Use `pathlib` for all path operations
+* Add `FADatabase.move_files_folder` to move files folder
+* `FADatabaseSubmissions.get_submissions_files` returns `Path` objects
+
 ## 4.15.0
 
 * Add `FADatabaseSubmissions.get_submissions_files` to retrieve submissions files and thumbnails
