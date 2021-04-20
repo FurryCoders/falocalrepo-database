@@ -480,9 +480,10 @@ class FADatabase:
 
     def check_connection(self, raise_for_error: bool = True) -> list[Process]:
         ps: list[Process] = []
+        database_path: str = str(self.database_path)
         for process in process_iter():
             try:
-                if process.is_running() and any(self.database_path == f.path for f in process.open_files()):
+                if process.is_running() and any(database_path == f.path for f in process.open_files()):
                     ps.append(process)
                 if len(ps) > 1 and raise_for_error:
                     raise Error(f"Multiple connections to database: {ps}")
