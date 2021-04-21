@@ -11,6 +11,7 @@ from shutil import move
 from sqlite3 import Connection
 from sqlite3 import Cursor
 from sqlite3 import DatabaseError
+from sqlite3 import ProgrammingError
 from sqlite3 import connect
 from typing import Generator
 from typing import Optional
@@ -427,6 +428,13 @@ class FADatabase:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+    def is_open(self):
+        try:
+            self.connection.execute("SELECT * FROM sqlite_master")
+            return True
+        except ProgrammingError:
+            return False
 
     @property
     def tables(self) -> list[str]:
