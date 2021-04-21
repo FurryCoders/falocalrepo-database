@@ -14,6 +14,7 @@ from sqlite3 import DatabaseError
 from sqlite3 import ProgrammingError
 from sqlite3 import connect
 from typing import Generator
+from typing import Iterable
 from typing import Optional
 from typing import Union
 
@@ -498,6 +499,9 @@ class FADatabase:
             except (NoSuchProcess, AccessDenied):
                 pass
         return ps
+
+    def execute(self, sql: str, parameters: Iterable) -> Cursor:
+        return self.connection.execute(sql, parameters)
 
     def commit(self):
         self.connection.commit()
