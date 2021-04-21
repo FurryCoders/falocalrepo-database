@@ -430,7 +430,7 @@ class FADatabase:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def is_open(self):
+    def is_open(self) -> bool:
         try:
             self.connection.execute("SELECT * FROM sqlite_master")
             return True
