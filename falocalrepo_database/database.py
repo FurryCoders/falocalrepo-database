@@ -27,6 +27,8 @@ from psutil import process_iter
 from .__version__ import __version__
 from .exceptions import MultipleConnections
 from .exceptions import VersionMismatch
+from .selector import Selector
+from .selector import selector_to_sql
 from .tables import journals_table
 from .tables import list_columns
 from .tables import make_journals_table
@@ -133,7 +135,7 @@ class FADatabaseTable:
 
     def __getitem__(self, key: Union[Key, Entry]) -> Optional[Entry]:
         key = key if isinstance(key, dict) else {self.column_id: key}
-        return entry[0] if (entry := list(self.select(key))) else None
+        return entry[0] if (entry := list(self.select({"$eq": key}))) else None
 
     def __setitem__(self, key: Key, values: Entry):
         values = self.format_dict(values)
@@ -197,31 +199,16 @@ class FADatabaseTable:
         obj = {k: format_list(v) if isinstance(v := obj.get(k, ""), list) else v for k in self.columns}
         return obj
 
-    def select(self, query: dict[str, Union[list[Value], Value]] = None, columns: list[str] = None,
-               query_and: bool = True, query_and_values: bool = False, like: bool = False,
+    def select(self, query: Selector = None, values: list[Value] = None, columns: list[str] = None,
                order: list[str] = None, limit: int = 0, offset: int = 0
                ) -> 'FADatabaseCursor':
-        query = query or {}
-        query = {k: [v] if not isinstance(v, list) else v for k, v in query.items()}
-        query = {k: vs for k, vs in query.items() if vs}
-        order = order or []
-        columns = columns or self.columns
-        op: str = "like" if like else "="
-        logic: str = "AND" if query_and else "OR"
-        logic_values: str = "AND" if query_and_values else "OR"
-        where_str: str = f" {logic} ".join(map(lambda q: f"({q})", [
-            f" {logic_values} ".join([f"{k} {op} ?"] * len(vs))
-            for k, vs in query.items()
-        ]))
-        order_str = ",".join(order)
-        cursor: Cursor = self.database.connection.execute(
-            f"""SELECT {','.join(columns)} FROM {self.table}
-            {f' WHERE {where_str} ' if where_str else ''}
-            {f' ORDER BY {order_str} ' if order_str else ''}
-            {f' LIMIT {limit} ' if limit > 0 else ''}
-            {f' OFFSET {offset} ' if limit > 0 and offset > 0 else ''}""",
-            [v for values in query.values() for v in values]
-        )
+        cursor: Cursor = self.database.execute(
+            f"""SELECT {','.join(columns := columns or self.columns)} FROM {self.table}
+                    {f' WHERE {selector_to_sql(query)}' if query else ''}
+                    {f' ORDER BY {",".join(order)}' if order else ''}
+                    {f' LIMIT {limit}' if limit > 0 else ''}
+                    {f' OFFSET {offset}' if limit > 0 and offset > 0 else ''}""",
+            values or [])
         return FADatabaseCursor(cursor, columns, self)
 
     def select_sql(self, where: str = "", values: list[Value] = None, columns: list[str] = None,
