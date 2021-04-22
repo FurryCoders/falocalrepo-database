@@ -135,7 +135,7 @@ class FADatabaseTable:
 
     def __getitem__(self, key: Union[Key, Entry]) -> Optional[Entry]:
         key = key if isinstance(key, dict) else {self.column_id: key}
-        return entry[0] if (entry := list(self.select({"$eq": key}))) else None
+        return self.select({"$eq": key}).fetchone()
 
     def __setitem__(self, key: Key, values: Entry):
         values = self.format_dict(values)
@@ -374,6 +374,12 @@ class FADatabaseCursor:
 
     def __iter__(self) -> Generator[Entry, None, None]:
         return self.entries
+
+    def fetchone(self):
+        return next(self.entries, None)
+
+    def fetchall(self):
+        return list(self.entries)
 
 
 class FADatabase:
