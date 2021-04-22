@@ -63,23 +63,19 @@ def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> Path:
     return Path(*[id_str[n:n + width] for n in range(0, depth * width, width)])
 
 
-def check_version(version_a: str, raise_for_error: bool = True, *, major: bool = True, minor: bool = True,
-                  patch: bool = True, version_b: str = __version__
+def check_version(version_a: str, *, major: bool = True, minor: bool = True, patch: bool = True,
+                  version_b: str = __version__
                   ) -> Optional[VersionMismatch]:
-    err: Optional[VersionMismatch] = None
-    if version_a == version_b:
+    if not version_a:
+        return VersionMismatch(f"version error: {version_a}")
+    elif version_a == version_b:
         return None
-    elif not version_a:
-        err = VersionMismatch(f"version error: {version_a}")
     elif (v_a := version_a.split("."))[0] != (v_b := version_b.split("."))[0]:
-        err = VersionMismatch(f"major version is not latest: {v_a[0]} != {v_b[0]}") if major else None
+        return VersionMismatch(f"major version is not latest: {v_a[0]} != {v_b[0]}") if major else None
     elif v_a[1] != v_b[1]:
-        err = VersionMismatch(f"minor version is not latest: {v_a[1]} != {v_b[1]}") if minor else None
+        return VersionMismatch(f"minor version is not latest: {v_a[1]} != {v_b[1]}") if minor else None
     elif v_a[2] != v_b[2]:
-        err = VersionMismatch(f"patch version is not latest: {v_a[2]} != {v_b[2]}") if patch else None
-    if err is not None and raise_for_error:
-        raise err
-    return err
+        return VersionMismatch(f"patch version is not latest: {v_a[2]} != {v_b[2]}") if patch else None
 
 
 def copy_folder(src: Path, dest: Path):
@@ -98,11 +94,10 @@ def clean_username(username: str) -> str:
 def copy_cursors(db_dest: 'FADatabase', cursors: list['FADatabaseCursor'] = None, replace: bool = True):
     if not cursors:
         return
-    assert (e := check_version(version_dest := db_dest.version, raise_for_error=False, patch=False)) is None, \
+    assert (e := check_version(version_dest := db_dest.version)) is None, \
         f"Destination database is not up to date. {e.args[0]}"
-    assert all(
-        check_version(c.table.database.version, raise_for_error=False, patch=False, version_b=version_dest) is None
-        for c in cursors), "Cursors must point to a database with the same version as the destination database"
+    assert all(check_version(c.table.database.version, version_b=version_dest) is None for c in cursors), \
+        "Cursors must point to a database with the same version as the destination database"
     assert all(set(c.columns) == set(c.table.columns) for c in cursors), "Cursors must contain all table columns"
 
     dest_files: Path = db_dest.files_folder
@@ -484,8 +479,11 @@ class FADatabase:
     def check_version(self, raise_for_error: bool = True, *, major: bool = True, minor: bool = True, patch: bool = True,
                       version: str = __version__
                       ) -> Optional[VersionMismatch]:
-        return check_version(self.version, raise_for_error=raise_for_error, major=major, minor=minor, patch=patch,
-                             version_b=version)
+        err: Optional[VersionMismatch] = check_version(
+            self.version, major=major, minor=minor, patch=patch, version_b=version)
+        if err is not None and raise_for_error:
+            raise err
+        return err
 
     def check_connection(self, raise_for_error: bool = True) -> list[Process]:
         ps: list[Process] = []
