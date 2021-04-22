@@ -36,11 +36,10 @@ from .tables import make_users_table
 from .tables import settings_table
 from .tables import submissions_table
 from .tables import users_table
+from .types import Entry
+from .types import Key
+from .types import Value
 from .update import update_database
-
-Key = Union[str, int, float]
-Value = Union[str, int, float, None]
-Entry = dict[str, Union[list[str], Value]]
 
 
 def guess_extension(file: Optional[bytes], default: str = "") -> str:
