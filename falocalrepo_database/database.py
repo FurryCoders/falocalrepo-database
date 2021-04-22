@@ -10,7 +10,6 @@ from shutil import copy
 from shutil import move
 from sqlite3 import Connection
 from sqlite3 import Cursor
-from sqlite3 import DatabaseError
 from sqlite3 import ProgrammingError
 from sqlite3 import connect
 from typing import Generator
@@ -21,12 +20,13 @@ from typing import Union
 from chardet import detect as detect_encoding
 from filetype import guess_extension as filetype_guess_extension
 from psutil import AccessDenied
-from psutil import Error
 from psutil import NoSuchProcess
 from psutil import Process
 from psutil import process_iter
 
 from .__version__ import __version__
+from .exceptions import MultipleConnections
+from .exceptions import VersionMismatch
 from .tables import journals_table
 from .tables import list_columns
 from .tables import make_journals_table
@@ -65,18 +65,18 @@ def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> Path:
 
 def check_version(version_a: str, raise_for_error: bool = True, *, major: bool = True, minor: bool = True,
                   patch: bool = True, version_b: str = __version__
-                  ) -> Optional[DatabaseError]:
-    err: Optional[DatabaseError] = None
+                  ) -> Optional[VersionMismatch]:
+    err: Optional[VersionMismatch] = None
     if version_a == version_b:
         return None
     elif not version_a:
-        err = DatabaseError(f"version error: {version_a}")
+        err = VersionMismatch(f"version error: {version_a}")
     elif (v_a := version_a.split("."))[0] != (v_b := version_b.split("."))[0]:
-        err = DatabaseError(f"major version is not latest: {v_a[0]} != {v_b[0]}") if major else None
+        err = VersionMismatch(f"major version is not latest: {v_a[0]} != {v_b[0]}") if major else None
     elif v_a[1] != v_b[1]:
-        err = DatabaseError(f"minor version is not latest: {v_a[1]} != {v_b[1]}") if minor else None
+        err = VersionMismatch(f"minor version is not latest: {v_a[1]} != {v_b[1]}") if minor else None
     elif v_a[2] != v_b[2]:
-        err = DatabaseError(f"patch version is not latest: {v_a[2]} != {v_b[2]}") if patch else None
+        err = VersionMismatch(f"patch version is not latest: {v_a[2]} != {v_b[2]}") if patch else None
     if err is not None and raise_for_error:
         raise err
     return err
@@ -483,7 +483,7 @@ class FADatabase:
 
     def check_version(self, raise_for_error: bool = True, *, major: bool = True, minor: bool = True, patch: bool = True,
                       version: str = __version__
-                      ) -> Optional[DatabaseError]:
+                      ) -> Optional[VersionMismatch]:
         return check_version(self.version, raise_for_error=raise_for_error, major=major, minor=minor, patch=patch,
                              version_b=version)
 
@@ -495,7 +495,7 @@ class FADatabase:
                 if process.is_running() and any(database_path == f.path for f in process.open_files()):
                     ps.append(process)
                 if len(ps) > 1 and raise_for_error:
-                    raise Error(f"Multiple connections to database: {ps}")
+                    raise MultipleConnections(f"Multiple connections to database: {ps}")
             except (NoSuchProcess, AccessDenied):
                 pass
         return ps
