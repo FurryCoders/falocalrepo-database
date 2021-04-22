@@ -3,44 +3,6 @@ from sqlite3 import Connection
 
 from .__version__ import __version__
 
-"""
-Entries guide - USERS
-v3.0        v3.1      v3.2
-0 USERNAME  USERNAME  USERNAME
-1 FOLDERS   FOLDERS   FOLDERS
-2 GALLERY   GALLERY   GALLERY
-3 SCRAPS    SCRAPS    SCRAPS
-4 FAVORITES FAVORITES FAVORITES
-5 EXTRAS    MENTIONS  MENTIONS
-6                     JOURNALS
-
-Entries guide - SUBMISSIONS
-v3.2            v4.0
-0  ID           ID
-1  AUTHOR       AUTHOR
-2  TITLE        TITLE
-3  UDATE        DATE
-4  DESCRIPTION  DESCRIPTION
-5  TAGS         TAGS
-6  CATEGORY     CATEGORY
-7  SPECIES      SPECIES
-8  GENDER       GENDER
-9  RATING       RATING
-10 FILELINK     FILELINK
-11 FILEEXT      FILEEXT
-12 FILESAVED    FILESAVED
-13 LOCATION     LOCATION
-14 SERVER       SERVER
-
-Entries guide - JOURNALS
-v3.2        v4.0
-0 ID        ID
-1 AUTHOR    AUTHOR
-2 TITLE     TITLE
-3 UDATE     DATE
-4 CONTENT   CONTENT
-"""
-
 journals_table: str = "JOURNALS"
 settings_table: str = "SETTINGS"
 submissions_table: str = "SUBMISSIONS"
