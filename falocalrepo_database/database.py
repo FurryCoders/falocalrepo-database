@@ -360,17 +360,17 @@ class FADatabaseUsers(FADatabaseTable):
             return
         self.update({"FOLDERS": format_list([f"!{f.strip('!')}" for f in user_entry["FOLDERS"]])}, user)
 
-    def add_user_folder(self, user: str, folder: str):
+    def add_user_folder(self, user: str, folder: str) -> bool:
         if not (user_entry := self[(user := clean_username(user))]):
-            return
+            return False
         elif (folder := folder.lower()) in user_entry["FOLDERS"]:
-            return
+            return False
         elif f"!{folder}" in user_entry["FOLDERS"]:
             self.remove_user_folder(user, f"!{folder}")
-        self.add_to_list(user, {"FOLDERS": [folder]})
+        return self.add_to_list(user, {"FOLDERS": [folder]})
 
-    def remove_user_folder(self, user: str, folder: str):
-        self.remove_from_list(clean_username(user), {"FOLDERS": [folder.lower()]})
+    def remove_user_folder(self, user: str, folder: str) -> bool:
+        return self.remove_from_list(clean_username(user), {"FOLDERS": [folder.lower()]})
 
 
 class FADatabaseCursor:
