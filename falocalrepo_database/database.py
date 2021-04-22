@@ -67,7 +67,7 @@ def check_version(version_a: str, *, major: bool = True, minor: bool = True, pat
                   version_b: str = __version__
                   ) -> Optional[VersionMismatch]:
     if not version_a:
-        return VersionMismatch(f"version error: {version_a}")
+        return VersionMismatch(f"version missing")
     elif version_a == version_b:
         return None
     elif (v_a := version_a.split("."))[0] != (v_b := version_b.split("."))[0]:
