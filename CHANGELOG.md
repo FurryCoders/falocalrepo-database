@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.17.0
+
+* Use new query syntax for selection based on MongoDB queries
+* Add custom exceptions for version mismatch and multiple connections errors
+
 ## 4.16.0
 
 * Use `pathlib` for all path operations
