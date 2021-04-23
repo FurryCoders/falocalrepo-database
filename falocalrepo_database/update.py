@@ -850,6 +850,66 @@ def make_database_4_11(db: Connection) -> Connection:
     return db
 
 
+def make_database_4_18(db: Connection) -> Connection:
+    db.execute(
+        f"""CREATE TABLE IF NOT EXISTS USERS
+        (USERNAME TEXT UNIQUE NOT NULL CHECK (length(USERNAME) > 0),
+        FOLDERS TEXT NOT NULL,
+        PRIMARY KEY (USERNAME ASC));"""
+    )
+
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS SUBMISSIONS
+        (ID INT UNIQUE NOT NULL CHECK (ID > 0),
+        AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
+        TITLE TEXT NOT NULL,
+        DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%dT%H:%M',DATE)),
+        DESCRIPTION TEXT NOT NULL,
+        TAGS TEXT NOT NULL,
+        CATEGORY TEXT NOT NULL,
+        SPECIES TEXT NOT NULL,
+        GENDER TEXT NOT NULL,
+        RATING TEXT NOT NULL,
+        TYPE TEXT NOT NULL CHECK (TYPE IN ('image', 'music', 'text', 'flash')),
+        FILEURL TEXT NOT NULL,
+        FILEEXT TEXT NOT NULL,
+        FILESAVED INT NOT NULL CHECK (FILESAVED in (0, 1, 10, 11)),
+        FAVORITE TEXT NOT NULL,
+        MENTIONS TEXT NOT NULL,
+        FOLDER TEXT NOT NULL CHECK (FOLDER IN ('gallery', 'scraps')),
+        USERUPDATE INT NOT NULL CHECK (USERUPDATE in (0, 1)),
+        PRIMARY KEY (ID ASC));"""
+    )
+
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS JOURNALS
+        (ID INT UNIQUE NOT NULL CHECK (ID > 0),
+        AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
+        TITLE TEXT NOT NULL,
+        DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%dT%H:%M',DATE)),
+        CONTENT TEXT NOT NULL,
+        MENTIONS TEXT NOT NULL,
+        USERUPDATE INT NOT NULL CHECK (USERUPDATE in (0, 1)),
+        PRIMARY KEY (ID ASC));""",
+    )
+
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS SETTINGS
+        (SETTING TEXT UNIQUE NOT NULL CHECK (length(SETTING) > 0),
+        SVALUE TEXT NOT NULL CHECK (length(SVALUE) > 0),
+        PRIMARY KEY (SETTING ASC));"""
+    )
+
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["HISTORY", "[]"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["COOKIES", "{}"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["FILESFOLDER", "FA.files"])
+    db.execute(f"INSERT OR IGNORE INTO SETTINGS (SETTING, SVALUE) VALUES (?, ?)", ["VERSION", "4.18.0"])
+
+    db.commit()
+
+    return db
+
+
 def make_database(path: str, make_function: Callable[[Connection], Connection]):
     make_function(connect_database(path)).close()
 
@@ -1149,7 +1209,8 @@ def update_4_3_to_4_4(db: Connection, db_path: str, db_new_path: str):
     )
 
     print("Updating favorites from users entries")
-    for n, u, fs in db.execute("select row_number() over (), USERNAME, FAVORITES from db_new.USERS where FAVORITES != ''"):
+    for n, u, fs in db.execute(
+            "select row_number() over (), USERNAME, FAVORITES from db_new.USERS where FAVORITES != ''"):
         print(n, end="\r", flush=True)
         for f in map(int, filter(bool, fs.split(","))):
             f_us: Optional[tuple] = db.execute(f"select FAVORITE from db_new.SUBMISSIONS where ID = {f}").fetchone()
@@ -1431,6 +1492,25 @@ def update_4_10_4_11(db: Connection, db_path: str, db_new_path: str):
         db.execute("UPDATE db_new.SUBMISSIONS SET FILESAVED = ? WHERE ID = ?", (f, i))
 
 
+def update_4_18(db: Connection, _db_path: str, db_new_path: str):
+    print("Updating to 4.18.0")
+
+    make_database(db_new_path, make_database_4_18)
+
+    # Transferring entries
+    print("Transferring entries")
+    db.execute(f"ATTACH DATABASE '{db_new_path}' AS db_new")
+    db.execute("INSERT OR IGNORE INTO db_new.USERS SELECT * FROM USERS")
+    db.execute("""INSERT OR IGNORE INTO db_new.SUBMISSIONS
+               SELECT ID, AUTHOR, TITLE, strftime('%Y-%m-%dT%H:%M', DATE), DESCRIPTION, TAGS, CATEGORY, SPECIES,
+               GENDER, RATING, TYPE, FILEURL,FILEEXT, FILESAVED, FAVORITE, MENTIONS, FOLDER, USERUPDATE
+               FROM SUBMISSIONS""")
+    db.execute("""INSERT OR IGNORE INTO db_new.JOURNALS
+               SELECT ID, AUTHOR, TITLE, strftime('%Y-%m-%dT%H:%M', DATE), CONTENT, MENTIONS, USERUPDATE
+               FROM JOURNALS""")
+    db.execute("INSERT OR REPLACE INTO db_new.SETTINGS SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION')")
+
+
 def update_wrapper(db: Connection, function: Callable[[Connection, str, str], None], prefix_old: str) -> Connection:
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
@@ -1505,6 +1585,8 @@ def update_database(db: Connection, version: str) -> Connection:
         db = update_version(db, db_version, "4.10.0")  # 4.9.x to 4.10.0
     elif compare_versions(db_version, "4.11.0") < 0:
         db = update_wrapper(db, update_4_10_4_11, "v4_10_")  # 4.10.x to 4.11.0
+    elif compare_versions(db_version, "4.18.0") < 0:
+        db = update_wrapper(db, update_4_18, "v4_17_")  # 4.11.0-4.17.x to 4.11.0
     elif compare_versions(db_version, version) < 0:
         return update_version(db, db_version, version)  # Update to latest patch
 
