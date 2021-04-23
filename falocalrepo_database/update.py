@@ -915,8 +915,6 @@ def make_database(path: str, make_function: Callable[[Connection], Connection]):
 
 
 def update_2_7_to_3(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 2.7.0 to 3.0.0")
-
     make_database(db_new_path, make_database_3)
 
     # Transferring entries
@@ -1014,8 +1012,6 @@ def update_2_7_to_3(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_3_0_to_3_1(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 3.0.0 to 3.1.0")
-
     make_database(db_new_path, make_database_3_1)
 
     # Transferring entries
@@ -1041,8 +1037,6 @@ def update_3_0_to_3_1(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_3_1_to_3_2(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 3.1.0 to 3.2.0")
-
     make_database(db_new_path, make_database_3_2)
 
     # Transferring entries
@@ -1064,8 +1058,6 @@ def update_3_1_to_3_2(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_3_2_to_3_3(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 3.2.0 to 3.3.0")
-
     make_database(db_new_path, make_database_3_3)
 
     # Transferring entries
@@ -1097,8 +1089,6 @@ def update_3_2_to_3_3(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_3_4_to_3_5(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 3.4.0 to 3.5.0")
-
     make_database(db_new_path, make_database_3_3)
 
     # Transferring entries
@@ -1132,8 +1122,6 @@ def update_3_4_to_3_5(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_3_8_to_4(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 3.8.0 to 4.0.0")
-
     make_database(db_new_path, make_database_4)
 
     # Transferring entries
@@ -1158,8 +1146,6 @@ def update_3_8_to_4(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_4_2_to_4_3(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 4.2.0 to 4.3.0")
-
     make_database(db_new_path, make_database_4_3)
 
     # Transferring entries
@@ -1184,8 +1170,6 @@ def update_4_2_to_4_3(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_4_3_to_4_4(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 4.3.0 to 4.4.0")
-
     make_database(db_new_path, make_database_4_4)
 
     # Transferring entries
@@ -1223,8 +1207,6 @@ def update_4_3_to_4_4(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_4_4_to_4_5(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 4.4.0 to 4.5.0")
-
     make_database(db_new_path, make_database_4_5)
 
     # Transferring entries
@@ -1286,8 +1268,6 @@ def update_4_4_to_4_5(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_4_5_to_4_6(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 4.5.0 to 4.6.0")
-
     make_database(db_new_path, make_database_4_6)
 
     # Transferring entries
@@ -1320,8 +1300,6 @@ def update_4_5_to_4_6(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_4_6_to_4_7(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 4.6.0 to 4.7.0")
-
     make_database(db_new_path, make_database_4_7)
 
     # Transferring entries
@@ -1354,8 +1332,6 @@ def update_4_6_to_4_7(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_4_7_to_4_8(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 4.7.0 to 4.8.0")
-
     make_database(db_new_path, make_database_4_8)
 
     # Transferring entries
@@ -1401,8 +1377,6 @@ def update_4_7_to_4_8(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_4_8_to_4_9(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 4.8.0 to 4.9.0")
-
     make_database(db_new_path, make_database_4_9)
 
     # Transferring entries
@@ -1468,8 +1442,6 @@ def update_4_8_to_4_9(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_4_10_4_11(db: Connection, db_path: str, db_new_path: str):
-    print("Updating 4.10.0 to 4.11.0")
-
     make_database(db_new_path, make_database_4_11)
 
     # Transferring entries
@@ -1493,8 +1465,6 @@ def update_4_10_4_11(db: Connection, db_path: str, db_new_path: str):
 
 
 def update_4_18(db: Connection, _db_path: str, db_new_path: str):
-    print("Updating to 4.18.0")
-
     make_database(db_new_path, make_database_4_18)
 
     # Transferring entries
@@ -1511,7 +1481,9 @@ def update_4_18(db: Connection, _db_path: str, db_new_path: str):
     db.execute("INSERT OR REPLACE INTO db_new.SETTINGS SELECT * FROM SETTINGS WHERE SETTING NOT IN ('VERSION')")
 
 
-def update_wrapper(db: Connection, function: Callable[[Connection, str, str], None], prefix_old: str) -> Connection:
+def update_wrapper(db: Connection, function: Callable[[Connection, str, str], None], version_old: str, version_new: str
+                   ) -> Connection:
+    print(f"Updating {version_old} to {version_new}")
     db_path: str = dp if (dp := database_path(db)) else "FA.db"
     db_new_path: str = join(dirname(db_path), "new_" + basename(db_path))
     try:
@@ -1519,7 +1491,7 @@ def update_wrapper(db: Connection, function: Callable[[Connection, str, str], No
         db.commit()
         db.close()
         db = None
-        move(db_path, join(dirname(db_path), prefix_old + basename(db_path)))
+        move(db_path, join(dirname(db_path), f"v{version_old.replace('.', '_')}_" + basename(db_path)))
         move(db_new_path, db_path)
         return connect_database(db_path)
     except KeyboardInterrupt:
@@ -1551,42 +1523,36 @@ def update_database(db: Connection, version: str) -> Connection:
         raise DatabaseError("Database version is newer than program.")
     elif compare_versions(db_version, "2.7.0") < 0:
         raise DatabaseError("Update does not support versions lower than 2.11.2")
-    elif compare_versions(db_version, "3.0.0") < 0:
-        db = update_wrapper(db, update_2_7_to_3, "v2_7_")  # 2.7.x to 3.0.0
-    elif compare_versions(db_version, "3.1.0") < 0:
-        db = update_wrapper(db, update_3_0_to_3_1, "v3_0_")  # 3.0.x to 3.1.0
-    elif compare_versions(db_version, "3.2.0") < 0:
-        db = update_wrapper(db, update_3_1_to_3_2, "v3_1_")  # 3.1.x to 3.2.0
-    elif compare_versions(db_version, "3.3.0") < 0:
-        db = update_wrapper(db, update_3_2_to_3_3, "v3_2_")  # 3.2.x to 3.3.0
-    elif compare_versions(db_version, "3.4.0") < 0:
-        db = update_version(db, db_version, "3.4.0")  # 3.3.x to 3.4.0
-    elif compare_versions(db_version, "3.5.0") < 0:
-        db = update_wrapper(db, update_3_4_to_3_5, "v3_4_")  # 3.4.x to 3.5.0
-    elif compare_versions(db_version, "3.8.0") < 0:
-        db = update_version(db, db_version, "3.8.0")  # 3.5.0-3.7.x to 3.8.0
-    elif compare_versions(db_version, "4.0.0") < 0:
-        db = update_wrapper(db, update_3_8_to_4, "v3_8_")  # 3.8.x to 4.0.0
-    elif compare_versions(db_version, "4.3.0") < 0:
-        db = update_wrapper(db, update_4_2_to_4_3, "v4_2_")  # 4.0.0-4.2.x to 4.3.0
-    elif compare_versions(db_version, "4.4.0") < 0:
-        db = update_wrapper(db, update_4_3_to_4_4, "v4_3_")  # 4.3.x to 4.4.0
-    elif compare_versions(db_version, "4.5.0") < 0:
-        db = update_wrapper(db, update_4_4_to_4_5, "v4_4_")  # 4.4.x to 4.5.0
-    elif compare_versions(db_version, "4.6.0") < 0:
-        db = update_wrapper(db, update_4_5_to_4_6, "v4_5_")  # 4.5.x to 4.6.0
-    elif compare_versions(db_version, "4.7.0") < 0:
-        db = update_wrapper(db, update_4_6_to_4_7, "v4_6_")  # 4.6.x to 4.7.0
-    elif compare_versions(db_version, "4.8.0") < 0:
-        db = update_wrapper(db, update_4_7_to_4_8, "v4_7_")  # 4.7.x to 4.8.0
-    elif compare_versions(db_version, "4.9.0") < 0:
-        db = update_wrapper(db, update_4_8_to_4_9, "v4_8_")  # 4.8.x to 4.9.0
-    elif compare_versions(db_version, "4.10.0") < 0:
-        db = update_version(db, db_version, "4.10.0")  # 4.9.x to 4.10.0
-    elif compare_versions(db_version, "4.11.0") < 0:
-        db = update_wrapper(db, update_4_10_4_11, "v4_10_")  # 4.10.x to 4.11.0
-    elif compare_versions(db_version, "4.18.0") < 0:
-        db = update_wrapper(db, update_4_18, "v4_17_")  # 4.11.0-4.17.x to 4.11.0
+    elif compare_versions(db_version, v := "3.0.0") < 0:
+        db = update_wrapper(db, update_2_7_to_3, db_version, v)  # 2.7.x to 3.0.0
+    elif compare_versions(db_version, v := "3.1.0") < 0:
+        db = update_wrapper(db, update_3_0_to_3_1, db_version, v)  # 3.0.x to 3.1.0
+    elif compare_versions(db_version, v := "3.2.0") < 0:
+        db = update_wrapper(db, update_3_1_to_3_2, db_version, v)  # 3.1.x to 3.2.0
+    elif compare_versions(db_version, v := "3.3.0") < 0:
+        db = update_wrapper(db, update_3_2_to_3_3, db_version, v)  # 3.2.x to 3.3.0
+    elif compare_versions(db_version, v := "3.5.0") < 0:
+        db = update_wrapper(db, update_3_4_to_3_5, db_version, v)  # 3.3.0-3.4.x to 3.5.0
+    elif compare_versions(db_version, v := "4.0.0") < 0:
+        db = update_wrapper(db, update_3_8_to_4, db_version, v)  # 3.6.0-3.8.x to 4.0.0
+    elif compare_versions(db_version, v := "4.3.0") < 0:
+        db = update_wrapper(db, update_4_2_to_4_3, db_version, v)  # 4.0.0-4.2.x to 4.3.0
+    elif compare_versions(db_version, v := "4.4.0") < 0:
+        db = update_wrapper(db, update_4_3_to_4_4, db_version, v)  # 4.3.x to 4.4.0
+    elif compare_versions(db_version, v := "4.5.0") < 0:
+        db = update_wrapper(db, update_4_4_to_4_5, db_version, v)  # 4.4.x to 4.5.0
+    elif compare_versions(db_version, v := "4.6.0") < 0:
+        db = update_wrapper(db, update_4_5_to_4_6, db_version, v)  # 4.5.x to 4.6.0
+    elif compare_versions(db_version, v := "4.7.0") < 0:
+        db = update_wrapper(db, update_4_6_to_4_7, db_version, v)  # 4.6.x to 4.7.0
+    elif compare_versions(db_version, v := "4.8.0") < 0:
+        db = update_wrapper(db, update_4_7_to_4_8, db_version, v)  # 4.7.x to 4.8.0
+    elif compare_versions(db_version, v := "4.9.0") < 0:
+        db = update_wrapper(db, update_4_8_to_4_9, db_version, v)  # 4.8.x to 4.9.0
+    elif compare_versions(db_version, v := "4.11.0") < 0:
+        db = update_wrapper(db, update_4_10_4_11, db_version, v)  # 4.9.0-4.10.x to 4.11.0
+    elif compare_versions(db_version, v := "4.18.0") < 0:
+        db = update_wrapper(db, update_4_18, db_version, v)  # 4.11.0-4.17.x to 4.18.0
     elif compare_versions(db_version, version) < 0:
         return update_version(db, db_version, version)  # Update to latest patch
 
