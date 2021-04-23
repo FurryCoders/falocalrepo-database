@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.18.0
+
+* `DATE` columns are now saved in ISO format `YYYY-MM-DDTHH:MM`
+
 ## 4.17.0
 
 * Use new query syntax for selection based on MongoDB queries
