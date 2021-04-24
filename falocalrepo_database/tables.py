@@ -15,6 +15,8 @@ list_columns: dict[str, list[str]] = {
     users_table: ["FOLDERS"],
 }
 
+date_format: str = "%Y-%m-%dT%H:%M"
+
 
 def make_journals_table(db: Connection):
     db.execute(
@@ -22,7 +24,7 @@ def make_journals_table(db: Connection):
         (ID INT UNIQUE NOT NULL CHECK (ID > 0),
         AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
         TITLE TEXT NOT NULL,
-        DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%dT%H:%M',DATE)),
+        DATE DATE NOT NULL CHECK (DATE==strftime('{date_format}',DATE)),
         CONTENT TEXT NOT NULL,
         MENTIONS TEXT NOT NULL,
         USERUPDATE INT NOT NULL CHECK (USERUPDATE in (0, 1)),
@@ -54,7 +56,7 @@ def make_submissions_table(db: Connection):
         (ID INT UNIQUE NOT NULL CHECK (ID > 0),
         AUTHOR TEXT NOT NULL CHECK (length(AUTHOR) > 0),
         TITLE TEXT NOT NULL,
-        DATE DATE NOT NULL CHECK (DATE==strftime('%Y-%m-%dT%H:%M',DATE)),
+        DATE DATE NOT NULL CHECK (DATE==strftime('{date_format}',DATE)),
         DESCRIPTION TEXT NOT NULL,
         TAGS TEXT NOT NULL,
         CATEGORY TEXT NOT NULL,
