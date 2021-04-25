@@ -411,13 +411,6 @@ class FADatabase:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def is_open(self) -> bool:
-        try:
-            self.connection.execute("SELECT * FROM sqlite_master")
-            return True
-        except ProgrammingError:
-            return False
-
     @property
     def tables(self) -> list[str]:
         return [
@@ -445,6 +438,13 @@ class FADatabase:
     @property
     def files_folder(self) -> Path:
         return self.database_path.parent / self.settings["FILESFOLDER"]
+
+    def is_open(self) -> bool:
+        try:
+            self.connection.execute("SELECT * FROM sqlite_master")
+            return True
+        except ProgrammingError:
+            return False
 
     def make_tables(self):
         if journals_table not in (tables := self.tables):
