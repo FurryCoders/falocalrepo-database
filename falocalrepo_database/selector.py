@@ -11,6 +11,7 @@ class ValuePlaceholder:
 
 
 Selector = dict[str, Union[dict[str, Union[Value, ValuePlaceholder]], list['Selector']]]
+SELECTOR_NOT = NOT = "$not"
 SELECTOR_AND = AND = "$and"
 SELECTOR_OR = OR = "$or"
 SELECTOR_EQ = EQ = "$eq"
@@ -43,11 +44,13 @@ def selector_to_sql(selector: Selector) -> str:
     for key, value in selector.items():
         if key in (AND, OR):
             assert isinstance(value, list) and all(isinstance(v, dict) for v in value)
-        elif key in (EQ, NE, GT, LT, GE, LE, IN, BETWEEN, LIKE, GLOB):
+        elif key in (NOT, EQ, NE, GT, LT, GE, LE, IN, BETWEEN, LIKE, GLOB):
             assert isinstance(value, dict)
         else:
             raise UnknownSelector(key)
 
+        if key == SELECTOR_NOT:
+            sql = f"not ({selector_to_sql(value)})"
         if key == SELECTOR_AND:
             sql = " and ".join(map(lambda s: f"({selector_to_sql(s)})", value))
         elif key == SELECTOR_OR:
