@@ -383,24 +383,18 @@ class FADatabaseCursor:
 
 
 class FADatabase:
-    def __init__(self, database_path: Union[str, PathLike]):
+    def __init__(self, database_path: Union[str, PathLike], *, make: bool = True):
         self.database_path: Path = Path(database_path).resolve()
         self.connection: Connection = connect(self.database_path)
-
-        if journals_table not in (tables := self.tables):
-            make_journals_table(self.connection)
-        if settings_table not in tables:
-            make_settings_table(self.connection)
-        if submissions_table not in tables:
-            make_submissions_table(self.connection)
-        if users_table not in tables:
-            make_users_table(self.connection)
 
         self.journals: FADatabaseJournals = FADatabaseJournals(self, journals_table)
         self.settings: FADatabaseSettings = FADatabaseSettings(self, settings_table)
         self.submissions: FADatabaseSubmissions = FADatabaseSubmissions(self, submissions_table)
         self.users: FADatabaseUsers = FADatabaseUsers(self, users_table)
         self.committed_changes: int = self.total_changes
+
+        if make:
+            self.make_tables()
 
     def __getitem__(self, table: str):
         return FADatabaseTable(self, table)
@@ -451,6 +445,20 @@ class FADatabase:
     @property
     def files_folder(self) -> Path:
         return self.database_path.parent / self.settings["FILESFOLDER"]
+
+    def make_tables(self):
+        if journals_table not in (tables := self.tables):
+            make_journals_table(self.connection)
+            self.journals.reload()
+        if settings_table not in tables:
+            make_settings_table(self.connection)
+            self.settings.reload()
+        if submissions_table not in tables:
+            make_submissions_table(self.connection)
+            self.submissions.reload()
+        if users_table not in tables:
+            make_users_table(self.connection)
+            self.users.reload()
 
     def move_files_folder(self, new_folder: Union[str, PathLike]) -> Path:
         new_folder = Path(new_folder)
