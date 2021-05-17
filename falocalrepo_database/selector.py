@@ -14,6 +14,7 @@ SELECTOR_LT = LT = "$lt"
 SELECTOR_GE = GE = "$ge"
 SELECTOR_LE = LE = "$le"
 SELECTOR_IN = IN = "$in"
+SELECTOR_INSTR = INSTR = "$instr"
 SELECTOR_BETWEEN = BETWEEN = "$between"
 SELECTOR_LIKE = LIKE = "$like"
 SELECTOR_GLOB = GLOB = "$glob"
@@ -32,7 +33,7 @@ def selector_to_sql(selector: Selector) -> tuple[str, list[Value]]:
     for key, value in selector.items():
         if key in (AND, OR):
             assert isinstance(value, list) and all(isinstance(v, dict) for v in value)
-        elif key in (NOT, EQ, NE, GT, LT, GE, LE, IN, BETWEEN, LIKE, GLOB):
+        elif key in (NOT, EQ, NE, GT, LT, GE, LE, IN, INSTR, BETWEEN, LIKE, GLOB):
             assert isinstance(value, dict)
         else:
             raise UnknownSelector(key)
@@ -71,6 +72,9 @@ def selector_to_sql(selector: Selector) -> tuple[str, list[Value]]:
             sql = f"{(k := [*value.keys()][0])} in " + \
                   f"({','.join(['?'] * len(vs if isinstance(vs := value[k], list) else [vs]))})"
             values.extend(vs)
+        elif key == SELECTOR_INSTR:
+            sql = f"instr({(k := [*value.keys()][0])}, ?)"
+            values.append(value[k])
         elif key == SELECTOR_BETWEEN:
             assert isinstance((v := value[(k := [*value.keys()][0])]), list)
             sql = f"{k} between ? and ?"
