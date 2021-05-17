@@ -199,16 +199,17 @@ class FADatabaseTable:
         obj = {k: format_list(v) if isinstance(v := obj.get(k, ""), list) else v for k in self.columns}
         return obj
 
-    def select(self, query: Selector = None, values: list[Value] = None, columns: list[str] = None,
+    def select(self, query: Selector = None, columns: list[str] = None,
                order: list[str] = None, limit: int = 0, offset: int = 0
                ) -> 'FADatabaseCursor':
+        sql, values = selector_to_sql(query) if query else ("", [])
         cursor: Cursor = self.database.execute(
             f"""SELECT {','.join(columns := columns or self.columns)} FROM {self.table}
-                    {f' WHERE {selector_to_sql(query)}' if query else ''}
+                    {f' WHERE {sql}' if sql else ''}
                     {f' ORDER BY {",".join(order)}' if order else ''}
                     {f' LIMIT {limit}' if limit > 0 else ''}
                     {f' OFFSET {offset}' if limit > 0 and offset > 0 else ''}""",
-            values or [])
+            values)
         return FADatabaseCursor(cursor, columns, self)
 
     def select_sql(self, where: str = "", values: list[Value] = None, columns: list[str] = None,

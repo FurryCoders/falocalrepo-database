@@ -1,16 +1,9 @@
-from re import sub
 from typing import Union
 
 from .exceptions import UnknownSelector
 from .types import Value
 
-
-class ValuePlaceholder:
-    def __str__(self):
-        return "?"
-
-
-Selector = dict[str, Union[dict[str, Union[Value, ValuePlaceholder]], list['Selector']]]
+Selector = dict[str, Union[dict[str, Value], list['Selector']]]
 SELECTOR_NOT = NOT = "$not"
 SELECTOR_AND = AND = "$and"
 SELECTOR_OR = OR = "$or"
@@ -26,20 +19,15 @@ SELECTOR_LIKE = LIKE = "$like"
 SELECTOR_GLOB = GLOB = "$glob"
 
 
-def sql_value(value: Value) -> str:
-    if value is ValuePlaceholder or isinstance(value, ValuePlaceholder):
-        return str(ValuePlaceholder())
-    elif value is None:
-        return "null"
-    elif isinstance(value, str):
-        value = sub(r"(?<!\\)'", "\\'", value)
-        return f"'{value}'"
-    else:
-        return str(value)
+def flatten(list_old) -> list:
+    list_new = []
+    for i in list_old:
+        list_new.extend(flatten(i)) if isinstance(i, list) else list_new.append(i)
+    return list_new
 
 
-def selector_to_sql(selector: Selector) -> str:
-    sql: str = ""
+def selector_to_sql(selector: Selector) -> tuple[str, list[Value]]:
+    sql, values = "", []
     assert isinstance(selector, dict), "selector needs to be of type dict"
     for key, value in selector.items():
         if key in (AND, OR):
@@ -50,30 +38,46 @@ def selector_to_sql(selector: Selector) -> str:
             raise UnknownSelector(key)
 
         if key == SELECTOR_NOT:
-            sql = f"not ({selector_to_sql(value)})"
+            sql_, values_ = selector_to_sql(value)
+            sql = f"not ({sql})"
+            values.extend(values_)
         if key == SELECTOR_AND:
-            sql = " and ".join(map(lambda s: f"({selector_to_sql(s)})", value))
+            sql_values = list(map(selector_to_sql, value))
+            sql = f"({' and '.join([s for s, _ in sql_values])})"
+            values.extend(flatten([v for _, v in sql_values]))
         elif key == SELECTOR_OR:
-            sql = " or ".join(map(lambda s: f"({selector_to_sql(s)})", value))
+            sql_values = list(map(selector_to_sql, value))
+            sql = f"({' or '.join([s for s, _ in sql_values])})"
+            values.extend(flatten([v for _, v in sql_values]))
         elif key == SELECTOR_EQ:
-            sql = f"{(k := [*value.keys()][0])} = {sql_value(value[k])}"
+            sql = f"{(k := [*value.keys()][0])} = ?"
+            values.append(value[k])
         elif key == SELECTOR_NE:
-            sql = f"{(k := [*value.keys()][0])} != {sql_value(value[k])}"
+            sql = f"{(k := [*value.keys()][0])} != ?"
+            values.append(value[k])
         elif key == SELECTOR_GT:
-            sql = f"{(k := [*value.keys()][0])} > {sql_value(value[k])}"
+            sql = f"{(k := [*value.keys()][0])} > ?"
+            values.append(value[k])
         elif key == SELECTOR_LT:
-            sql = f"{(k := [*value.keys()][0])} < {sql_value(value[k])}"
+            sql = f"{(k := [*value.keys()][0])} < ?"
+            values.append(value[k])
         elif key == SELECTOR_GE:
-            sql = f"{(k := [*value.keys()][0])} >= {sql_value(value[k])}"
+            sql = f"{(k := [*value.keys()][0])} >= ?"
+            values.append(value[k])
         elif key == SELECTOR_LE:
-            sql = f"{(k := [*value.keys()][0])} <= {sql_value(value[k])}"
+            sql = f"{(k := [*value.keys()][0])} <= ?"
+            values.append(value[k])
         elif key == SELECTOR_IN:
             sql = f"{(k := [*value.keys()][0])} in " + \
-                  f"({','.join(map(sql_value, v if isinstance(v := value[k], list) else [v]))})"
+                  f"({','.join(['?'] * len(vs if isinstance(vs := value[k], list) else [vs]))})"
+            values.extend(vs)
         elif key == SELECTOR_BETWEEN:
             assert isinstance((v := value[(k := [*value.keys()][0])]), list)
-            sql = f"{k} between {v[0]} and {v[1]}"
+            sql = f"{k} between ? and ?"
+            values.extend(v[0:2])
         elif key in (SELECTOR_LIKE, SELECTOR_GLOB):
-            assert isinstance((v := value[(k := [*value.keys()][0])]), (str, ValuePlaceholder)) or v is ValuePlaceholder
-            sql = f"{k} like {sql_value(v)}" if key == SELECTOR_LIKE else f"{k} glob {sql_value(v)}"
-    return sql
+            assert isinstance((v := value[(k := [*value.keys()][0])]), str)
+            sql = f"{k} like ?" if key == SELECTOR_LIKE else f"{k} glob ?"
+            values.append(v)
+
+    return sql, values
