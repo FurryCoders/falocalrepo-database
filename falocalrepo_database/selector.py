@@ -1,3 +1,4 @@
+from typing import Any
 from typing import Union
 
 from .exceptions import UnknownSelector
@@ -20,7 +21,7 @@ SELECTOR_LIKE = LIKE = "$like"
 SELECTOR_GLOB = GLOB = "$glob"
 
 
-def flatten(list_old) -> list:
+def flatten(list_old: list) -> list:
     list_new = []
     for i in list_old:
         list_new.extend(flatten(i)) if isinstance(i, list) else list_new.append(i)
@@ -41,7 +42,7 @@ def selector_to_sql(selector: Selector) -> tuple[str, list[Value]]:
         if key == SELECTOR_NOT:
             sql_, values_ = selector_to_sql(value)
             sql = f"not ({sql})"
-            values.extend(values_)
+            values.extend(flatten(values_))
         if key == SELECTOR_AND:
             sql_values = list(map(selector_to_sql, value))
             sql = f"({' and '.join([s for s, _ in sql_values])})"
