@@ -1,3 +1,4 @@
+from typing import Optional
 from typing import Union
 
 from .exceptions import UnknownSelector
@@ -88,6 +89,9 @@ def selector_to_sql(selector: Selector) -> tuple[str, list[Value]]:
 
 
 class SelectorBuilder:
+    def __init__(self, field: str = None):
+        self.field: Optional[str] = field
+
     def __sub__(self, other: Selector):  # NOT
         return {SELECTOR_NOT: other}
 
@@ -97,35 +101,35 @@ class SelectorBuilder:
     def __or__(self, other: list[Selector]):  # OR
         return {SELECTOR_OR: other}
 
-    def __eq__(self, other: dict[str, Value]):  # EQ
-        return {SELECTOR_EQ: other}
+    def __eq__(self, value: Value):  # EQ
+        return {SELECTOR_EQ: {self.field: value}}
 
-    def __ne__(self, other: dict[str, Value]):  # NE
-        return {SELECTOR_NE: other}
+    def __ne__(self, value: Value):  # NE
+        return {SELECTOR_NE: {self.field: value}}
 
-    def __gt__(self, other: dict[str, Value]):  # GT
-        return {SELECTOR_GT: other}
+    def __gt__(self, value: Value):  # GT
+        return {SELECTOR_GT: {self.field: value}}
 
-    def __lt__(self, other: dict[str, Value]):  # LT
-        return {SELECTOR_LT: other}
+    def __lt__(self, value: Value):  # LT
+        return {SELECTOR_LT: {self.field: value}}
 
-    def __ge__(self, other: dict[str, Value]):  # GE
-        return {SELECTOR_GE: other}
+    def __ge__(self, value: Value):  # GE
+        return {SELECTOR_GE: {self.field: value}}
 
-    def __le__(self, other: dict[str, Value]):  # LE
-        return {SELECTOR_LE: other}
+    def __le__(self, value: Value):  # LE
+        return {SELECTOR_LE: {self.field: value}}
 
-    def __truediv__(self, other: dict[str, Value]):  # IN
-        return {SELECTOR_IN: other}
+    def __truediv__(self, value: Value):  # IN
+        return {SELECTOR_IN: {self.field: value}}
 
-    def __floordiv__(self, other: dict[str, Value]):  # INSTR
-        return {SELECTOR_INSTR: other}
+    def __floordiv__(self, value: Value):  # INSTR
+        return {SELECTOR_INSTR: {self.field: value}}
 
-    def __xor__(self, other: dict[str, list[Value]]):  # BETWEEN
-        return {SELECTOR_BETWEEN: other}
+    def __xor__(self, values: list[Value]):  # BETWEEN
+        return {SELECTOR_BETWEEN: {self.field: values[:2]}}
 
-    def __mod__(self, other: dict[str, Value]):  # LIKE
-        return {SELECTOR_LIKE: other}
+    def __mod__(self, value: Value):  # LIKE
+        return {SELECTOR_LIKE: {self.field: value}}
 
-    def __mul__(self, other: dict[str, Value]):  # GLOB
-        return {SELECTOR_GLOB: other}
+    def __mul__(self, value: Value):  # GLOB
+        return {SELECTOR_GLOB: {self.field: value}}
