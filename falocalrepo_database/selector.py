@@ -85,3 +85,47 @@ def selector_to_sql(selector: Selector) -> tuple[str, list[Value]]:
             values.append(v)
 
     return sql, values
+
+
+class SelectorBuilder:
+    def __sub__(self, other: Selector):  # NOT
+        return {SELECTOR_NOT: other}
+
+    def __and__(self, other: list[Selector]):  # AND
+        return {SELECTOR_AND: other}
+
+    def __or__(self, other: list[Selector]):  # OR
+        return {SELECTOR_OR: other}
+
+    def __eq__(self, other: dict[str, Value]):  # EQ
+        return {SELECTOR_EQ: other}
+
+    def __ne__(self, other: dict[str, Value]):  # NE
+        return {SELECTOR_NE: other}
+
+    def __gt__(self, other: dict[str, Value]):  # GT
+        return {SELECTOR_GT: other}
+
+    def __lt__(self, other: dict[str, Value]):  # LT
+        return {SELECTOR_LT: other}
+
+    def __ge__(self, other: dict[str, Value]):  # GE
+        return {SELECTOR_GE: other}
+
+    def __le__(self, other: dict[str, Value]):  # LE
+        return {SELECTOR_LE: other}
+
+    def __truediv__(self, other: dict[str, Value]):  # IN
+        return {SELECTOR_IN: other}
+
+    def __floordiv__(self, other: dict[str, Value]):  # INSTR
+        return {SELECTOR_INSTR: other}
+
+    def __xor__(self, other: dict[str, list[Value]]):  # BETWEEN
+        return {SELECTOR_BETWEEN: other}
+
+    def __mod__(self, other: dict[str, Value]):  # LIKE
+        return {SELECTOR_LIKE: other}
+
+    def __mul__(self, other: dict[str, Value]):  # GLOB
+        return {SELECTOR_GLOB: other}
