@@ -92,44 +92,44 @@ class SelectorBuilder:
     def __init__(self, field: str = None):
         self.field: Optional[str] = field
 
-    def __sub__(self, other: Selector):  # NOT
+    def __sub__(self, other: Selector) -> Selector:  # NOT
         return {SELECTOR_NOT: other}
 
-    def __and__(self, other: list[Selector]):  # AND
+    def __and__(self, other: list[Selector]) -> Selector:  # AND
         return {SELECTOR_AND: other}
 
-    def __or__(self, other: list[Selector]):  # OR
+    def __or__(self, other: list[Selector]) -> Selector:  # OR
         return {SELECTOR_OR: other}
 
-    def __eq__(self, value: Value):  # EQ
+    def __eq__(self, value: Value) -> Selector:  # EQ
         return {SELECTOR_EQ: {self.field: value}}
 
-    def __ne__(self, value: Value):  # NE
+    def __ne__(self, value: Value) -> Selector:  # NE
         return {SELECTOR_NE: {self.field: value}}
 
-    def __gt__(self, value: Value):  # GT
+    def __gt__(self, value: Value) -> Selector:  # GT
         return {SELECTOR_GT: {self.field: value}}
 
-    def __lt__(self, value: Value):  # LT
+    def __lt__(self, value: Value) -> Selector:  # LT
         return {SELECTOR_LT: {self.field: value}}
 
-    def __ge__(self, value: Value):  # GE
+    def __ge__(self, value: Value) -> Selector:  # GE
         return {SELECTOR_GE: {self.field: value}}
 
-    def __le__(self, value: Value):  # LE
+    def __le__(self, value: Value) -> Selector:  # LE
         return {SELECTOR_LE: {self.field: value}}
 
-    def __truediv__(self, value: Value):  # IN
+    def __truediv__(self, value: Value) -> Selector:  # IN
         return {SELECTOR_IN: {self.field: value}}
 
-    def __floordiv__(self, value: Value):  # INSTR
+    def __floordiv__(self, value: Value) -> Selector:  # INSTR
         return {SELECTOR_INSTR: {self.field: value}}
 
-    def __xor__(self, values: list[Value]):  # BETWEEN
+    def __xor__(self, values: list[Value]) -> Selector:  # BETWEEN
         return {SELECTOR_BETWEEN: {self.field: values[:2]}}
 
-    def __mod__(self, value: Value):  # LIKE
+    def __mod__(self, value: Value) -> Selector:  # LIKE
         return {SELECTOR_LIKE: {self.field: value}}
 
-    def __mul__(self, value: Value):  # GLOB
+    def __mul__(self, value: Value) -> Selector:  # GLOB
         return {SELECTOR_GLOB: {self.field: value}}
