@@ -4,7 +4,7 @@ from typing import Union
 from .exceptions import UnknownSelector
 from .types import Value
 
-Selector = dict[str, Union[dict[str, Union[Value, list[Value]]], list['Selector']]]
+Selector = dict[str, Union[dict[str, Union[Value, list[Value]]], 'Selector', list['Selector']]]
 SELECTOR_NOT = NOT = "$not"
 SELECTOR_AND = AND = "$and"
 SELECTOR_OR = OR = "$or"
