@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.19.0
+
+* Improved handling of `Selector` objects
+* Create `Selector` objects more easily via the `SelectorBuilder` object
+
 ## 4.18.0
 
 * `DATE` columns are now saved in ISO format `YYYY-MM-DDTHH:MM`
