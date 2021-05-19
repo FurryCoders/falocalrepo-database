@@ -31,6 +31,7 @@ from .selector import Selector
 from .selector import selector_to_sql
 from .tables import journals_table
 from .tables import list_columns
+from .tables import list_columns_sorted
 from .tables import make_journals_table
 from .tables import make_settings_table
 from .tables import make_submissions_table
@@ -116,12 +117,20 @@ def copy_cursors(db_dest: 'FADatabase', cursors: list['FADatabaseCursor'] = None
             table_dest.insert(cursor.table.format_dict(entry), replace=True)
 
 
-def format_list(obj: list[Value]) -> str:
-    return "".join(f"|{e}|" for e in sorted(set(map(str, obj)), key=str.lower))
+def format_list(obj: list[Value], *, sort: bool = False) -> str:
+    return "".join(f"|{e}|" for e in (sorted(obj) if sort else obj))
 
 
 def unpack_list(obj: str) -> list[str]:
     return [e for e in obj.split("|") if e]
+
+
+def join_lists(a: list[Value], b: list[Value]) -> list[Value]:
+    return a + [e for e in b if b not in a]
+
+
+def disjoin_lists(a: list[Value], b: list[Value]) -> list[Value]:
+    return [e for e in a if e not in b]
 
 
 class FADatabaseTable:
@@ -129,6 +138,7 @@ class FADatabaseTable:
         self.database: 'FADatabase' = database
         self.table: str = table.upper()
         self.list_columns: list[str] = list(map(str.upper, list_columns.get(self.table, [])))
+        self.list_columns_sorted: list[str] = list(map(str.upper, list_columns_sorted.get(self.table, [])))
 
     def __len__(self) -> int:
         return self.database.connection.execute(f"SELECT COUNT(*) FROM {self.table}").fetchone()[0]
@@ -175,9 +185,10 @@ class FADatabaseTable:
         elif not (item := self[key]):
             return False
         item = {k: item[k] for k in values.keys()}
-        item_new = {k: sorted(filter(bool, set(item[k] + v)), key=str.lower) for k, v in values.items()}
-        self.update({k: format_list(v) for k, v in item_new.items()}, key) if item_new != item else None
-        return item_new != item
+        item_new = {k: join_lists(item[k], v) for k, v in values.items()}
+        if diff := any({*item[k]} != {*v} for k, v in item_new.items()):
+            self.update({k: format_list(v, sort=k in self.list_columns_sorted) for k, v in item_new.items()}, key)
+        return diff
 
     def remove_from_list(self, key: Key, values: dict[str, list[Value]]) -> bool:
         if not (values := {k.upper(): v for k, v in values.items() if v and k.upper() in self.list_columns}):
@@ -185,9 +196,10 @@ class FADatabaseTable:
         elif not (item := self[key]):
             return False
         item = {k: item[k] for k in values.keys()}
-        item_new = {k: sorted(filter(bool, set(item[k]) - set(v)), key=str.lower) for k, v in values.items()}
-        self.update({k: format_list(v) for k, v in item_new.items()}, key) if item_new != item else None
-        return item_new != item
+        item_new = {k: disjoin_lists(item[k], v) for k, v in values.items()}
+        if diff := any({*item[k]} != {*v} for k, v in item_new.items()):
+            self.update({k: format_list(v, sort=k in self.list_columns_sorted) for k, v in item_new.items()}, key)
+        return diff
 
     def reload(self):
         self.__init__(self.database, self.table)
@@ -196,7 +208,8 @@ class FADatabaseTable:
 
     def format_dict(self, obj: Entry) -> dict[str, Value]:
         obj = {k.upper().replace("_", ""): v for k, v in obj.items()}
-        obj = {k: format_list(v) if isinstance(v := obj.get(k, ""), list) else v for k in self.columns}
+        obj = {k: format_list(v, sort=k in self.list_columns_sorted) if isinstance(v := obj.get(k, ""), list) else v
+               for k in self.columns}
         return obj
 
     def select(self, query: Selector = None, columns: list[str] = None,

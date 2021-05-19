@@ -14,6 +14,12 @@ list_columns: dict[str, list[str]] = {
     submissions_table: ["TAGS", "FAVORITE", "MENTIONS"],
     users_table: ["FOLDERS"],
 }
+list_columns_sorted: dict[str, list[str]] = {
+    journals_table: ["MENTIONS"],
+    settings_table: [],
+    submissions_table: ["FAVORITE", "MENTIONS"],
+    users_table: ["FOLDERS"],
+}
 
 date_format: str = "%Y-%m-%dT%H:%M"
 
