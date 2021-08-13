@@ -119,7 +119,7 @@ class SelectorBuilder:
     def __le__(self, value: Value) -> Selector:  # LE
         return {SELECTOR_LE: {self.field: value}}
 
-    def __truediv__(self, value: Value) -> Selector:  # IN
+    def __truediv__(self, value: Union[Value, list[Value]]) -> Selector:  # IN
         return {SELECTOR_IN: {self.field: value}}
 
     def __floordiv__(self, value: Value) -> Selector:  # INSTR
