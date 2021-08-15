@@ -499,7 +499,7 @@ class FADatabase:
             raise err
         return err
 
-    def check_connection(self: Union['FADatabase', Path, str], raise_for_error: bool = True) -> list[Process]:
+    def check_connection(self: Union['FADatabase', PathLike, str], raise_for_error: bool = True) -> list[Process]:
         database_path: str
         if isinstance(self, FADatabase):
             database_path: str = str(self.database_path)
