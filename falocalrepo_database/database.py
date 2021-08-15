@@ -504,7 +504,7 @@ class FADatabase:
         if isinstance(self, FADatabase):
             database_path: str = str(self.database_path)
         elif isinstance(self, (str, Path)):
-            database_path: str = str(self)
+            database_path: str = str(Path(self).resolve())
         else:
             raise TypeError("database path argument must be of type Path or str")
         ps: list[Process] = []
