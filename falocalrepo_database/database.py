@@ -499,9 +499,15 @@ class FADatabase:
             raise err
         return err
 
-    def check_connection(self, raise_for_error: bool = True) -> list[Process]:
+    def check_connection(self: Union['FADatabase', Path, str], raise_for_error: bool = True) -> list[Process]:
+        database_path: str
+        if isinstance(self, FADatabase):
+            database_path: str = str(self.database_path)
+        elif isinstance(self, (str, Path)):
+            database_path: str = str(self)
+        else:
+            raise TypeError("database path argument must be of type Path or str")
         ps: list[Process] = []
-        database_path: str = str(self.database_path)
         for process in process_iter():
             try:
                 if process.is_running() and any(database_path == f.path for f in process.open_files()):
