@@ -179,6 +179,7 @@ class FADatabaseTable:
             for name, *_, pk in self.columns_info if pk == 1
         ][0]
 
+    # noinspection DuplicatedCode
     def add_to_list(self, key: Key, values: dict[str, list[Value]]) -> bool:
         if not (values := {k.upper(): v for k, v in values.items() if v and k.upper() in self.list_columns}):
             return False
@@ -190,6 +191,7 @@ class FADatabaseTable:
             self.update({k: format_list(v, sort=k in self.list_columns_sorted) for k, v in item_new.items()}, key)
         return diff
 
+    # noinspection DuplicatedCode
     def remove_from_list(self, key: Key, values: dict[str, list[Value]]) -> bool:
         if not (values := {k.upper(): v for k, v in values.items() if v and k.upper() in self.list_columns}):
             return False
@@ -246,6 +248,7 @@ class FADatabaseTable:
             [v for v in values.values()]
         )
 
+    # noinspection SqlWithoutWhere
     def update(self, values: dict[str, Value], key: Optional[Key] = None):
         update_columns: list[str] = [f"{col} = ?" for col in values]
         where_str: str = f"WHERE {self.column_id} = ?" if key else ""
