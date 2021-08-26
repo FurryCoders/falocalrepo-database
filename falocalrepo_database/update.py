@@ -25,6 +25,7 @@ from typing import Optional
 from typing import Union
 
 
+# noinspection SqlResolve,DuplicatedCode
 def get_version(db: Connection) -> str:
     try:
         # Database version 3.0.0 and above
@@ -34,6 +35,7 @@ def get_version(db: Connection) -> str:
         return db.execute(f"SELECT VALUE FROM SETTINGS WHERE FIELD = 'VERSION'").fetchone()[0]
 
 
+# noinspection SqlResolve,DuplicatedCode
 def compare_versions(a: str, b: str) -> int:
     a_split = list(map(int, a.split("-", 1)[0].split(".")))
     b_split = list(map(int, b.split("-", 1)[0].split(".")))
@@ -48,6 +50,7 @@ def compare_versions(a: str, b: str) -> int:
     return 0
 
 
+# noinspection SqlResolve,DuplicatedCode
 def insert(db: Connection, table: str, keys: Collection[str], values: Collection[Union[int, str]],
            replace: bool = True):
     db.execute(
@@ -58,10 +61,12 @@ def insert(db: Connection, table: str, keys: Collection[str], values: Collection
     )
 
 
+# noinspection SqlResolve,DuplicatedCode
 def count(db: Connection, table: str) -> int:
     return db.execute(f"SELECT COUNT(*) FROM {table}").fetchall()[0][0]
 
 
+# noinspection SqlResolve,DuplicatedCode
 def database_path(db: Connection) -> Optional[str]:
     name: str
     filename: Optional[str]
@@ -72,15 +77,18 @@ def database_path(db: Connection) -> Optional[str]:
     return None
 
 
+# noinspection SqlResolve,DuplicatedCode
 def clean_username(user: str) -> str:
     return sub(r"[^a-z0-9.~-]", "", user.lower())
 
 
+# noinspection SqlResolve,DuplicatedCode
 def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> str:
     id_str: str = str(int(id_)).zfill(depth * width)
     return join(*[id_str[n:n + width] for n in range(0, depth * width, width)])
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_3(db: Connection) -> Connection:
     # Create submissions table
     db.execute(
@@ -137,6 +145,7 @@ def make_database_3(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_3_1(db: Connection) -> Connection:
     # Create submissions table
     db.execute(
@@ -194,6 +203,7 @@ def make_database_3_1(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_3_2(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -256,6 +266,7 @@ def make_database_3_2(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_3_3(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -317,6 +328,7 @@ def make_database_3_3(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_4(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -379,6 +391,7 @@ def make_database_4(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_4_3(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -438,6 +451,7 @@ def make_database_4_3(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_4_4(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -498,6 +512,7 @@ def make_database_4_4(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_4_5(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -554,6 +569,7 @@ def make_database_4_5(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_4_6(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -612,6 +628,7 @@ def make_database_4_6(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_4_7(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -671,6 +688,7 @@ def make_database_4_7(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_4_8(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -730,6 +748,7 @@ def make_database_4_8(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_4_9(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -790,6 +809,7 @@ def make_database_4_9(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_4_11(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -850,6 +870,7 @@ def make_database_4_11(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database_4_18(db: Connection) -> Connection:
     db.execute(
         f"""CREATE TABLE IF NOT EXISTS USERS
@@ -910,10 +931,12 @@ def make_database_4_18(db: Connection) -> Connection:
     return db
 
 
+# noinspection SqlResolve,DuplicatedCode
 def make_database(path: str, make_function: Callable[[Connection], Connection]):
     make_function(connect_database(path)).close()
 
 
+# noinspection SqlResolve,DuplicatedCode
 def update_3_0(db: Connection, db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_3)
 
@@ -966,9 +989,9 @@ def update_3_0(db: Connection, db_path: str, db_new_path: str):
     for n, id_, location in db.execute("SELECT row_number() over (), ID, LOCATION FROM SUBMISSIONS"):
         print(n, end="\r", flush=True)
         if isdir(folder_old := join(files_folder_old, location.strip("/"))):
-            fileglob = glob(join(folder_old, "submission*"))
+            file_glob = glob(join(folder_old, "submission*"))
             fileext = ""
-            if filename := fileglob[0] if fileglob else "":
+            if filename := file_glob[0] if file_glob else "":
                 makedirs((folder_new := join(files_folder_new, tiered_path(id_))), exist_ok=True)
                 copy(filename, join(folder_new, (filename := basename(filename))))
                 fileext = filename.split(".")[-1] if "." in filename else ""
@@ -991,9 +1014,9 @@ def update_3_0(db: Connection, db_path: str, db_new_path: str):
         print(f"{len(sub_not_found)} submissions not found in FA.files\n" +
               "Writing ID's to FA_update_3_0.txt")
         with open("FA_update_3_0.txt", "w") as f:
-            for i, sub in enumerate(sorted(sub_not_found)):
+            for i, sub_ in enumerate(sorted(sub_not_found)):
                 print(i, end="\r", flush=True)
-                f.write(str(sub) + "\n")
+                f.write(str(sub_) + "\n")
 
     # Replace older files folder with new
     print("Replacing older files folder with new")
@@ -1011,7 +1034,8 @@ def update_3_0(db: Connection, db_path: str, db_new_path: str):
     db.execute("update db_new.SETTINGS set SVALUE = ? where SETTING = 'USRN'", [str(count(db, "USERS"))])
 
 
-def update_3_1(db: Connection, db_path: str, db_new_path: str):
+# noinspection SqlResolve,DuplicatedCode
+def update_3_1(db: Connection, _db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_3_1)
 
     # Transferring entries
@@ -1032,11 +1056,18 @@ def update_3_1(db: Connection, db_path: str, db_new_path: str):
 
     # Update users folders
     print("Updating users folders")
-    db.execute("UPDATE db_new.USERS SET FOLDERS = replace(FOLDERS, 'extras', 'mentions')")
-    db.execute("UPDATE db_new.USERS SET FOLDERS = replace(FOLDERS, 'Extras', 'mentions_all')")
+    db.execute(
+        """UPDATE db_new.USERS SET FOLDERS = replace(FOLDERS, 'extras', 'mentions')
+        WHERE instr(FOLDERS, 'extras') > 0"""
+    )
+    db.execute(
+        """UPDATE db_new.USERS SET FOLDERS = replace(FOLDERS, 'Extras', 'mentions_all')
+        WHERE instr(FOLDERS, 'Extras') > 0"""
+    )
 
 
-def update_3_2(db: Connection, db_path: str, db_new_path: str):
+# noinspection SqlResolve,DuplicatedCode
+def update_3_2(db: Connection, _db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_3_2)
 
     # Transferring entries
@@ -1054,10 +1085,11 @@ def update_3_2(db: Connection, db_path: str, db_new_path: str):
         """INSERT OR REPLACE INTO db_new.SETTINGS
         SELECT * FROM SETTINGS WHERE SETTING != "VERSION";"""
     )
-    db.execute("UPDATE db_new.USERS SET JOURNALS = ''")
+    db.execute("UPDATE db_new.USERS SET JOURNALS = '' WHERE JOURNALS IS NULL")
 
 
-def update_3_3(db: Connection, db_path: str, db_new_path: str):
+# noinspection SqlResolve,DuplicatedCode
+def update_3_3(db: Connection, _db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_3_3)
 
     # Transferring entries
@@ -1088,7 +1120,8 @@ def update_3_3(db: Connection, db_path: str, db_new_path: str):
                    json_dumps([[float(last_update[0]), "update"]]))
 
 
-def update_3_5(db: Connection, db_path: str, db_new_path: str):
+# noinspection SqlResolve,DuplicatedCode
+def update_3_5(db: Connection, _db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_3_3)
 
     # Transferring entries
@@ -1121,7 +1154,8 @@ def update_3_5(db: Connection, db_path: str, db_new_path: str):
     db.execute("UPDATE db_new.SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", ["3.5.0"])
 
 
-def update_4_0(db: Connection, db_path: str, db_new_path: str):
+# noinspection SqlResolve,DuplicatedCode
+def update_4_0(db: Connection, _db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_4)
 
     # Transferring entries
@@ -1145,7 +1179,8 @@ def update_4_0(db: Connection, db_path: str, db_new_path: str):
     )
 
 
-def update_4_3(db: Connection, db_path: str, db_new_path: str):
+# noinspection SqlResolve,DuplicatedCode
+def update_4_3(db: Connection, _db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_4_3)
 
     # Transferring entries
@@ -1169,7 +1204,8 @@ def update_4_3(db: Connection, db_path: str, db_new_path: str):
     )
 
 
-def update_4_4(db: Connection, db_path: str, db_new_path: str):
+# noinspection SqlResolve,DuplicatedCode
+def update_4_4(db: Connection, _db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_4_4)
 
     # Transferring entries
@@ -1206,6 +1242,7 @@ def update_4_4(db: Connection, db_path: str, db_new_path: str):
             db.execute(f"update db_new.SUBMISSIONS set FAVORITE = ? where ID = {f}", [f_us_new])
 
 
+# noinspection SqlResolve,DuplicatedCode
 def update_4_5(db: Connection, db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_4_5)
 
@@ -1267,7 +1304,8 @@ def update_4_5(db: Connection, db_path: str, db_new_path: str):
             f.write("\n".join(f"{u} {s}" for u, s in double_folders))
 
 
-def update_4_6(db: Connection, db_path: str, db_new_path: str):
+# noinspection SqlResolve,DuplicatedCode
+def update_4_6(db: Connection, _db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_4_6)
 
     # Transferring entries
@@ -1299,7 +1337,8 @@ def update_4_6(db: Connection, db_path: str, db_new_path: str):
     )
 
 
-def update_4_7(db: Connection, db_path: str, db_new_path: str):
+# noinspection SqlResolve,DuplicatedCode
+def update_4_7(db: Connection, _db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_4_7)
 
     # Transferring entries
@@ -1331,7 +1370,8 @@ def update_4_7(db: Connection, db_path: str, db_new_path: str):
             db.execute("update db_new.JOURNALS set MENTIONS = ? where ID = ?", (",".join(mentions), i))
 
 
-def update_4_8(db: Connection, db_path: str, db_new_path: str):
+# noinspection SqlResolve,DuplicatedCode
+def update_4_8(db: Connection, _db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_4_8)
 
     # Transferring entries
@@ -1376,6 +1416,7 @@ def update_4_8(db: Connection, db_path: str, db_new_path: str):
         db.execute("update db_new.JOURNALS set MENTIONS = ? where ID = ?", (ms, i))
 
 
+# noinspection SqlResolve,DuplicatedCode
 def update_4_9(db: Connection, db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_4_9)
 
@@ -1441,6 +1482,7 @@ def update_4_9(db: Connection, db_path: str, db_new_path: str):
             f.write("\n".join(f"{i} {e}" for i, e in blank_extensions))
 
 
+# noinspection SqlResolve,DuplicatedCode
 def update_4_11(db: Connection, db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_4_11)
 
@@ -1464,6 +1506,7 @@ def update_4_11(db: Connection, db_path: str, db_new_path: str):
         db.execute("UPDATE db_new.SUBMISSIONS SET FILESAVED = ? WHERE ID = ?", (f, i))
 
 
+# noinspection SqlResolve,DuplicatedCode
 def update_4_18(db: Connection, _db_path: str, db_new_path: str):
     make_database(db_new_path, make_database_4_18)
 
