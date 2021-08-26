@@ -506,7 +506,7 @@ class FADatabase:
         database_path: str
         if isinstance(self, FADatabase):
             database_path: str = str(self.database_path)
-        elif isinstance(self, (str, Path)):
+        elif isinstance(self, (str, PathLike)):
             database_path: str = str(Path(self).resolve())
         else:
             raise TypeError("database path argument must be of type Path or str")
