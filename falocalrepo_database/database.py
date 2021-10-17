@@ -93,7 +93,7 @@ def clean_username(username: str) -> str:
     return str(sub(r"[^a-zA-Z0-9\-.~,]", "", username.lower().strip()))
 
 
-def copy_cursors(db_dest: 'FADatabase', cursors: list['FADatabaseCursor'] = None, replace: bool = True):
+def copy_cursors(db_dest: 'FADatabase', cursors: Iterable['FADatabaseCursor']):
     if not cursors:
         return
     assert (e := check_version(version_dest := db_dest.version)) is None, \
@@ -102,19 +102,18 @@ def copy_cursors(db_dest: 'FADatabase', cursors: list['FADatabaseCursor'] = None
         "Cursors must point to a database with the same version as the destination database"
     assert all(set(c.columns) == set(c.table.columns) for c in cursors), "Cursors must contain all table columns"
 
-    dest_files: Path = db_dest.files_folder
-    cursor_files: Optional[Path] = None
-
     for cursor in cursors:
         table_dest: FADatabaseTable = db_dest[cursor.table.table]
-        if cursor.table.table == submissions_table:
-            cursor_files = cursor.table.database.files_folder
+        cursor_db: FADatabase = cursor.table.database
         for entry in cursor:
-            if not replace and table_dest.table == users_table and (entry_b := table_dest[entry[table_dest.column_id]]):
-                entry["FOLDERS"] = list(set(entry["FOLDERS"] + entry_b["FOLDERS"]))
-            if table_dest.table == submissions_table:
-                copy_folder(cursor_files / (p := tiered_path(entry["ID"])), dest_files / p)
-            table_dest.insert(cursor.table.format_dict(entry), replace=True)
+            if table_dest.table == db_dest.submissions.table:
+                f, t = cursor_db.submissions.get_submission_files(entry[cursor.table.column_id])
+                db_dest.submissions.save_submission(entry, f.read_bytes() if f else None, t.read_bytes() if t else None)
+            elif table_dest.table == db_dest.users.table and entry[table_dest.column_id] in db_dest.users:
+                for f in entry["FOLDERS"]:
+                    db_dest.users.add_user_folder(entry[table_dest.column_id], f)
+            else:
+                table_dest.insert(table_dest.format_dict(entry))
 
 
 def format_list(obj: list[Value], *, sort: bool = False) -> str:
@@ -540,7 +539,7 @@ class FADatabase:
         self.connection.close()
 
     def merge(self, db_b: 'FADatabase', *cursors: FADatabaseCursor):
-        copy_cursors(self, cursors or [db_b.users.select(), db_b.submissions.select(), db_b.journals.select()], False)
+        copy_cursors(self, cursors or [db_b.users.select(), db_b.submissions.select(), db_b.journals.select()])
 
     def copy(self, db_b: 'FADatabase', *cursors: FADatabaseCursor):
         copy_cursors(db_b, cursors or [self.users.select(), self.submissions.select(), self.journals.select()])
