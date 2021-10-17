@@ -477,10 +477,11 @@ class FADatabase:
             make_users_table(self.connection)
             self.users.reload()
 
-    def move_files_folder(self, new_folder: Union[str, PathLike]) -> Path:
+    def move_files_folder(self, new_folder: Union[str, PathLike], *, move_files: bool = True) -> Path:
         new_folder = Path(new_folder)
         new_folder = new_folder if new_folder.is_absolute() else (self.database_path.parent / new_folder)
-        move(self.files_folder, new_folder)
+        if move_files:
+            move(self.files_folder, new_folder)
         self.settings["FILESFOLDER"] = str(new_folder.relative_to(self.database_path.parent))
         return new_folder
 
