@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.19.1
+
+* `FADatabase.move_files_folder()` accepts extra argument to skip moving old files to new location
+
 ## 4.19.0
 
 * Improved handling of `Selector` objects
