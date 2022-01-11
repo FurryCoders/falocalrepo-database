@@ -395,6 +395,10 @@ class SettingsTable(Table):
         folder: Path = Path(self[self.files_folder_setting])
         return folder if folder.is_absolute() else self.database.path / folder
 
+    @files_folder.setter
+    def files_folder(self, value: str | Path):
+        self[self.files_folder_setting] = str(value)
+
     def create(self, exists_ignore: bool = False):
         super().create(exists_ignore=exists_ignore)
         self.insert({SettingsColumns.SETTING.value.name: self.files_folder_setting,
