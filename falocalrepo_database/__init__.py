@@ -18,6 +18,7 @@ __all__ = [
     "JournalsTable",
     "SettingsTable",
     "SubmissionsTable",
+    "UsersTable",
     "Table",
     "exceptions",
     "util",

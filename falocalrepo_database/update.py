@@ -22,10 +22,10 @@ __all__ = [
 def get_version(conn: Connection) -> str:
     try:
         # Database version 3.0.0 and above
-        return conn.execute(f"SELECT SVALUE FROM SETTINGS WHERE SETTING = 'VERSION'").fetchone()[0]
+        return conn.execute("SELECT SVALUE FROM SETTINGS WHERE SETTING = 'VERSION'").fetchone()[0]
     except OperationalError:
         # Database version 2.7.0
-        return conn.execute(f"SELECT VALUE FROM SETTINGS WHERE FIELD = 'VERSION'").fetchone()[0]
+        return conn.execute("SELECT VALUE FROM SETTINGS WHERE FIELD = 'VERSION'").fetchone()[0]
 
 
 def compare_versions(a: str, b: str) -> int:
@@ -137,8 +137,8 @@ def make_database_5(conn: Connection) -> Connection:
     SVALUE text check (SVALUE == null or length(SVALUE) > 0),
     primary key (SETTING));""")
 
-    conn.execute(f"insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["FILESFOLDER", "FA.files"])
-    conn.execute(f"insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["VERSION", "5.0.0"])
+    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["FILESFOLDER", "FA.files"])
+    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["VERSION", "5.0.0"])
 
     conn.execute("""create table HISTORY
     (TIME datetime unique not null,

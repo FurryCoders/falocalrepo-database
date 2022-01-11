@@ -454,8 +454,8 @@ class Database:
         return [
             Table(self, name)
             for [name] in self.connection.execute(
-                """select name from sqlite_master 
-                where type = 'table' 
+                """select name from sqlite_master
+                where type = 'table'
                 and name not like 'sqlite_%'
                 order by 1;"""
             )

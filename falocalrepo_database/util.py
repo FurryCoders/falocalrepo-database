@@ -2,7 +2,6 @@ from pathlib import Path
 from re import match
 from re import split
 from re import sub
-from shutil import copy
 
 from chardet import detect as detect_encoding
 from filetype import guess_extension as filetype_guess_extension
@@ -29,7 +28,7 @@ __all__ = [
 def compare_version(version_a: str, *, major: bool = True, minor: bool = True, patch: bool = True,
                     version_b: str = __version__) -> VersionError | None:
     if not version_a:
-        return VersionError(f"version missing")
+        return VersionError("version missing")
     elif version_a == version_b:
         return None
     elif (v_a := version_a.split("."))[0] != (v_b := version_b.split("."))[0]:
