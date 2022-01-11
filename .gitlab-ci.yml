@@ -1,0 +1,27 @@
+image: python:3.10
+
+before_script:
+  - python --version
+
+stages:
+  - Static Analysis
+  - Publish
+
+flake8:
+  stage: Static Analysis
+  before_script:
+    - python -m pip install flake8
+  script:
+    - python -m flake8 --max-line-length=120 falocalrepo_database
+
+publish:
+  stage: Publish
+  only:
+    - tags
+  before_script:
+    - python -m pip install poetry==1.1.12
+    - python -m poetry --version
+    - python -m poetry config virtualenvs.in-project true
+    - python -m poetry install --no-root
+  script:
+    - python -m poetry publish --build --username __token__ --password $PYPI_TOKEN
