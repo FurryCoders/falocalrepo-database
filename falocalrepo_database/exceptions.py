@@ -1,14 +1,19 @@
 from sqlite3 import DatabaseError
-from sqlite3 import OperationalError
+
+__all__ = [
+    "UnknownSelector",
+    "VersionError",
+    "MultipleConnections",
+]
 
 
 class UnknownSelector(KeyError):
     pass
 
 
-class VersionMismatch(DatabaseError):
+class VersionError(DatabaseError):
     pass
 
 
-class MultipleConnections(OperationalError):
+class MultipleConnections(DatabaseError):
     pass
