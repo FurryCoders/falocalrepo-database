@@ -14,38 +14,30 @@ Database functionality for [falocalrepo](https://gitlab.com/MatteoCampinoti94/fa
 
 ## Tables
 
-To store its information, the database uses four tables: `SETTINGS`, `USERS`, `SUBMISSIONS` and `JOURNALS`.
+To store its information, the database uses separate tables: `USERS`, `SUBMISSIONS`, `JOURNALS`, `SETTINGS`,
+and `HISTORY`.
 
 **Note**: bar-separated lists are formatted as `|item1||item2|` to properly isolate all elements
 
-### Settings
-
-The settings table contains settings for the program and statistics of the database.
-
-* `HISTORY` list of executed commands in the format `[[<time1>, "<command1>"], ..., [<timeN>, "<commandN>"]]` (UNIX time
-  in seconds)
-* `COOKIES` cookies for the scraper, stored in JSON format
-* `FILESFOLDER` location of downloaded submission files
-* `VERSION` database version
-
 ### Users
 
-The users table contains a list of all the users that have been download with the program, the folders that have been
+The users' table contains a list of all the users that have been download with the program, the folders that have been
 downloaded, and the submissions found in each of those.
 
 Each entry contains the following fields:
 
-* `USERNAME` The URL username of the user (no underscores or spaces)
+* `USERNAME` the URL username of the user (no underscores or spaces)
 * `FOLDERS` the folders downloaded for that specific user, sorted and bar-separated
+* `USERPAGE` the user's profile text
 
 ### Submissions
 
-The submissions table contains the metadata of the submissions downloaded by the program and information on their files
+The submissions' table contains the metadata of the submissions downloaded by the program and information on their files
 
 * `ID` the id of the submission
 * `AUTHOR` the username of the author (uploader) in full format
 * `TITLE`
-* `DATE` upload date in ISO format YYYY-MM-DD**T**HH:MM
+* `DATE` upload date in ISO format _YYYY-MM-DDTHH:MM_
 * `DESCRIPTION` description in html format
 * `TAGS` bar-separated tags
 * `CATEGORY`
@@ -56,8 +48,8 @@ The submissions table contains the metadata of the submissions downloaded by the
 * `FILEURL` the remote URL of the submission file
 * `FILEEXT` the extensions of the downloaded file. Can be empty if the file contained errors and could not be recognised
   upon download
-* `FILESAVED` file and thumbnail download status: 00, 01, 10, 11. 1*x* if the file was downloaded 0*x* if not, *x*1 if
-  thumbnail was downloaded, *x*0 if not
+* `FILESAVED` file and thumbnail download status as a 2bit flag: `1x` if the file was downloaded `0x` if not, `x1` if
+  thumbnail was downloaded, `x0` if not. Possible values are `0`, `1`, `2`, `3`.
 * `FAVORITE` a bar-separated list of users that have "faved" the submission
 * `MENTIONS` a bar-separated list of users that are mentioned in the submission description as links
 * `FOLDER` the folder of the submission (`gallery` or `scraps`)
@@ -65,15 +57,30 @@ The submissions table contains the metadata of the submissions downloaded by the
 
 ### Journals
 
-The journals table contains the metadata of the journals downloaded by the program.
+The journals' table contains the metadata of the journals downloaded by the program.
 
 * `ID` the id of the journal
 * `AUTHOR` the username of the author (uploader) in full format
 * `TITLE`
-* `DATE` upload date in ISO format YYYY-MM-DD**T**HH:MM
+* `DATE` upload date in ISO format _YYYY-MM-DDTHH:MM_
 * `CONTENT` content in html format
 * `MENTIONS` a bar-separated list of users that are mentioned in the journal content as links
 * `USERUPDATE` whether the journal was added as a user update or single entry
+
+### Settings
+
+The settings table contains settings for the program and variable used by the database handler and main program.
+
+* `COOKIES` cookies for the download program, stored in JSON format
+* `FILESFOLDER` location of downloaded submission files
+* `VERSION` database version
+
+### History
+
+The history table holds events related to the database.
+
+* `TIME` event time in ISO format _YYYY-MM-DDTHH:MM:SS.ssssss_
+* `EVENT` the event description
 
 ## Submission Files
 
@@ -84,12 +91,15 @@ then broken up in 5 segments of 2 digits; each of these segments represents a fo
 
 For example, a submission `1457893` will be padded to `0001457893` and divided into `00`, `01`, `45`, `78`, `93`. The
 submission file will then be saved as `00/01/45/78/93/submission.file` with the correct extension extracted from the
-file itself - FurAffinity links do not always contain the right extension and often confuse jpg and png.
+file itself (FurAffinity links do not always contain the right extension and sometimes confuse JPEG and PNG).
 
 ## Upgrading Database
 
 The `FADatabase.upgrade` function allows to upgrade the database to the current version.
 
-_Note:_ Versions before 2.7.0 are not supported by falocalrepo-database version 3.0.0 and above. To update from those to
-the new version use [falocalrepo](https://gitlab.com/MatteoCampinoti94/FALocalRepo/-/releases/v2.11.2) version 2.11.2 to
-update the database to version 2.7.0
+_Note:_ versions prior to 4.19.0 are not supported by falocalrepo-database version 5.0.0 and above. To update from
+those, use [falocalrepo version 3.25.0](https://gitlab.com/MatteoCampinoti94/FALocalRepo/-/releases/v3.25.0) to upgrade
+the database to version 4.19.0.
+_Note:_ Versions prior to 2.7.0 are not supported by falocalrepo-database version 3.0.0 and above. To update from those
+to the new version use [falocalrepo](https://gitlab.com/MatteoCampinoti94/FALocalRepo/-/releases/v2.11.2) version 2.11.2
+to update the database to version 2.7.0
