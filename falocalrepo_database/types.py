@@ -1,5 +1,3 @@
-from typing import Union
+from datetime import datetime
 
-Key = Union[str, int, float]
-Value = Union[str, int, float, None]
-Entry = dict[str, Union[list[str], Value]]
+Value = str | int | float | datetime | None
