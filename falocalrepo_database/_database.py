@@ -26,7 +26,7 @@ from psutil import process_iter
 
 from .__version__ import __version__
 from .exceptions import MultipleConnections
-from .exceptions import VersionMismatch
+from .exceptions import VersionError
 from .selector import Selector
 from .selector import selector_to_sql
 from .tables import journals_table
@@ -67,17 +67,17 @@ def tiered_path(id_: Union[int, str], depth: int = 5, width: int = 2) -> Path:
 
 def check_version(version_a: str, *, major: bool = True, minor: bool = True, patch: bool = True,
                   version_b: str = __version__
-                  ) -> Optional[VersionMismatch]:
+                  ) -> Optional[VersionError]:
     if not version_a:
-        return VersionMismatch(f"version missing")
+        return VersionError(f"version missing")
     elif version_a == version_b:
         return None
     elif (v_a := version_a.split("."))[0] != (v_b := version_b.split("."))[0]:
-        return VersionMismatch(f"major version is not latest: {v_a[0]} != {v_b[0]}") if major else None
+        return VersionError(f"major version is not latest: {v_a[0]} != {v_b[0]}") if major else None
     elif v_a[1] != v_b[1]:
-        return VersionMismatch(f"minor version is not latest: {v_a[1]} != {v_b[1]}") if minor else None
+        return VersionError(f"minor version is not latest: {v_a[1]} != {v_b[1]}") if minor else None
     elif v_a[2] != v_b[2]:
-        return VersionMismatch(f"patch version is not latest: {v_a[2]} != {v_b[2]}") if patch else None
+        return VersionError(f"patch version is not latest: {v_a[2]} != {v_b[2]}") if patch else None
 
 
 def copy_folder(src: Path, dest: Path):
@@ -495,8 +495,8 @@ class FADatabase:
 
     def check_version(self, raise_for_error: bool = True, *, major: bool = True, minor: bool = True, patch: bool = True,
                       version: str = __version__
-                      ) -> Optional[VersionMismatch]:
-        err: Optional[VersionMismatch] = check_version(
+                      ) -> Optional[VersionError]:
+        err: Optional[VersionError] = check_version(
             self.version, major=major, minor=minor, patch=patch, version_b=version)
         if err is not None and raise_for_error:
             raise err
