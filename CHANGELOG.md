@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.0.0
+
+* Complete rewrite with typing-powered formatting and parsing of row values
+
 ## 4.19.1
 
 * `FADatabase.move_files_folder()` accepts extra argument to skip moving old files to new location
