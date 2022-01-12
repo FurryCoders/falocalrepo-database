@@ -49,8 +49,10 @@ def type_to_sql(t: type) -> str:
         raise TypeError(t, "not allowed")
 
 
-def sql_to_type(t: str) -> Type[T]:
-    if (t := t.lower()) in ("integer", "int"):
+def sql_to_type(t: str | Type[Any]) -> Type[T]:
+    if t is Any:
+        return str
+    elif (t := t.lower()) in ("integer", "int"):
         return int
     elif t == "real":
         return float
