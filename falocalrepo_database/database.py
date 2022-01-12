@@ -448,7 +448,8 @@ class Database:
         self.close()
 
     def __contains__(self, value: str | Table):
-        return (value.name if isinstance(value, Table) else value) in [t.name for t in self.tables]
+        value = value.name.lower() if isinstance(value, Table) else value.lower()
+        return value in [t.name.lower() for t in self.tables]
 
     @property
     def autocommit(self):
@@ -480,9 +481,7 @@ class Database:
 
     @property
     def is_formatted(self):
-        tables: list[str] = [t.name.lower() for t in self.tables]
-        return all(t.lower() in tables for t in
-                   (users_table, submissions_table, journals_table, settings_table, history_table))
+        return settings_table in self
 
     @property
     def is_open(self) -> bool:
