@@ -527,10 +527,9 @@ class Database:
                       read_only=self.read_only if read_only is None else read_only,
                       autocommit=self.autocommit if autocommit is None else autocommit)
 
-    def upgrade(self, *, check_connections: bool = True, check_version: bool = True, read_only: bool = None,
-                autocommit: bool = None):
+    def upgrade(self, *, check_connections: bool = True, read_only: bool = None, autocommit: bool = None):
         self.connection = update_database(self.connection, __version__)
-        self.reset(check_connections=check_connections, check_version=check_version,
+        self.reset(check_connections=check_connections, check_version=False,
                    read_only=self.read_only if read_only is None else read_only,
                    autocommit=self.autocommit if autocommit is None else autocommit)
 
