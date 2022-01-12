@@ -447,6 +447,9 @@ class Database:
     def __exit__(self, _exc_type, _exc_val, _exc_tb):
         self.close()
 
+    def __contains__(self, value: str | Table):
+        return (value.name if isinstance(value, Table) else value) in [t.name for t in self.tables]
+
     @property
     def autocommit(self):
         return self.connection.isolation_level is None
