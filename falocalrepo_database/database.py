@@ -441,6 +441,12 @@ class Database:
     def __getitem__(self, name: str) -> Table:
         return Table(self, name.upper())
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _exc_type, _exc_val, _exc_tb):
+        self.close()
+
     @property
     def autocommit(self):
         return self.connection.isolation_level is None
@@ -514,14 +520,19 @@ class Database:
     def rollback(self):
         self.execute("ROLLBACK")
 
-    def reset(self):
+    def reset(self, *, init: bool = False, check_connections: bool = True, check_version: bool = True,
+              read_only: bool = None, autocommit: bool = None):
         self.close()
-        self.__init__(self.path, init=False, check_connections=True,
-                      check_version=False, read_only=self.read_only)
+        self.__init__(self.path, init=init, check_connections=check_connections, check_version=check_version,
+                      read_only=self.read_only if read_only is None else read_only,
+                      autocommit=self.autocommit if autocommit is None else autocommit)
 
-    def upgrade(self):
+    def upgrade(self, *, check_connections: bool = True, check_version: bool = True, read_only: bool = None,
+                autocommit: bool = None):
         self.connection = update_database(self.connection, __version__)
-        self.reset()
+        self.reset(check_connections=check_connections, check_version=check_version,
+                   read_only=self.read_only if read_only is None else read_only,
+                   autocommit=self.autocommit if autocommit is None else autocommit)
 
     def merge(self, db_b: 'Database', *cursors: Cursor, replace: bool = True):
         copy_cursors(self, cursors or [db_b.users.select(), db_b.submissions.select(), db_b.journals.select()],
