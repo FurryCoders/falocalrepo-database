@@ -125,7 +125,7 @@ class Table:
     def __init__(self, database: "Database", name: str, columns: Iterable[Column] = None):
         self.database: Database = database
         self.name: str = name
-        self.columns: list[Column] = list(columns or self.get_columns())
+        self._columns: list[Column] = columns or []
 
     def __len__(self) -> int:
         return self.select(columns=[Column(f"count({self.key.name})", int)]).cursor.fetchone()[0]
@@ -134,7 +134,7 @@ class Table:
         return bool(self[key])
 
     @overload
-    def __getitem__(self, key: dict[str, Value] | tuple[Value]) -> list[dict[str, Value]]:
+    def __getitem__(self, key: dict[str, Value] | tuple[Value] | list[Value]) -> list[dict[str, Value]]:
         ...
 
     @overload
@@ -144,17 +144,22 @@ class Table:
     def __getitem__(self, key: Value | dict[str, Value] | tuple[Value]
                     ) -> dict[str, Value] | list[dict[str, Value]] | None:
         if isinstance(key, dict):
-            return self.select({EQ: key}).fetchall()
-        elif isinstance(key, tuple):
-            return self.select({OR: [{EQ: {self.key.name: k}} for k in key]}).fetchall()
+            return self.select({EQ: self.format_entry(key, defaults=False)}).fetchall()
+        elif isinstance(key, (tuple, list)):
+            return self.select({OR: [{EQ: {self.key.name: self.key.to_entry(k)}} for k in key]}).fetchall()
         else:
-            return self.select({EQ: {self.key.name: key}}).fetchone()
+            return self.select({EQ: {self.key.name: self.key.to_entry(key)}}).fetchone()
 
     def __setitem__(self, key: Value, entry: dict[str, Any]):
         self.insert(self.format_entry(entry | {self.key.name: key}), replace=True)
 
-    def __delitem__(self, key: Value):
-        self.delete({EQ: {self.key: key}})
+    def __delitem__(self, key: Value | dict[str, Value] | tuple[Value] | list[Value]) -> SQLCursor:
+        if isinstance(key, dict):
+            return self.delete({EQ: self.format_entry(key, defaults=False)})
+        elif isinstance(key, (tuple, list)):
+            return self.delete({OR: [{EQ: {self.key.name: self.key.to_entry(k)}} for k in key]})
+        else:
+            return self.delete({EQ: {self.key.name: self.key.to_entry(key)}})
 
     def __iter__(self) -> Generator[dict[str, Value], None, None]:
         return self.select().entries
@@ -163,6 +168,15 @@ class Table:
         if not (entry := self[key]):
             raise KeyError(f"Entry {self.key.name} = {key!r} does not exist in {self.name} table.")
         return entry
+
+    def _get_columns(self) -> list[Column]:
+        return [Column(name, t, not_null=bool(not_null), key=pk)
+                for _, name, t, not_null, _, pk in self.database.execute(f"pragma table_info({self.name})")]
+
+    @property
+    def columns(self) -> list[Column]:
+        self._columns = self._columns or self._get_columns()
+        return self._columns
 
     @property
     def key(self) -> Column | None:
@@ -175,10 +189,6 @@ class Table:
     def get_column(self, name: str) -> Column | None:
         name = name.lower()
         return next((c for c in self.columns if c.name.lower() == name.lower()), None)
-
-    def get_columns(self) -> list[Column]:
-        return [Column(name, t, not_null=bool(not_null), key=pk)
-                for _, name, t, not_null, _, pk in self.database.execute(f"pragma table_info({self.name})")]
 
     def create_statement(self, exists_ignore: bool = False) -> str:
         elements: list[str] = ["create table"]
@@ -198,8 +208,10 @@ class Table:
     def create(self, exists_ignore: bool = True):
         self.database.execute(self.create_statement(exists_ignore=exists_ignore))
 
-    def format_entry(self, entry: dict[str, Any]) -> dict[str, Value]:
-        columns_dict: dict[str, Any] = {c.name.upper(): c.default for c in self.columns if c.default is not NoDefault}
+    def format_entry(self, entry: dict[str, Any], *, defaults: bool = True) -> dict[str, Value]:
+        columns_dict: dict[str, Any] = {}
+        if defaults:
+            columns_dict = {c.name.upper(): c.default for c in self.columns if c.default is not NoDefault}
         entry = columns_dict | {k.upper(): v for k, v in entry.items()}
         entry = {(c := self.get_column(k)).name: c.to_entry(v) for k, v in entry.items()}
         return entry
@@ -225,8 +237,7 @@ class Table:
         return self.select_sql(" ".join(elements), values, columns, order, limit, offset)
 
     def select_sql(self, sql: str, values: list[Any] = None, columns: list[str | Column] = None,
-                   order: list[str] = None,
-                   limit: int = 0, offset: int = 0) -> Cursor:
+                   order: list[str] = None, limit: int = 0, offset: int = 0) -> Cursor:
         columns_: list[Column] = [(self.get_column(c) or Column(c, Any)) if isinstance(c, str) else c
                                   for c in columns] if columns else self.columns
 
@@ -240,15 +251,15 @@ class Table:
 
         return Cursor(cursor, columns_, self)
 
-    def update(self, query: Selector, new_entry: dict[str, Value]):
+    def update(self, query: Selector, new_entry: dict[str, Value]) -> SQLCursor:
         sql, values = selector_to_sql(query) if query else ("", [])
         update_columns: list[str] = [f"{col} = ?" for col in new_entry]
-        self.database.execute(f"UPDATE {self.name} SET {','.join(update_columns)} WHERE {sql}",
-                              [*new_entry.values(), *values])
+        return self.database.execute(f"UPDATE {self.name} SET {','.join(update_columns)} WHERE {sql}",
+                                     [*new_entry.values(), *values])
 
-    def delete(self, query: Selector):
+    def delete(self, query: Selector) -> SQLCursor:
         sql, values = selector_to_sql(query) if query else ("", [])
-        self.database.execute(f"DELETE FROM {self.name} WHERE {sql}", values)
+        return self.database.execute(f"DELETE FROM {self.name} WHERE {sql}", values)
 
     def add_to_list(self, key: Value, column: str | Column, new_values: Iterable[Value]):
         entry: dict = self._get_exists(key)
@@ -525,6 +536,7 @@ class Database:
     def reset(self, *, init: bool = False, check_connections: bool = True, check_version: bool = True,
               read_only: bool = None, autocommit: bool = None):
         self.close()
+        self.connection = None
         self.__init__(self.path, init=init, check_connections=check_connections, check_version=check_version,
                       read_only=self.read_only if read_only is None else read_only,
                       autocommit=self.autocommit if autocommit is None else autocommit)
