@@ -99,7 +99,7 @@ The `FADatabase.upgrade` function allows to upgrade the database to the current 
 
 _Note:_ versions prior to 4.19.0 are not supported by falocalrepo-database version 5.0.0 and above. To update from
 those, use [falocalrepo version 3.25.0](https://gitlab.com/MatteoCampinoti94/FALocalRepo/-/releases/v3.25.0) to upgrade
-the database to version 4.19.0.
+the database to version 4.19.0.<br/>
 _Note:_ Versions prior to 2.7.0 are not supported by falocalrepo-database version 3.0.0 and above. To update from those
 to the new version use [falocalrepo](https://gitlab.com/MatteoCampinoti94/FALocalRepo/-/releases/v2.11.2) version 2.11.2
 to update the database to version 2.7.0
