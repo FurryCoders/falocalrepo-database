@@ -332,7 +332,7 @@ class SubmissionsTable(Table):
         self.save_submission_thumbnail(submission["ID"], thumbnail)
         submission[SubmissionsColumns.FILESAVED.value.name] = (0b10 * bool(file)) + (0b01 * bool(thumbnail))
 
-        self.insert(self.format_entry(submission), replace=replace)
+        self.insert(submission, replace=replace)
 
     def save_submission_file(self, submission_id: int, file: bytes | None, name: str, ext: str,
                              guess_ext: bool = True) -> str:
