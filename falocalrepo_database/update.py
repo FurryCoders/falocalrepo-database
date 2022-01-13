@@ -78,8 +78,8 @@ def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path
         conn.close()
         conn = None
         orig_name: str = db_path.name
-        db_path.rename(db_path.with_name(f"v{version_old.replace('.', '_')}_{db_path.name}"))
-        db_new_path.rename(db_new_path := db_new_path.with_name(orig_name))
+        db_path.replace(db_path.with_name(f"v{version_old.replace('.', '_')}_{db_path.name}"))
+        db_new_path.replace(db_new_path := db_new_path.with_name(orig_name))
         print("Complete")
         return connect(db_new_path)
     except BaseException as err:
