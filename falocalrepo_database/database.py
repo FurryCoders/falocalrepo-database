@@ -404,7 +404,7 @@ class SettingsTable(Table):
     @property
     def files_folder(self) -> Path:
         folder: Path = Path(self[self.files_folder_setting])
-        return folder if folder.is_absolute() else self.database.path.parent / folder
+        return folder if folder.is_absolute() else (self.database.path.parent / folder).resolve()
 
     @files_folder.setter
     def files_folder(self, value: str | Path):
