@@ -419,6 +419,9 @@ class SettingsTable(Table):
 
 
 class HistoryTable(Table):
+    def __iter__(self) -> Generator[dict[str, Value], None, None]:
+        return self.select(order=[self.key.name]).entries
+
     def add_event(self, event: str, time: datetime = None):
         self[time or datetime.now()] = {HistoryColumns.EVENT.value.name: event}
 
