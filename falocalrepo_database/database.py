@@ -362,6 +362,12 @@ class SubmissionsTable(Table):
             return True
         return False
 
+    def set_user_update(self, submission_id: int, update: int) -> bool:
+        if self._get_exists(submission_id)[SubmissionsColumns.USERUPDATE.value.name] != update:
+            self.update({EQ: {self.key.name: submission_id}}, {SubmissionsColumns.USERUPDATE.value.name: update})
+            return True
+        return False
+
     def add_favorite(self, submission_id: int, user: str) -> bool:
         return self.add_to_list(submission_id, SubmissionsColumns.FAVORITE.value.name, [clean_username(user)])
 
@@ -378,6 +384,12 @@ class SubmissionsTable(Table):
 class JournalsTable(Table):
     def save_journal(self, journal: dict[str, Any], *, replace: bool = False):
         self.insert(self.format_entry(journal), replace=replace)
+
+    def set_user_update(self, journal_id: int, update: int) -> bool:
+        if self._get_exists(journal_id)[JournalsColumns.USERUPDATE.value.name] != update:
+            self.update({EQ: {self.key.name: journal_id}}, {JournalsColumns.USERUPDATE.value.name: update})
+            return True
+        return False
 
     def add_mention(self, journal_id: int, user: str) -> bool:
         return self.add_to_list(journal_id, JournalsColumns.MENTIONS.value.name, [clean_username(user)])
