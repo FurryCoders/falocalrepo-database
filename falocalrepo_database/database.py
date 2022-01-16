@@ -56,7 +56,7 @@ def _copy_folder(src: Path, dest: Path):
         copy(src, dest)
 
 
-def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool):
+def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool, exist_ok: bool):
     if not cursors:
         return
     elif not db_dest.is_formatted:
@@ -89,7 +89,7 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
             if dest_table.name.lower() == db_dest.submissions.name.lower():
                 f, t = cursor_db.submissions.get_submission_files(entry[cursor.table.key.name])
                 db_dest.submissions.save_submission(entry, f.read_bytes() if f else None, t.read_bytes() if t else None,
-                                                    replace=replace)
+                                                    replace=replace, exist_ok=exist_ok)
             else:
                 dest_table.insert(dest_table.format_entry(entry), replace=replace, exists_ok=True)
 
@@ -280,8 +280,8 @@ class Table:
 
 
 class UsersTable(Table):
-    def save_user(self, user: dict[str, Any], *, replace: bool = False):
-        self.insert(self.format_entry(user), replace=replace)
+    def save_user(self, user: dict[str, Any], *, replace: bool = False, exist_ok: bool = False):
+        self.insert(self.format_entry(user), replace=replace, exists_ok=exist_ok)
 
     def deactivate(self, user: str) -> bool:
         entry: dict = self._get_exists(user := clean_username(user))
@@ -322,7 +322,7 @@ class SubmissionsTable(Table):
         return self.database.settings.files_folder
 
     def save_submission(self, submission: dict[str, Value | list[Value]], file: bytes = None, thumbnail: bytes = None,
-                        *, replace: bool = False):
+                        *, replace: bool = False, exist_ok: bool = False):
         submission = self.format_entry(submission)
 
         submission[SubmissionsColumns.FILEEXT.value.name] = \
@@ -332,7 +332,7 @@ class SubmissionsTable(Table):
         self.save_submission_thumbnail(submission["ID"], thumbnail)
         submission[SubmissionsColumns.FILESAVED.value.name] = (0b10 * bool(file)) + (0b01 * bool(thumbnail))
 
-        self.insert(submission, replace=replace)
+        self.insert(submission, replace=replace, exists_ok=exist_ok)
 
     def save_submission_file(self, submission_id: int, file: bytes | None, name: str, ext: str,
                              guess_ext: bool = True) -> str:
@@ -382,8 +382,8 @@ class SubmissionsTable(Table):
 
 
 class JournalsTable(Table):
-    def save_journal(self, journal: dict[str, Any], *, replace: bool = False):
-        self.insert(self.format_entry(journal), replace=replace)
+    def save_journal(self, journal: dict[str, Any], *, replace: bool = False, exist_ok: bool = False):
+        self.insert(self.format_entry(journal), replace=replace, exists_ok=exist_ok)
 
     def set_user_update(self, journal_id: int, update: int) -> bool:
         if self._get_exists(journal_id)[JournalsColumns.USERUPDATE.value.name] != update:
@@ -562,13 +562,13 @@ class Database:
                    read_only=self.read_only if read_only is None else read_only,
                    autocommit=self.autocommit if autocommit is None else autocommit)
 
-    def merge(self, db_b: 'Database', *cursors: Cursor, replace: bool = True):
+    def merge(self, db_b: 'Database', *cursors: Cursor, replace: bool = True, exist_ok: bool = True):
         copy_cursors(self, cursors or [db_b.users.select(), db_b.submissions.select(), db_b.journals.select()],
-                     replace=replace)
+                     replace=replace, exist_ok=exist_ok)
 
-    def copy(self, db_b: 'Database', *cursors: Cursor, replace: bool = True):
+    def copy(self, db_b: 'Database', *cursors: Cursor, replace: bool = True, exist_ok: bool = True):
         copy_cursors(db_b, cursors or [self.users.select(), self.submissions.select(), self.journals.select()],
-                     replace=replace)
+                     replace=replace, exist_ok=exist_ok)
 
     def close(self):
         self.connection.close()
