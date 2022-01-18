@@ -7,7 +7,7 @@
 Database functionality for [falocalrepo](https://pypi.org/project/falocalrepo).
 
 [![version_pypi](https://img.shields.io/pypi/v/falocalrepo-database?logo=pypi)](https://pypi.org/project/falocalrepo-database/)
-[![version_gitlab](https://img.shields.io/gitlab/v/tag/MatteoCampinoti94/falocalrepo-database?label=version&sort=date&logo=gitlab&color=FCA121)](https://gitlab.com/MatteoCampinoti94/falocalrepo-database)
+[![version_gitlab](https://img.shields.io/gitlab/v/tag/MatteoCampinoti94/falocalrepo-database?label=gitlab&sort=date&logo=gitlab&color=FCA121)](https://gitlab.com/MatteoCampinoti94/falocalrepo-database)
 [![version_python](https://img.shields.io/pypi/pyversions/falocalrepo-database?logo=Python)](https://www.python.org)
 
 </div>
