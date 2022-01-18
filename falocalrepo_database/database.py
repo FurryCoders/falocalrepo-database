@@ -265,7 +265,7 @@ class Table:
         entry: dict = self._get_exists(key)
         column = column.name if isinstance(column, Column) else self.get_column(column).name
         if changes := any(v not in entry[column] for v in new_values):
-            entry[column] = list(entry[column]) + list(new_values)
+            entry[column] = list(entry[column]) + [v for v in new_values if v not in entry[column]]
             self[key] = entry
         return changes
 
@@ -369,16 +369,16 @@ class SubmissionsTable(Table):
         return False
 
     def add_favorite(self, submission_id: int, user: str) -> bool:
-        return self.add_to_list(submission_id, SubmissionsColumns.FAVORITE.value.name, [clean_username(user)])
+        return self.add_to_list(submission_id, SubmissionsColumns.FAVORITE.value, [clean_username(user)])
 
     def remove_favorite(self, submission_id: int, user: str) -> bool:
-        return self.remove_from_list(submission_id, SubmissionsColumns.FAVORITE.value.name, [clean_username(user)])
+        return self.remove_from_list(submission_id, SubmissionsColumns.FAVORITE.value, [clean_username(user)])
 
     def add_mention(self, submission_id: int, user: str) -> bool:
-        return self.add_to_list(submission_id, SubmissionsColumns.MENTIONS.value.name, [clean_username(user)])
+        return self.add_to_list(submission_id, SubmissionsColumns.MENTIONS.value, [clean_username(user)])
 
     def remove_mention(self, submission_id: int, user: str) -> bool:
-        return self.remove_from_list(submission_id, SubmissionsColumns.MENTIONS.value.name, [clean_username(user)])
+        return self.remove_from_list(submission_id, SubmissionsColumns.MENTIONS.value, [clean_username(user)])
 
 
 class JournalsTable(Table):
@@ -392,10 +392,10 @@ class JournalsTable(Table):
         return False
 
     def add_mention(self, journal_id: int, user: str) -> bool:
-        return self.add_to_list(journal_id, JournalsColumns.MENTIONS.value.name, [clean_username(user)])
+        return self.add_to_list(journal_id, JournalsColumns.MENTIONS.value, [clean_username(user)])
 
     def remove_mention(self, journal_id: int, user: str) -> bool:
-        return self.remove_from_list(journal_id, JournalsColumns.MENTIONS.value.name, [clean_username(user)])
+        return self.remove_from_list(journal_id, JournalsColumns.MENTIONS.value, [clean_username(user)])
 
 
 class SettingsTable(Table):
