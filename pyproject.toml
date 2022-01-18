@@ -16,6 +16,11 @@ classifiers = [
     "Topic :: Database",
 ]
 
+[tool.poetry.urls]
+"Changelog" = "https://gitlab.com/MatteoCampinoti94/falocalrepo-database/-/blob/master/CHANGELOG.md"
+"Source" = "https://gitlab.com/MatteoCampinoti94/falocalrepo-database"
+"Download" = "https://pypi.org/project/falocalrepo-database/#files"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 filetype = "^1.0.9"
