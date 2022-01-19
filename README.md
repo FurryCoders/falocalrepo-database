@@ -95,8 +95,6 @@ file itself (FurAffinity links do not always contain the right extension and som
 
 ## Upgrading Database
 
-The `FADatabase.upgrade` function allows to upgrade the database to the current version.
-
 _Note:_ versions prior to 4.19.0 are not supported by falocalrepo-database version 5.0.0 and above. To update from
 those, use [falocalrepo v3.25.0](https://pypi.org/project/falocalrepo/v3.25.0) to upgrade the database to version
 4.19.0.<br/>
