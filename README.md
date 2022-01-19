@@ -6,9 +6,9 @@
 
 Database functionality for [falocalrepo](https://pypi.org/project/falocalrepo).
 
-[![version_pypi](https://img.shields.io/pypi/v/falocalrepo-database?logo=pypi)](https://pypi.org/project/falocalrepo-database/)
-[![version_gitlab](https://img.shields.io/gitlab/v/tag/MatteoCampinoti94/falocalrepo-database?label=gitlab&sort=date&logo=gitlab&color=FCA121)](https://gitlab.com/MatteoCampinoti94/falocalrepo-database)
-[![version_python](https://img.shields.io/pypi/pyversions/falocalrepo-database?logo=Python)](https://www.python.org)
+[![](https://img.shields.io/github/v/tag/FurryCoders/falocalrepo-database?label=github&sort=date&logo=github&color=blue)](https://github.com/FurryCoders/falocalrepo-database)
+[![](https://img.shields.io/pypi/v/falocalrepo-database?logo=pypi)](https://pypi.org/project/falocalrepo-database/)
+[![](https://img.shields.io/pypi/pyversions/falocalrepo-database?logo=Python)](https://www.python.org)
 
 </div>
 
@@ -98,8 +98,8 @@ file itself (FurAffinity links do not always contain the right extension and som
 The `FADatabase.upgrade` function allows to upgrade the database to the current version.
 
 _Note:_ versions prior to 4.19.0 are not supported by falocalrepo-database version 5.0.0 and above. To update from
-those, use [falocalrepo version 3.25.0](https://pypi.org/project/falocalrepo/v3.25.0) to upgrade
-the database to version 4.19.0.<br/>
+those, use [falocalrepo v3.25.0](https://pypi.org/project/falocalrepo/v3.25.0) to upgrade the database to version
+4.19.0.<br/>
 _Note:_ Versions prior to 2.7.0 are not supported by falocalrepo-database version 3.0.0 and above. To update from those
-to the new version use [falocalrepo](https://gitlab.com/MatteoCampinoti94/FALocalRepo/-/releases/v2.11.2) version 2.11.2
-to update the database to version 2.7.0
+to the new version use [falocalrepo v2.11.2](https://github.com/FurryCoders/FALocalRepo/releases/tag/v2.11.2) to upgrade
+the database to version 2.7.0
