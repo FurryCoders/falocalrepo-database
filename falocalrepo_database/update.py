@@ -65,14 +65,14 @@ def database_path(conn: Connection) -> Path | None:
     return None
 
 
-def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path, Path], None], version_old: str,
-                   version_new: str) -> Connection:
+def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path, Path], list[str] | None],
+                   version_old: str, version_new: str) -> Connection:
     print(f"Updating {version_old} to {version_new}... ", end="", flush=True)
     db_path: Path = p if (p := database_path(conn)) else Path("FA.db")
     db_new_path: Path = db_path.with_name(f".new_{db_path.name}")
     db_new_path.unlink(missing_ok=True)
     try:
-        update_function(conn, db_path, db_new_path)
+        messages: list[str] = update_function(conn, db_path, db_new_path) or []
         conn.commit()
         conn.close()
         conn = None
@@ -80,6 +80,8 @@ def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path
         db_path.replace(db_path := db_path.with_name(f"v{version_old.replace('.', '_')}_{db_path.name}"))
         db_new_path.replace(db_new_path := db_new_path.with_name(orig_name))
         print("Complete")
+        for message in messages:
+            print(f"  {message}")
         print("  Previous version moved to:", db_path, end="", flush=True)
         return connect(db_new_path)
     except BaseException as err:
@@ -174,6 +176,7 @@ def update_5_0(conn: Connection, _db_path: Path, db_new_path: Path):
 
 # noinspection SqlResolve,DuplicatedCode
 def update_5_0_10(conn: Connection, _db_path: Path, db_new_path: Path):
+    messages: list[str] = []
     make_database_5(connect(db_new_path)).close()
     conn.execute("attach database ? as db_new", [str(db_new_path)])
     conn.execute("insert into db_new.USERS select* from USERS")
@@ -194,7 +197,8 @@ def update_5_0_10(conn: Connection, _db_path: Path, db_new_path: Path):
                          ("".join(f"|{f}|" for f in fs_filtered), i))
             modified += 1
     if modified:
-        print(f"  {modified} submissions modified.")
+        messages.append(f"{modified} submissions modified.")
+    return messages
 
 
 def update_patch(conn: Connection, version: str, target_version: str) -> Connection:
