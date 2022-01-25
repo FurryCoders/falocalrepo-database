@@ -173,12 +173,13 @@ def update_5_0(conn: Connection, _db_path: Path, db_new_path: Path):
 
 
 # noinspection SqlResolve,DuplicatedCode
-def update_5_0_9(conn: Connection, _db_path: Path, db_new_path: Path):
+def update_5_0_10(conn: Connection, _db_path: Path, db_new_path: Path):
     make_database_5(connect(db_new_path)).close()
     conn.execute("attach database ? as db_new", [str(db_new_path)])
     conn.execute("insert into db_new.USERS select* from USERS")
     conn.execute("insert into db_new.SUBMISSIONS select * from SUBMISSIONS")
     conn.execute("insert into db_new.JOURNALS select * from JOURNALS")
+    conn.execute("insert into db_new.HISTORY select * from HISTORY")
     conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS"
                  " where SETTING != 'VERSION'")
     conn.execute("update db_new.SETTINGS set SVALUE = '5.0.9' where SETTING = 'VERSION'")
@@ -215,8 +216,8 @@ def update_database(conn: Connection, version: str) -> Connection:
         raise DatabaseError("Update does not support versions lower than 4.19.0.")
     elif compare_versions(db_version, v := "5.0.0") < 0:
         conn = update_wrapper(conn, update_5_0, db_version, v)  # 4.19.x to 5.0.0
-    elif compare_versions(db_version, v := "5.0.9") < 0:
-        conn = update_wrapper(conn, update_5_0_9, db_version, v)  # 4.19.x to 5.0.0
+    elif compare_versions(db_version, v := "5.0.10") < 0:
+        conn = update_wrapper(conn, update_5_0_10, db_version, v)  # 4.19.x to 5.0.0
     elif compare_versions(db_version, version) < 0:
         return update_patch(conn, db_version, version)  # Update to the latest patch
 
