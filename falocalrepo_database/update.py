@@ -11,7 +11,6 @@ from typing import Collection
 from typing import Optional
 from typing import Union
 
-
 __all__ = [
     "compare_versions",
     "update_database",
@@ -173,6 +172,30 @@ def update_5_0(conn: Connection, _db_path: Path, db_new_path: Path):
                      (datetime.fromtimestamp(time).strftime("%Y-%m-%dT%H:%M:%S.%f"), event))
 
 
+# noinspection SqlResolve,DuplicatedCode
+def update_5_0_9(conn: Connection, _db_path: Path, db_new_path: Path):
+    make_database_5(connect(db_new_path)).close()
+    conn.execute("attach database ? as db_new", [str(db_new_path)])
+    conn.execute("insert into db_new.USERS select* from USERS")
+    conn.execute("insert into db_new.SUBMISSIONS select * from SUBMISSIONS")
+    conn.execute("insert into db_new.JOURNALS select * from JOURNALS")
+    conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS"
+                 " where SETTING != 'VERSION'")
+    conn.execute("update db_new.SETTINGS set SVALUE = '5.0.9' where SETTING = 'VERSION'")
+    users_favorites: list[str] = [
+        u for [u] in conn.execute("select USERNAME from USERS where FOLDERS like '%favorites%'").fetchall()]
+    modified: int = 0
+    for i, fs_raw in conn.execute("select ID, FAVORITE from SUBMISSIONS where FAVORITE like '%|_|%'").fetchall():
+        fs: list[str] = list(filter(bool, fs_raw.split("|")))
+        fs_filtered = list(filter(users_favorites.__contains__, fs))
+        if fs != fs_filtered:
+            conn.execute("update db_new.SUBMISSIONS set FAVORITE = ? where ID = ?",
+                         ("".join(f"|{f}|" for f in fs_filtered), i))
+            modified += 1
+    if modified:
+        print(f"  {modified} submissions modified.")
+
+
 def update_patch(conn: Connection, version: str, target_version: str) -> Connection:
     print(f"Patching {version} to {target_version}... ", end="", flush=True)
     conn.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", [target_version])
@@ -192,6 +215,8 @@ def update_database(conn: Connection, version: str) -> Connection:
         raise DatabaseError("Update does not support versions lower than 4.19.0.")
     elif compare_versions(db_version, v := "5.0.0") < 0:
         conn = update_wrapper(conn, update_5_0, db_version, v)  # 4.19.x to 5.0.0
+    elif compare_versions(db_version, v := "5.0.9") < 0:
+        conn = update_wrapper(conn, update_5_0_9, db_version, v)  # 4.19.x to 5.0.0
     elif compare_versions(db_version, version) < 0:
         return update_patch(conn, db_version, version)  # Update to the latest patch
 
