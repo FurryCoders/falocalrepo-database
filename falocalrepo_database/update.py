@@ -182,7 +182,7 @@ def update_5_0_10(conn: Connection, _db_path: Path, db_new_path: Path):
     conn.execute("insert into db_new.HISTORY select * from HISTORY")
     conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS"
                  " where SETTING != 'VERSION'")
-    conn.execute("update db_new.SETTINGS set SVALUE = '5.0.9' where SETTING = 'VERSION'")
+    conn.execute("update db_new.SETTINGS set SVALUE = '5.0.10' where SETTING = 'VERSION'")
     users_favorites: list[str] = [
         u for [u] in conn.execute("select USERNAME from USERS where FOLDERS like '%favorites%'").fetchall()]
     modified: int = 0
@@ -217,7 +217,7 @@ def update_database(conn: Connection, version: str) -> Connection:
     elif compare_versions(db_version, v := "5.0.0") < 0:
         conn = update_wrapper(conn, update_5_0, db_version, v)  # 4.19.x to 5.0.0
     elif compare_versions(db_version, v := "5.0.10") < 0:
-        conn = update_wrapper(conn, update_5_0_10, db_version, v)  # 4.19.x to 5.0.0
+        conn = update_wrapper(conn, update_5_0_10, db_version, v)  # 5.0.x to 5.0.10
     elif compare_versions(db_version, version) < 0:
         return update_patch(conn, db_version, version)  # Update to the latest patch
 
