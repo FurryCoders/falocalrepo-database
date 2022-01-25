@@ -507,7 +507,7 @@ class Database:
 
     @property
     def is_formatted(self):
-        return settings_table in self
+        return settings_table in self and self.version is not None
 
     @property
     def is_open(self) -> bool:
