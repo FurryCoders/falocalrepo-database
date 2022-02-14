@@ -95,10 +95,11 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
 
 
 class Cursor:
-    def __init__(self, cursor: SQLCursor, columns: list[Column], table: 'Table'):
+    def __init__(self, cursor: SQLCursor, columns: list[Column], table: 'Table', *, query: str = None):
         self.cursor: SQLCursor = cursor
         self.columns: list[Column] = columns
         self.table: Table = table
+        self.query: str | None = query
 
     def __next__(self) -> dict[str, Value]:
         return next(self.entries)
@@ -240,16 +241,14 @@ class Table:
                    order: list[str] = None, limit: int = 0, offset: int = 0) -> Cursor:
         columns_: list[Column] = [(self.get_column(c) or Column(c, Any)) if isinstance(c, str) else c
                                   for c in columns] if columns else self.columns
+        statements: list[str] = [f"SELECT {','.join(c.name for c in columns_)} FROM {self.name}",
+                                 f"WHERE {sql} " if sql else None,
+                                 f"ORDER BY {','.join(order)} " if order else None,
+                                 f"LIMIT {limit}' " if limit > 0 else None,
+                                 f"OFFSET {offset}" if limit > 0 and offset > 0 else None]
+        sql = " ".join(list(filter(bool, statements)))
 
-        cursor: SQLCursor = self.database.execute(
-            f"""SELECT {','.join(c.name for c in columns_)} FROM {self.name}
-                            {f' WHERE {sql}' if sql else ''}
-                            {f' ORDER BY {",".join(order)}' if order else ''}
-                            {f' LIMIT {limit}' if limit > 0 else ''}
-                            {f' OFFSET {offset}' if limit > 0 and offset > 0 else ''}""",
-            values)
-
-        return Cursor(cursor, columns_, self)
+        return Cursor(self.database.execute(sql, values), columns_, self, query=sql)
 
     def update(self, query: Selector, new_entry: dict[str, Value]) -> SQLCursor:
         sql, values = selector_to_sql(query) if query else ("", [])
