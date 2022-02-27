@@ -95,11 +95,13 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
 
 
 class Cursor:
-    def __init__(self, cursor: SQLCursor, columns: list[Column], table: 'Table', *, query: str = None):
+    def __init__(self, cursor: SQLCursor, columns: list[Column], table: 'Table', *, query: str = None,
+                 query_values: list[Any] = None):
         self.cursor: SQLCursor = cursor
         self.columns: list[Column] = columns
         self.table: Table = table
         self.query: str | None = query
+        self.query_values: list[Any] | None = query_values
 
     def __next__(self) -> dict[str, Value]:
         return next(self.entries)
@@ -245,7 +247,7 @@ class Table:
                                           f"ORDER BY {','.join(order)} " if order else None,
                                           f"LIMIT {limit}' " if limit > 0 else None,
                                           f"OFFSET {offset}" if limit > 0 and offset > 0 else None])))
-        return Cursor(self.database.execute(sql, values), columns_, self, query=sql)
+        return Cursor(self.database.execute(sql, values), columns_, self, query=sql, query_values=values)
 
     def update(self, query: Selector, new_entry: dict[str, Value]) -> SQLCursor:
         sql, values = selector_to_sql(query) if query else ("", [])
