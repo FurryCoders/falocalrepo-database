@@ -230,11 +230,10 @@ class Table:
         sql, values = selector_to_sql(query) if query else ("", None)
         return self.select_sql(sql, values, columns, order, limit, offset)
 
-    def select_query(self, query: str, columns: list[str | Column], default_field: str, likes: list[str] = None,
-                     aliases: dict[str, str] = None, order: list[str] = None, limit: int = 0, offset: int = 0
-                     ) -> Cursor:
-
-        elements, values = query_to_sql(query, default_field, likes, aliases)
+    def select_query(self, query: str, columns: list[str | Column] = None, default_field: str = None,
+                     likes: list[str] = None, aliases: dict[str, str] = None, order: list[str] = None, limit: int = 0,
+                     offset: int = 0) -> Cursor:
+        elements, values = query_to_sql(query, default_field or self.key.name, likes, aliases)
         return self.select_sql(" ".join(elements), values, columns, order, limit, offset)
 
     def select_sql(self, sql: str, values: list[Any] = None, columns: list[str | Column] = None,
