@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.1.0
+
+* Add boolean USERS.ACTIVE column to store whether user is active or not
+
 ## 5.0.0
 
 * Complete rewrite with typing-powered formatting and parsing of row values
