@@ -34,6 +34,7 @@ class ColumnsEnum(Enum):
 class UsersColumns(ColumnsEnum):
     USERNAME = Column("USERNAME", str, unique=True, key=True, check="length({name}) > 0", to_entry=clean_username)
     FOLDERS = Column("FOLDERS", set)
+    ACTIVE = Column("ACTIVE", bool)
     USERPAGE = Column("USERPAGE", str, to_entry=str.strip)
 
 
