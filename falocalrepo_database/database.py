@@ -167,7 +167,7 @@ class Table:
     def __iter__(self) -> Generator[dict[str, Value], None, None]:
         return self.select().entries
 
-    def _get_exists(self, key: Value):
+    def _get_exists(self, key: Value) -> dict:
         if not (entry := self[key]):
             raise KeyError(f"Entry {self.key.name} = {key!r} does not exist in {self.name} table.")
         return entry
