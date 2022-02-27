@@ -28,6 +28,7 @@ Each entry contains the following fields:
 
 * `USERNAME` the URL username of the user (no underscores or spaces)
 * `FOLDERS` the folders downloaded for that specific user, sorted and bar-separated
+* `ACTIVE` `1` if the user is active, `0` if not
 * `USERPAGE` the user's profile text
 
 ### Submissions
@@ -53,7 +54,7 @@ The submissions' table contains the metadata of the submissions downloaded by th
 * `FAVORITE` a bar-separated list of users that have "faved" the submission
 * `MENTIONS` a bar-separated list of users that are mentioned in the submission description as links
 * `FOLDER` the folder of the submission (`gallery` or `scraps`)
-* `USERUPDATE` whether the submission was added as a user update or favorite/single entry
+* `USERUPDATE` `1` if the submission was added as a user update otherwise `0`
 
 ### Journals
 
@@ -65,7 +66,7 @@ The journals' table contains the metadata of the journals downloaded by the prog
 * `DATE` upload date in ISO format _YYYY-MM-DDTHH:MM_
 * `CONTENT` content in html format
 * `MENTIONS` a bar-separated list of users that are mentioned in the journal content as links
-* `USERUPDATE` whether the journal was added as a user update or single entry
+* `USERUPDATE` `1` if the journal was added as a user update otherwise `0`
 
 ### Settings
 
