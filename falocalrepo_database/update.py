@@ -154,6 +154,64 @@ def make_database_5(conn: Connection) -> Connection:
 
 
 # noinspection SqlResolve,DuplicatedCode
+def make_database_5_1(conn: Connection) -> Connection:
+    conn.execute("""create table USERS
+    (USERNAME text unique not null check (length(USERNAME) > 0),
+    FOLDERS text not null,
+    ACTIVE boolean not null,
+    USERPAGE text not null,
+    primary key (USERNAME));""")
+
+    conn.execute("""create table SUBMISSIONS
+    (ID integer unique not null check (ID > 0),
+    AUTHOR text not null check (length(AUTHOR) > 0),
+    TITLE text not null,
+    DATE datetime not null,
+    DESCRIPTION text not null,
+    TAGS text not null,
+    CATEGORY text not null,
+    SPECIES text not null,
+    GENDER text not null,
+    RATING text not null,
+    TYPE text not null check (TYPE in ('image', 'music', 'text', 'flash')),
+    FILEURL text not null,
+    FILEEXT text not null,
+    FILESAVED integer not null check (FILESAVED in (0, 1, 2, 3)),
+    FAVORITE text not null,
+    MENTIONS text not null,
+    FOLDER text not null check (FOLDER in ('gallery', 'scraps')),
+    USERUPDATE boolean not null,
+    primary key (ID));""")
+
+    conn.execute("""create table JOURNALS
+    (ID integer unique not null check (ID > 0),
+    AUTHOR text not null check (length(AUTHOR) > 0),
+    TITLE text not null,
+    DATE datetime not null,
+    CONTENT text not null,
+    MENTIONS text not null,
+    USERUPDATE integer not null check (USERUPDATE in (0, 1)),
+    primary key (ID))""")
+
+    conn.execute("""create table SETTINGS
+    (SETTING text unique not null check (length(SETTING) > 0),
+    SVALUE text check (SVALUE == null or length(SVALUE) > 0),
+    primary key (SETTING));""")
+
+    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["FILESFOLDER", "FA.files"])
+    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["VERSION", "5.0.0"])
+
+    conn.execute("""create table HISTORY
+    (TIME datetime unique not null,
+    EVENT text not null,
+    primary key (TIME));""")
+
+    conn.commit()
+
+    return conn
+
+
+# noinspection SqlResolve,DuplicatedCode
 def update_5_0(conn: Connection, _db_path: Path, db_new_path: Path):
     make_database_5(connect(db_new_path)).close()
     conn.execute("attach database ? as db_new", [str(db_new_path)])
@@ -175,7 +233,7 @@ def update_5_0(conn: Connection, _db_path: Path, db_new_path: Path):
 
 
 # noinspection SqlResolve,DuplicatedCode
-def update_5_0_10(conn: Connection, _db_path: Path, db_new_path: Path):
+def update_5_0_10(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]:
     messages: list[str] = []
     make_database_5(connect(db_new_path)).close()
     conn.execute("attach database ? as db_new", [str(db_new_path)])
@@ -201,6 +259,20 @@ def update_5_0_10(conn: Connection, _db_path: Path, db_new_path: Path):
     return messages
 
 
+# noinspection SqlResolve,DuplicatedCode
+def update_5_1(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]:
+    make_database_5_1(connect(db_new_path)).close()
+    conn.execute("attach database ? as db_new", [str(db_new_path)])
+    conn.execute("insert into db_new.USERS (USERNAME, FOLDERS, USERPAGE, ACTIVE)"
+                 "select USERNAME, replace(FOLDERS, '!', ''), USERPAGE, FOLDERS not like '%!%' from USERS")
+    conn.execute("insert into db_new.SUBMISSIONS select * from SUBMISSIONS")
+    conn.execute("insert into db_new.JOURNALS select * from JOURNALS")
+    conn.execute("insert into db_new.HISTORY select * from HISTORY")
+    conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS where SETTING != 'VERSION'")
+    conn.execute("update db_new.SETTINGS set SVALUE = '5.1.0' where SETTING = 'VERSION'")
+    return []
+
+
 def update_patch(conn: Connection, version: str, target_version: str) -> Connection:
     print(f"Patching {version} to {target_version}... ", end="", flush=True)
     conn.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", [target_version])
@@ -222,6 +294,8 @@ def update_database(conn: Connection, version: str) -> Connection:
         conn = update_wrapper(conn, update_5_0, db_version, v)  # 4.19.x to 5.0.0
     elif compare_versions(db_version, v := "5.0.10") < 0:
         conn = update_wrapper(conn, update_5_0_10, db_version, v)  # 5.0.x to 5.0.10
+    elif compare_versions(db_version, v := "5.1.0") < 0:
+        conn = update_wrapper(conn, update_5_1, db_version, v)  # 5.0.10 to 5.1.0
     elif compare_versions(db_version, version) < 0:
         return update_patch(conn, db_version, version)  # Update to the latest patch
 
