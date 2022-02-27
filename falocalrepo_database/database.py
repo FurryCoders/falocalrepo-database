@@ -245,7 +245,7 @@ class Table:
         sql = " ".join(list(filter(bool, [f"SELECT {','.join(c.name for c in columns_)} FROM {self.name}",
                                           f"WHERE {sql} " if sql else None,
                                           f"ORDER BY {','.join(order)} " if order else None,
-                                          f"LIMIT {limit}' " if limit > 0 else None,
+                                          f"LIMIT {limit} " if limit > 0 else None,
                                           f"OFFSET {offset}" if limit > 0 and offset > 0 else None])))
         return Cursor(self.database.execute(sql, values), columns_, self, query=sql, query_values=values)
 
