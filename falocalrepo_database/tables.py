@@ -55,7 +55,7 @@ class SubmissionsColumns(ColumnsEnum):
     FAVORITE = Column("FAVORITE", set)
     MENTIONS = Column("MENTIONS", set)
     FOLDER = Column("FOLDER", str, to_entry=str.lower, check="{name} in ('gallery', 'scraps')")
-    USERUPDATE = Column("USERUPDATE", int, check="{name} in (0, 1)")
+    USERUPDATE = Column("USERUPDATE", bool)
 
 
 class JournalsColumns(ColumnsEnum):
@@ -65,7 +65,7 @@ class JournalsColumns(ColumnsEnum):
     DATE = Column("DATE", datetime)
     CONTENT = Column("CONTENT", str)
     MENTIONS = Column("MENTIONS", set)
-    USERUPDATE = Column("USERUPDATE", int, check="{name} in (0, 1)")
+    USERUPDATE = Column("USERUPDATE", bool)
 
 
 class SettingsColumns(ColumnsEnum):

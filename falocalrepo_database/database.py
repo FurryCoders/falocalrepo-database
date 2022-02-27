@@ -360,7 +360,7 @@ class SubmissionsTable(Table):
             return True
         return False
 
-    def set_user_update(self, submission_id: int, update: int) -> bool:
+    def set_user_update(self, submission_id: int, update: bool) -> bool:
         if self._get_exists(submission_id)[SubmissionsColumns.USERUPDATE.value.name] != update:
             self.update({EQ: {self.key.name: submission_id}}, {SubmissionsColumns.USERUPDATE.value.name: update})
             return True
@@ -383,7 +383,7 @@ class JournalsTable(Table):
     def save_journal(self, journal: dict[str, Any], *, replace: bool = False, exist_ok: bool = False):
         self.insert(self.format_entry(journal), replace=replace, exists_ok=exist_ok)
 
-    def set_user_update(self, journal_id: int, update: int) -> bool:
+    def set_user_update(self, journal_id: int, update: bool) -> bool:
         if self._get_exists(journal_id)[JournalsColumns.USERUPDATE.value.name] != update:
             self.update({EQ: {self.key.name: journal_id}}, {JournalsColumns.USERUPDATE.value.name: update})
             return True
