@@ -281,22 +281,10 @@ class UsersTable(Table):
     def save_user(self, user: dict[str, Any], *, replace: bool = False, exist_ok: bool = False):
         self.insert(self.format_entry(user), replace=replace, exists_ok=exist_ok)
 
-    def deactivate(self, user: str) -> bool:
-        entry: dict = self._get_exists(user := clean_username(user))
-        folders: set[str] = entry[col := UsersColumns.FOLDERS.value.name]
-        if all(f.startswith("!") for f in folders):
+    def set_active(self, user: str, active: bool) -> bool:
+        if (entry := self._get_exists(user := clean_username(user)))[UsersColumns.ACTIVE.name] is active:
             return False
-        entry[col] = {f"!{f.strip('!')}" for f in folders}
-        self[user] = entry
-        return True
-
-    def activate(self, user: str) -> bool:
-        entry: dict = self._get_exists(user := clean_username(user))
-        folders: set[str] = entry[col := UsersColumns.FOLDERS.value.name]
-        if not any(f.startswith("!") for f in folders):
-            return False
-        entry[col] = {f.strip('!') for f in folders}
-        self[user] = entry
+        self[user] = entry | {UsersColumns.ACTIVE.name: active}
         return True
 
     def add_folder(self, user: str, folder: str) -> bool:
