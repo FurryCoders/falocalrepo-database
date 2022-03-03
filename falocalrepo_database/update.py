@@ -168,7 +168,7 @@ def make_database_5_1(conn: Connection) -> Connection:
     primary key (SETTING));""")
 
     conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["FILESFOLDER", "FA.files"])
-    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["VERSION", "5.0.0"])
+    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["VERSION", "5.1.0"])
 
     conn.execute("""create table HISTORY
     (TIME datetime unique not null,
