@@ -65,37 +65,6 @@ def database_path(conn: Connection) -> Path | None:
     return None
 
 
-def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path, Path], list[str] | None],
-                   version_old: str, version_new: str) -> Connection:
-    print(f"Updating {version_old} to {version_new}... ", end="", flush=True)
-    db_path: Path = p if (p := database_path(conn)) else Path("FA.db")
-    db_new_path: Path = db_path.with_name(f".new_{db_path.name}")
-    db_new_path.unlink(missing_ok=True)
-    try:
-        messages: list[str] = update_function(conn, db_path, db_new_path) or []
-        conn.commit()
-        conn.close()
-        conn = None
-        orig_name: str = db_path.name
-        db_path.replace(db_path := db_path.with_name(f"v{version_old.replace('.', '_')}_{db_path.name}"))
-        db_new_path.replace(db_new_path := db_new_path.with_name(orig_name))
-        print("Complete")
-        for message in messages:
-            print(f"  {message}")
-        print("  Previous version moved to:", db_path, end="", flush=True)
-        return connect(db_new_path)
-    except BaseException as err:
-        conn.close()
-        conn = None
-        db_new_path.unlink(missing_ok=True)
-        raise err
-    finally:
-        if conn is not None:
-            conn.commit()
-            conn.close()
-        print()
-
-
 # noinspection SqlResolve,DuplicatedCode
 def make_database_5(conn: Connection) -> Connection:
     conn.execute("""create table USERS
@@ -288,6 +257,37 @@ def update_5_1_2(conn: Connection, _db_path: Path, db_new_path: Path) -> list[st
         set CATEGORY = replace(replace(replace(CATEGORY, '/ ', '/'), ' /', '/'), '/', ' / '),
             SPECIES = replace(replace(replace(SPECIES, '/ ', '/'), ' /', '/'), '/', ' / ')""")
     return []
+
+
+def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path, Path], list[str] | None],
+                   version_old: str, version_new: str) -> Connection:
+    print(f"Updating {version_old} to {version_new}... ", end="", flush=True)
+    db_path: Path = p if (p := database_path(conn)) else Path("FA.db")
+    db_new_path: Path = db_path.with_name(f".new_{db_path.name}")
+    db_new_path.unlink(missing_ok=True)
+    try:
+        messages: list[str] = update_function(conn, db_path, db_new_path) or []
+        conn.commit()
+        conn.close()
+        conn = None
+        orig_name: str = db_path.name
+        db_path.replace(db_path := db_path.with_name(f"v{version_old.replace('.', '_')}_{db_path.name}"))
+        db_new_path.replace(db_new_path := db_new_path.with_name(orig_name))
+        print("Complete")
+        for message in messages:
+            print(f"  {message}")
+        print("  Previous version moved to:", db_path, end="", flush=True)
+        return connect(db_new_path)
+    except BaseException as err:
+        conn.close()
+        conn = None
+        db_new_path.unlink(missing_ok=True)
+        raise err
+    finally:
+        if conn is not None:
+            conn.commit()
+            conn.close()
+        print()
 
 
 def update_patch(conn: Connection, version: str, target_version: str) -> Connection:
