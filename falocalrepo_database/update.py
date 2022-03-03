@@ -273,6 +273,23 @@ def update_5_1(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]
     return []
 
 
+# noinspection SqlResolve,DuplicatedCode,SqlWithoutWhere
+def update_5_1_2(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]:
+    make_database_5_1(connect(db_new_path)).close()
+    conn.execute("attach database ? as db_new", [str(db_new_path)])
+    conn.execute("insert into db_new.USERS select * from USERS")
+    conn.execute("insert into db_new.SUBMISSIONS select * from SUBMISSIONS")
+    conn.execute("insert into db_new.JOURNALS select * from JOURNALS")
+    conn.execute("insert into db_new.HISTORY select * from HISTORY")
+    conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS where SETTING != 'VERSION'")
+    conn.execute("update db_new.SETTINGS set SVALUE = '5.1.2' where SETTING = 'VERSION'")
+    conn.execute("""
+        update db_new.SUBMISSIONS 
+        set CATEGORY = replace(replace(replace(CATEGORY, '/ ', '/'), ' /', '/'), '/', ' / '),
+            SPECIES = replace(replace(replace(SPECIES, '/ ', '/'), ' /', '/'), '/', ' / ')""")
+    return []
+
+
 def update_patch(conn: Connection, version: str, target_version: str) -> Connection:
     print(f"Patching {version} to {target_version}... ", end="", flush=True)
     conn.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", [target_version])
@@ -296,6 +313,8 @@ def update_database(conn: Connection, version: str) -> Connection:
         conn = update_wrapper(conn, update_5_0_10, db_version, v)  # 5.0.x to 5.0.10
     elif compare_versions(db_version, v := "5.1.0") < 0:
         conn = update_wrapper(conn, update_5_1, db_version, v)  # 5.0.10 to 5.1.0
+    elif compare_versions(db_version, v := "5.1.2") < 0:
+        conn = update_wrapper(conn, update_5_1_2, db_version, v)  # 5.1.0-5.1.1 to 5.1.2
     elif compare_versions(db_version, version) < 0:
         return update_patch(conn, db_version, version)  # Update to the latest patch
 
