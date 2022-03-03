@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 
-# noinspection SqlResolve
+# noinspection SqlResolve,SqlNoDataSourceInspection
 def get_version(conn: Connection) -> str:
     try:
         # Database version 3.0.0 and above
@@ -65,7 +65,7 @@ def database_path(conn: Connection) -> Path | None:
     return None
 
 
-# noinspection SqlResolve,DuplicatedCode
+# noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode
 def make_database_5(conn: Connection) -> Connection:
     conn.execute("""create table USERS
     (USERNAME text unique not null check (length(USERNAME) > 0),
@@ -122,7 +122,7 @@ def make_database_5(conn: Connection) -> Connection:
     return conn
 
 
-# noinspection SqlResolve,DuplicatedCode
+# noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode
 def make_database_5_1(conn: Connection) -> Connection:
     conn.execute("""create table USERS
     (USERNAME text unique not null check (length(USERNAME) > 0),
@@ -180,7 +180,7 @@ def make_database_5_1(conn: Connection) -> Connection:
     return conn
 
 
-# noinspection SqlResolve,DuplicatedCode
+# noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode
 def update_5_0(conn: Connection, _db_path: Path, db_new_path: Path):
     make_database_5(connect(db_new_path)).close()
     conn.execute("attach database ? as db_new", [str(db_new_path)])
@@ -201,7 +201,7 @@ def update_5_0(conn: Connection, _db_path: Path, db_new_path: Path):
                      (datetime.fromtimestamp(time).strftime("%Y-%m-%dT%H:%M:%S.%f"), event))
 
 
-# noinspection SqlResolve,DuplicatedCode
+# noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode
 def update_5_0_10(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]:
     messages: list[str] = []
     make_database_5(connect(db_new_path)).close()
@@ -228,7 +228,7 @@ def update_5_0_10(conn: Connection, _db_path: Path, db_new_path: Path) -> list[s
     return messages
 
 
-# noinspection SqlResolve,DuplicatedCode
+# noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode
 def update_5_1(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]:
     make_database_5_1(connect(db_new_path)).close()
     conn.execute("attach database ? as db_new", [str(db_new_path)])
@@ -242,7 +242,7 @@ def update_5_1(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]
     return []
 
 
-# noinspection SqlResolve,DuplicatedCode,SqlWithoutWhere
+# noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode,SqlWithoutWhere
 def update_5_1_2(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]:
     make_database_5_1(connect(db_new_path)).close()
     conn.execute("attach database ? as db_new", [str(db_new_path)])
@@ -290,6 +290,7 @@ def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path
         print()
 
 
+# noinspection SqlResolve,SqlNoDataSourceInspection
 def update_patch(conn: Connection, version: str, target_version: str) -> Connection:
     print(f"Patching {version} to {target_version}... ", end="", flush=True)
     conn.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", [target_version])
