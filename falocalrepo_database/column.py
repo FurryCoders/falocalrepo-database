@@ -72,13 +72,13 @@ def default_formatter(t: Type[T]) -> Callable[[T], Value]:
     if t_ in (Any, int, float, str, bool):
         return lambda v: v
     elif t_ is datetime:
-        return lambda v: v.strftime(date_format)
+        return lambda v: v.strftime(date_format) if v is not None else None
     elif t_ in (list, tuple):
-        return format_list
+        return lambda v: format_list(v) if v is not None else None
     elif t_ is set:
-        return lambda v: format_list(v, sort=True)
+        return lambda v: format_list(v, sort=True) if v is not None else None
     elif t_ is dict:
-        return dumps
+        return lambda v: dumps(v) if v is not None else None
     else:
         raise TypeError(t, "not allowed")
 
@@ -94,13 +94,14 @@ def default_parser(t: Type[T]) -> Callable[[Value], T]:
     if t_ is Any:
         return lambda v: v
     elif t_ in (int, float, str, bool):
-        return t_
+        return lambda v: t_(v) if v is not None else None
     elif t_ is datetime:
-        return lambda v: datetime.strptime(v, date_format)
+        return lambda v: datetime.strptime(v, date_format) if v is not None else None
     elif t_ in (list, tuple, set):
-        return (lambda v: t_(map(sub_type, parse_list(v)))) if sub_type else (lambda v: t_(parse_list(v)))
+        return (lambda v: t_(map(sub_type, parse_list(v))) if v is not None else None) if sub_type else (
+            lambda v: t_(parse_list(v)) if v is not None else None)
     elif t_ is dict:
-        return loads
+        return lambda v: loads(v) if v is not None else None
     else:
         raise TypeError(t, "not allowed")
 
