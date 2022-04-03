@@ -60,7 +60,7 @@ class SubmissionsColumns(ColumnsEnum):
 
 
 class JournalsColumns(ColumnsEnum):
-    ID = Column("ID", int, unique=True, key=True, check="ID > 0")
+    ID = Column("ID", int, unique=True, key=True, check="{name} > 0")
     AUTHOR = Column("AUTHOR", str, check="length({name}) > 0")
     TITLE = Column("TITLE", str)
     DATE = Column("DATE", datetime)
