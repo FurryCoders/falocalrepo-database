@@ -25,11 +25,13 @@ from .selector import EQ
 from .selector import OR
 from .selector import Selector
 from .selector import selector_to_sql
+from .tables import CommentsColumns
 from .tables import HistoryColumns
 from .tables import JournalsColumns
 from .tables import SettingsColumns
 from .tables import SubmissionsColumns
 from .tables import UsersColumns
+from .tables import comments_table
 from .tables import history_table
 from .tables import journals_table
 from .tables import settings_table
@@ -384,6 +386,29 @@ class JournalsTable(Table):
         return self.remove_from_list(journal_id, JournalsColumns.MENTIONS.value, [clean_username(user)])
 
 
+class CommentsTable(Table):
+    def save_comment(self, comment: dict[str, any], *, replace: bool = False, exist_ok: bool = False):
+        self.insert(self.format_entry(comment), replace=replace, exists_ok=exist_ok)
+
+    def get_comments(self, parent_table: str, parent_id: int) -> list[dict]:
+        return list(self.select_sql(
+            f"{CommentsColumns.PARENT_TABLE.name} = ? and {CommentsColumns.PARENT_ID.name} = ?",
+            [parent_table, parent_id],
+            order=["ID ASC"]))
+
+    def get_comments_tree(self, parent_table: str, parent_id: int) -> list[dict]:
+        comments: list[dict] = self.get_comments(parent_table, parent_id)
+        return self._make_comments_tree([c for c in comments if c["REPLY_TO"] is None], comments)
+
+    def make_comments_tree(self, comments: list[dict]) -> list[dict]:
+        return self._make_comments_tree(comments, comments)
+
+    def _make_comments_tree(self, comments: list[dict], all_comments: list[dict]) -> list[dict]:
+        return [com | {"REPLIES": self._make_comments_tree(
+            [c for c in all_comments if c[CommentsColumns.REPLY_TO.name] == com[CommentsColumns.ID.name]],
+            all_comments)} for com in comments]
+
+
 class SettingsTable(Table):
     version_setting: str = "VERSION"
     files_folder_setting: str = "FILESFOLDER"
@@ -439,6 +464,7 @@ class Database:
         self.users: UsersTable = UsersTable(self, users_table, UsersColumns.as_list())
         self.submissions: SubmissionsTable = SubmissionsTable(self, submissions_table, SubmissionsColumns.as_list())
         self.journals: JournalsTable = JournalsTable(self, journals_table, JournalsColumns.as_list())
+        self.comments: CommentsTable = CommentsTable(self, comments_table, CommentsColumns)
         self.settings: SettingsTable = SettingsTable(self, settings_table, SettingsColumns.as_list())
         self.history: HistoryTable = HistoryTable(self, history_table, HistoryColumns.as_list())
 
@@ -511,6 +537,7 @@ class Database:
         self.users.create(exists_ignore=True)
         self.submissions.create(exists_ignore=True)
         self.journals.create(exists_ignore=True)
+        self.comments.create(exists_ignore=True)
         self.settings.create(exists_ignore=True)
         self.history.create(exists_ignore=True)
 
