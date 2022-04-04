@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.2.0
+
+* Add `COMMENTS` table
+
 ## 5.1.0
 
 * Add boolean USERS.ACTIVE column to store whether user is active or not
