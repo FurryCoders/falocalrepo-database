@@ -9,11 +9,13 @@ __all__ = [
     "users_table",
     "submissions_table",
     "journals_table",
+    "comments_table",
     "settings_table",
     "history_table",
     "UsersColumns",
     "SubmissionsColumns",
     "JournalsColumns",
+    "CommentsColumns",
     "SettingsColumns",
     "HistoryColumns",
 ]
@@ -21,6 +23,7 @@ __all__ = [
 users_table: str = "USERS"
 submissions_table: str = "SUBMISSIONS"
 journals_table: str = "JOURNALS"
+comments_table: str = "COMMENTS"
 settings_table: str = "SETTINGS"
 history_table: str = "HISTORY"
 
@@ -67,6 +70,17 @@ class JournalsColumns(ColumnsEnum):
     CONTENT = Column("CONTENT", str)
     MENTIONS = Column("MENTIONS", set)
     USERUPDATE = Column("USERUPDATE", bool)
+
+
+class CommentsColumns(ColumnsEnum):
+    ID = Column("ID", int, unique=True, key=True, check="{name} > 0")
+    PARENT_TABLE = Column("PARENT_TABLE", str, check=f"{'{name}'} in ('{submissions_table}', '{journals_table}')")
+    PARENT_ID = Column("PARENT_ID", int, check="{name} > 0")
+    REPLY_TO = Column("REPLY_TO", int, not_null=False, check="{name} == null or {name} > 0")
+    AUTHOR = Column("AUTHOR", str, check="length({name}) > 0")
+    DATE = Column("DATE", datetime, to_entry=lambda v: v.strftime("%Y-%m-%dT%H:%M:%S"),
+                  from_entry=lambda v: datetime.strptime(v, "%Y-%m-%dT%H:%M:%S"))
+    TEXT = Column("TEXT", str)
 
 
 class SettingsColumns(ColumnsEnum):
