@@ -68,6 +68,18 @@ The journals' table contains the metadata of the journals downloaded by the prog
 * `MENTIONS` a bar-separated list of users that are mentioned in the journal content as links
 * `USERUPDATE` `1` if the journal was added as a user update otherwise `0`
 
+### Comments
+
+The comments' table contains the metadata of the journals and submissions stored in the database.
+
+* `ID` the id of the comment
+* `PARENT_TABLE` `SUBMISSIONS` if the comment relates to a submission, `JOURNAL` if the comment relates to a journal
+* `PARENT_ID` the id of the parent object (submission or journal)
+* `REPLY_TO` the id of the parent comment, if the comment is a reply
+* `AUTHOR` the username of the author in full format
+* `DATE` post date in ISO format _YYYY-MM-DDTHH:MM:SS_
+* `TEXT` the text of the comment
+
 ### Settings
 
 The settings table contains settings for the program and variable used by the database handler and main program.
