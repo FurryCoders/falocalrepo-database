@@ -21,6 +21,7 @@ from .__version__ import __version__
 from .column import Column
 from .column import NoDefault
 from .exceptions import VersionError
+from .selector import AND
 from .selector import EQ
 from .selector import OR
 from .selector import Selector
@@ -149,7 +150,8 @@ class Table:
     def __getitem__(self, key: Value | dict[str, Value] | tuple[Value]
                     ) -> dict[str, Value] | list[dict[str, Value]] | None:
         if isinstance(key, dict):
-            return self.select({EQ: self.format_entry(key, defaults=False)}).fetchall()
+            return self.select(
+                {AND: [{EQ: {k: v}} for k, v in self.format_entry(key, defaults=False).items()]}).fetchall()
         elif isinstance(key, (tuple, list)):
             return self.select({OR: [{EQ: {self.key.name: self.key.to_entry(k)}} for k in key]}).fetchall()
         else:
