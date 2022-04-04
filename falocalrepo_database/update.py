@@ -23,8 +23,7 @@ def get_version(conn: Connection) -> str:
         # Database version 3.0.0 and above
         return conn.execute("SELECT SVALUE FROM SETTINGS WHERE SETTING = 'VERSION'").fetchone()[0]
     except OperationalError:
-        # Database version 2.7.0
-        return conn.execute("SELECT VALUE FROM SETTINGS WHERE FIELD = 'VERSION'").fetchone()[0]
+        return ""
 
 
 def compare_versions(a: str, b: str) -> int:
