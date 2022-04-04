@@ -464,7 +464,7 @@ class Database:
         self.users: UsersTable = UsersTable(self, users_table, UsersColumns.as_list())
         self.submissions: SubmissionsTable = SubmissionsTable(self, submissions_table, SubmissionsColumns.as_list())
         self.journals: JournalsTable = JournalsTable(self, journals_table, JournalsColumns.as_list())
-        self.comments: CommentsTable = CommentsTable(self, comments_table, CommentsColumns)
+        self.comments: CommentsTable = CommentsTable(self, comments_table, CommentsColumns.as_list())
         self.settings: SettingsTable = SettingsTable(self, settings_table, SettingsColumns.as_list())
         self.history: HistoryTable = HistoryTable(self, history_table, HistoryColumns.as_list())
 
