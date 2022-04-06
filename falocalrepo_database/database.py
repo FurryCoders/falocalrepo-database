@@ -82,6 +82,8 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
             dest_table = db_dest.submissions
         elif cursor.table.name.lower() == db_dest.journals.name.lower():
             dest_table = db_dest.journals
+        elif cursor.table.name.lower() == db_dest.comments.name.lower():
+            dest_table = db_dest.comments
         elif cursor.table.name.lower() == db_dest.settings.name.lower():
             dest_table = db_dest.settings
         elif cursor.table.name.lower() == db_dest.history.name.lower():
