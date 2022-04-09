@@ -414,9 +414,9 @@ class CommentsTable(Table):
 
 
 class SettingsTable(Table):
-    version_setting: str = "VERSION"
-    files_folder_setting: str = "FILESFOLDER"
-    default_files_folder: str = "FA.files"
+    _version_setting: str = "VERSION"
+    _files_folder_setting: str = "FILESFOLDER"
+    _default_files_folder: str = "FA.files"
 
     def __getitem__(self, item: str) -> str | None:
         return (super().__getitem__(item) or {}).get(SettingsColumns.SVALUE.value.name, None)
@@ -426,22 +426,22 @@ class SettingsTable(Table):
 
     @property
     def version(self):
-        return self[self.version_setting]
+        return self[self._version_setting]
 
     @property
     def files_folder(self) -> Path:
-        folder: Path = Path(self[self.files_folder_setting])
+        folder: Path = Path(self[self._files_folder_setting])
         return folder if folder.is_absolute() else (self.database.path.parent / folder).resolve()
 
     @files_folder.setter
     def files_folder(self, value: str | Path):
-        self[self.files_folder_setting] = str(value)
+        self[self._files_folder_setting] = str(value)
 
     def create(self, exists_ignore: bool = False):
         super().create(exists_ignore=exists_ignore)
-        self.insert({SettingsColumns.SETTING.value.name: self.files_folder_setting,
-                     SettingsColumns.SVALUE.value.name: self.default_files_folder}, exists_ok=True)
-        self.insert({SettingsColumns.SETTING.value.name: self.version_setting,
+        self.insert({SettingsColumns.SETTING.value.name: self._files_folder_setting,
+                     SettingsColumns.SVALUE.value.name: self._default_files_folder}, exists_ok=True)
+        self.insert({SettingsColumns.SETTING.value.name: self._version_setting,
                      SettingsColumns.SVALUE.value.name: __version__}, exists_ok=True)
 
 
