@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.2.2
+
+* Change keys of `COMMENTS` table to `ID`, `PARENT_TABLE`, `PARENT_ID`
+
 ## 5.2.0
 
 * Add `COMMENTS` table
