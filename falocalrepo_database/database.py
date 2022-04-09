@@ -321,7 +321,7 @@ class SubmissionsTable(Table):
             self.save_submission_file(
                 submission[SubmissionsColumns.ID.value.name], file, "submission",
                 s[1] if (s := search(r"/[^/]+\.([^.]+)$", submission[SubmissionsColumns.FILEURL.value.name])) else "")
-        self.save_submission_thumbnail(submission["ID"], thumbnail)
+        self.save_submission_thumbnail(submission[SubmissionsColumns.ID.name], thumbnail)
         submission[SubmissionsColumns.FILESAVED.value.name] = (0b10 * bool(file)) + (0b01 * bool(thumbnail))
 
         self.insert(submission, replace=replace, exists_ok=exist_ok)
@@ -398,11 +398,11 @@ class CommentsTable(Table):
         return list(self.select_sql(
             f"{CommentsColumns.PARENT_TABLE.name} = ? and {CommentsColumns.PARENT_ID.name} = ?",
             [parent_table, parent_id],
-            order=["ID ASC"]))
+            order=[f"{CommentsColumns.ID.name} ASC"]))
 
     def get_comments_tree(self, parent_table: str, parent_id: int) -> list[dict]:
         comments: list[dict] = self.get_comments(parent_table, parent_id)
-        return self._make_comments_tree([c for c in comments if c["REPLY_TO"] is None], comments)
+        return self._make_comments_tree([c for c in comments if c[CommentsColumns.REPLY_TO.name] is None], comments)
 
     def make_comments_tree(self, comments: list[dict]) -> list[dict]:
         return self._make_comments_tree(comments, comments)
