@@ -73,9 +73,9 @@ class JournalsColumns(ColumnsEnum):
 
 
 class CommentsColumns(ColumnsEnum):
-    ID = Column("ID", int, unique=True, key=True, check="{name} > 0")
-    PARENT_TABLE = Column("PARENT_TABLE", str, check=f"{'{name}'} in ('{submissions_table}', '{journals_table}')")
-    PARENT_ID = Column("PARENT_ID", int, check="{name} > 0")
+    ID = Column("ID", int, key=True, check="{name} > 0")
+    PARENT_TABLE = Column("PARENT_TABLE", str, key=True, check=f"{'{name}'} in ('{submissions_table}', '{journals_table}')")
+    PARENT_ID = Column("PARENT_ID", int, key=True, check="{name} > 0")
     REPLY_TO = Column("REPLY_TO", int, not_null=False, check="{name} == null or {name} > 0")
     AUTHOR = Column("AUTHOR", str, check="length({name}) > 0")
     DATE = Column("DATE", datetime, to_entry=lambda v: v.strftime("%Y-%m-%dT%H:%M:%S"),
