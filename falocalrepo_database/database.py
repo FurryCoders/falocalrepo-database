@@ -3,6 +3,7 @@ from os import PathLike
 from pathlib import Path
 from re import search
 from shutil import copy
+from shutil import copy2
 from sqlite3 import Connection
 from sqlite3 import Cursor as SQLCursor
 from sqlite3 import DatabaseError
@@ -416,7 +417,9 @@ class CommentsTable(Table):
 class SettingsTable(Table):
     _version_setting: str = "VERSION"
     _files_folder_setting: str = "FILESFOLDER"
+    _backup_folder_setting: str = "BACKUPFOLDER"
     _default_files_folder: str = "FA.files"
+    _default_backup_folder: str = "FA.backup"
 
     def __getitem__(self, item: str) -> str | None:
         return (super().__getitem__(item) or {}).get(SettingsColumns.SVALUE.value.name, None)
@@ -436,6 +439,20 @@ class SettingsTable(Table):
     @files_folder.setter
     def files_folder(self, value: str | Path):
         self[self._files_folder_setting] = str(value)
+
+    @property
+    def backup_folder(self) -> Path | None:
+        folder: str | None = self[self._backup_folder_setting]
+        if folder is None:
+            return None
+        return p if (p := Path(folder)).is_absolute() else (self.database.path.parent / p).resolve()
+
+    @backup_folder.setter
+    def backup_folder(self, value: str | Path | None):
+        if value is None:
+            del self[self._backup_folder_setting]
+        else:
+            self[self._backup_folder_setting] = str(value)
 
     def create(self, exists_ignore: bool = False):
         super().create(exists_ignore=exists_ignore)
@@ -586,6 +603,16 @@ class Database:
     def copy(self, db_b: 'Database', *cursors: Cursor, replace: bool = True, exist_ok: bool = True):
         copy_cursors(db_b, cursors or [self.users.select(), self.submissions.select(), self.journals.select()],
                      replace=replace, exist_ok=exist_ok)
+
+    def backup(self, *, folder: Path = None, date_format: str = "%Y-%m-%d %H.%M.%S"):
+        folder: Path | None = folder or self.settings.backup_folder
+        if folder is None:
+            raise ValueError("No backup folder set in database settings")
+        m_time: datetime = datetime.fromtimestamp(self.path.stat().st_mtime)
+        folder.mkdir(parents=True, exist_ok=True)
+        copy2(self.path, folder / f"{self.path.name.removesuffix(self.path.suffix)} "
+                                  f"{m_time.strftime(date_format or '%Y-%m-%d %H.%M.%S')}"
+                                  f"{self.path.suffix}")
 
     def close(self):
         self.connection.close()
