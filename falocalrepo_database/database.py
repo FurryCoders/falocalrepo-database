@@ -93,8 +93,9 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
             raise DatabaseError(f"Unknown table {cursor.table.name}")
         for entry in cursor:
             if dest_table.name.lower() == db_dest.submissions.name.lower():
-                f, t = cursor_db.submissions.get_submission_files(entry[cursor.table.key.name])
-                db_dest.submissions.save_submission(entry, f.read_bytes() if f else None, t.read_bytes() if t else None,
+                fs, t = cursor_db.submissions.get_submission_files(entry[cursor.table.key.name])
+                db_dest.submissions.save_submission(entry, [f.read_bytes() for f in fs or []],
+                                                    t.read_bytes() if t else None,
                                                     replace=replace, exist_ok=exist_ok)
             else:
                 dest_table.insert(dest_table.format_entry(entry), replace=replace, exists_ok=True)
@@ -314,40 +315,51 @@ class SubmissionsTable(Table):
     def files_folder(self) -> Path:
         return self.database.settings.files_folder
 
-    def save_submission(self, submission: dict[str, Value | list[Value]], file: bytes = None, thumbnail: bytes = None,
-                        *, replace: bool = False, exist_ok: bool = False):
+    def save_submission(self, submission: dict[str, Value | list[Value]], files: list[bytes] = None,
+                        thumbnail: bytes = None, *, replace: bool = False, exist_ok: bool = False):
         submission = self.format_entry(submission)
 
-        submission[SubmissionsColumns.FILEEXT.value.name] = \
+        extensions: list[str] = [
             self.save_submission_file(
                 submission[SubmissionsColumns.ID.value.name], file, "submission",
-                s[1] if (s := search(r"/[^/]+\.([^.]+)$", submission[SubmissionsColumns.FILEURL.value.name])) else "")
+                s[1] if (s := search(r"/[^/]+\.([^.]+)$", submission[SubmissionsColumns.FILEURL.value.name])) else "",
+                n)
+            for n, file in enumerate(files) if file
+        ]
+        submission[SubmissionsColumns.FILEEXT.value.name] = list(filter(bool, extensions))
         self.save_submission_thumbnail(submission[SubmissionsColumns.ID.name], thumbnail)
-        submission[SubmissionsColumns.FILESAVED.value.name] = (0b10 * bool(file)) + (0b01 * bool(thumbnail))
+        submission[SubmissionsColumns.FILESAVED.value.name] = (0b100 * (len(extensions) == len(files)) * bool(files)) + \
+                                                              (0b010 * bool(files)) + \
+                                                              (0b001 * bool(thumbnail))
 
         self.insert(submission, replace=replace, exists_ok=exist_ok)
 
-    def save_submission_file(self, submission_id: int, file: bytes | None, name: str, ext: str,
+    def save_submission_file(self, submission_id: int, file: bytes | None, name: str, ext: str, n: int = 0,
                              guess_ext: bool = True) -> str:
         if file is None:
             return ""
+        assert n >= 0, "n must be zero or positive"
 
         ext: str = guess_extension(file, ext) if guess_ext else ext
         folder: Path = self.files_folder / tiered_path(submission_id)
         folder.mkdir(parents=True, exist_ok=True)
-        folder.joinpath(name + f".{ext}" * bool(ext)).write_bytes(file)
+        folder.joinpath(f"{name}{n if n > 0 else ''}" + f".{ext}" * bool(ext)).write_bytes(file)
 
         return ext
 
     def save_submission_thumbnail(self, submission_id: int, file: bytes | None):
         self.save_submission_file(submission_id, file, "thumbnail", "jpg", False)
 
-    def get_submission_files(self, submission_id: int) -> tuple[Path | None, Path | None]:
+    def get_submission_files(self, submission_id: int) -> tuple[list[Path] | None, Path | None]:
         if (entry := self[submission_id]) is None or (f := entry[SubmissionsColumns.FILESAVED.value.name]) == 0:
             return None, None
         folder: Path = self.files_folder / tiered_path(submission_id)
-        file_ext: str = f".{(ext := entry[SubmissionsColumns.FILEEXT.value.name])}" * bool(ext)
-        return folder / f"submission{file_ext}" if f & 0b10 else None, folder / "thumbnail.jpg" if f & 0b01 else None
+        file_ext: list[str] = entry[SubmissionsColumns.FILEEXT.value.name]
+        return (
+            [folder / f"submission{n or ''}{('.' + ext) if ext else ''}"
+             for n, ext in enumerate(file_ext)] if f & 0b10 else None,
+            folder / "thumbnail.jpg" if f & 0b01 else None
+        )
 
     def set_folder(self, submission_id: int, folder: str) -> bool:
         if self._get_exists(submission_id)[SubmissionsColumns.FOLDER.value.name] != (folder := folder.lower().strip()):
