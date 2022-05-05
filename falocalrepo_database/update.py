@@ -501,7 +501,7 @@ def update_5_3(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]
     conn.execute("insert into db_new.HISTORY select * from HISTORY")
     conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS where SETTING != 'VERSION'")
     conn.execute("update db_new.SETTINGS set SVALUE = '5.3.0' where SETTING = 'VERSION'")
-    conn.execute("update db_new.SUBMISSIONS set FILEEXT = ('|' || FILEEXT || '|') where FILEEXT != ''")
+    conn.execute("update db_new.SUBMISSIONS set FILEEXT = ('|' || FILEEXT || '|') where FILESAVED & 2")
     conn.execute("update db_new.SUBMISSIONS set FILESAVED = FILESAVED + 4 where FILESAVED & 2")
     return []
 

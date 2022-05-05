@@ -326,9 +326,9 @@ class SubmissionsTable(Table):
                 n)
             for n, file in enumerate(files) if file
         ]
-        submission[SubmissionsColumns.FILEEXT.value.name] = list(filter(bool, extensions))
+        submission[SubmissionsColumns.FILEEXT.value.name] = extensions
         self.save_submission_thumbnail(submission[SubmissionsColumns.ID.name], thumbnail)
-        submission[SubmissionsColumns.FILESAVED.value.name] = (0b100 * (len(extensions) == len(files)) * bool(files)) + \
+        submission[SubmissionsColumns.FILESAVED.value.name] = (0b100 * all(map(bool, files)) * bool(files)) + \
                                                               (0b010 * bool(files)) + \
                                                               (0b001 * bool(thumbnail))
 
