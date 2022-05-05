@@ -25,7 +25,7 @@ def format_list(obj: list[Value], *, sort: bool = False) -> str:
 
 
 def parse_list(obj: str) -> list[str]:
-    return [e for e in obj.removeprefix("|").removesuffix("|").split("||") if e]
+    return obj.removeprefix("|").removesuffix("|").split("||")
 
 
 def type_to_sql(t: type) -> str:
