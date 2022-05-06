@@ -319,18 +319,20 @@ class SubmissionsTable(Table):
                         thumbnail: bytes = None, *, replace: bool = False, exist_ok: bool = False):
         submission = self.format_entry(submission)
 
-        extensions: list[str] = [
+        submission[SubmissionsColumns.FILEEXT.value.name] = [
             self.save_submission_file(
                 submission[SubmissionsColumns.ID.value.name], file, "submission",
                 s[1] if (s := search(r"/[^/]+\.([^.]+)$", submission[SubmissionsColumns.FILEURL.value.name])) else "",
                 n)
             for n, file in enumerate(files) if file
         ]
-        submission[SubmissionsColumns.FILEEXT.value.name] = extensions
-        self.save_submission_thumbnail(submission[SubmissionsColumns.ID.name], thumbnail)
-        submission[SubmissionsColumns.FILESAVED.value.name] = (0b100 * all(map(bool, files)) * bool(files)) + \
-                                                              (0b010 * bool(files)) + \
-                                                              (0b001 * bool(thumbnail))
+        self.save_submission_thumbnail(submission[SubmissionsColumns.ID.name], thumbnail or None)
+
+        submission[SubmissionsColumns.FILESAVED.value.name] = (
+                (0b100 * all(map(bool, files)) * bool(files)) +  # all files were valid
+                (0b010 * any(map(bool, files))) +  # at least one file was valid
+                (0b001 * bool(thumbnail))  # the thumbnail was valid
+        )
 
         self.insert(submission, replace=replace, exists_ok=exist_ok)
 
