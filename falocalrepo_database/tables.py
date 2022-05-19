@@ -53,7 +53,7 @@ class SubmissionsColumns(ColumnsEnum):
     GENDER = Column("GENDER", str)
     RATING = Column("RATING", str)
     TYPE = Column("TYPE", str, to_entry=str.lower, check="{name} in ('image', 'music', 'text', 'flash')")
-    FILEURL = Column("FILEURL", str)
+    FILEURL = Column("FILEURL", list[str])
     FILEEXT = Column("FILEEXT", list[str])
     FILESAVED = Column("FILESAVED", int, check="{name} in (0, 1, 2, 3, 4, 5, 6, 7)")
     FAVORITE = Column("FAVORITE", set)
