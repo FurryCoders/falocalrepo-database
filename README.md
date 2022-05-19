@@ -46,7 +46,7 @@ The submissions' table contains the metadata of the submissions downloaded by th
 * `GENDER`
 * `RATING`
 * `TYPE` image, text, music, or flash
-* `FILEURL` the remote URL of the submission file
+* `FILEURL` a bar-separated list of the remote URLs for the submission files
 * `FILEEXT` a bar-separated list of extensions of the downloaded files. Can be empty if the file contained errors and
   could not be recognised upon download
 * `FILESAVED` file and thumbnail download status as a 2bit flag: `1x` if at least one file was valid `0x` if not, `1xx`
