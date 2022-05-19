@@ -319,13 +319,13 @@ class SubmissionsTable(Table):
                         thumbnail: bytes = None, *, replace: bool = False, exist_ok: bool = False):
         submission = self.format_entry(submission)
 
-        submission[SubmissionsColumns.FILEEXT.value.name] = [
+        submission[SubmissionsColumns.FILEEXT.value.name] = SubmissionsColumns.FILEEXT.value.to_entry([
             self.save_submission_file(
                 submission[SubmissionsColumns.ID.value.name], file, "submission",
                 s[1] if (s := search(r"/[^/]+\.([^.]+)$", submission[SubmissionsColumns.FILEURL.value.name])) else "",
                 n)
             for n, file in enumerate(files) if file
-        ]
+        ])
         self.save_submission_thumbnail(submission[SubmissionsColumns.ID.name], thumbnail or None)
 
         submission[SubmissionsColumns.FILESAVED.value.name] = (
