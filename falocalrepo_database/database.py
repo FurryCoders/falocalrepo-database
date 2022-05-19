@@ -363,6 +363,13 @@ class SubmissionsTable(Table):
             folder / "thumbnail.jpg" if f & 0b01 else None
         )
 
+    def set_filesaved(self, submission_id: int, all_files: bool | int, any_file: bool | int, thumbnail: bool | int):
+        filesaved: int = (0b100 * bool(all_files)) + (0b010 * bool(any_file)) + (0b001 * bool(thumbnail))
+        if self._get_exists(submission_id)[SubmissionsColumns.FILESAVED.value.name] != filesaved:
+            self.update({EQ: {self.key.name: submission_id}}, {SubmissionsColumns.FILESAVED.value.name: filesaved})
+            return True
+        return False
+
     def set_folder(self, submission_id: int, folder: str) -> bool:
         if self._get_exists(submission_id)[SubmissionsColumns.FOLDER.value.name] != (folder := folder.lower().strip()):
             self.update({EQ: {self.key.name: submission_id}}, {SubmissionsColumns.FOLDER.value.name: folder})
