@@ -1,5 +1,10 @@
 # Changelog
 
+# 5.3.0
+
+* Change `SUBMISSIONS.FILEURL` and `SUBMISSIONS.FILEEXT` to lists and support multiple files per submission
+* Add backup method to `Database`
+
 ## 5.2.2
 
 * Change keys of `COMMENTS` table to `ID`, `PARENT_TABLE`, `PARENT_ID`
@@ -82,7 +87,7 @@
 
 ## 4.7.0
 
-* Added `MENTIONS` to `JOURNALS` 
+* Added `MENTIONS` to `JOURNALS`
 
 ## 4.6.0
 
@@ -90,11 +95,12 @@
 
 ## 4.5.0
 
-* Added `MENTIONS` and `FOLDER` to `SUBMISSIONS`. Removed `GALLERY`, `SCRAPS`, `FAVORITES`, `MENTIONS` from `USERS` table.
+* Added `MENTIONS` and `FOLDER` to `SUBMISSIONS`. Removed `GALLERY`, `SCRAPS`, `FAVORITES`, `MENTIONS` from `USERS`
+  table.
 
 ## 4.4.0
 
-* Added `FAVORITE` column to `SUBMISSIONS` to hold users that have "faved" the submission 
+* Added `FAVORITE` column to `SUBMISSIONS` to hold users that have "faved" the submission
 
 ## 4.3.0
 
@@ -130,9 +136,12 @@
 
 ## 3.1.0
 
-* `EXTRAS` field in `USERS` table is changed to `MENTIONS`, and `extras` and `Extras` folders are renamed to `mentions` and `mentions_all` respectively.
+* `EXTRAS` field in `USERS` table is changed to `MENTIONS`, and `extras` and `Extras` folders are renamed to `mentions`
+  and `mentions_all` respectively.
 
 ## 3.0.0
 
-* Information from the database are copied over to the new version, but otherwise remain unaltered save for a few changed column names in the `SUBMISSIONS` and `USERS` tables
-  * Files are moved to the new structure, and the old files' folder is deleted. Only submissions files are kept starting from version 3.0.0.
+* Information from the database are copied over to the new version, but otherwise remain unaltered save for a few
+  changed column names in the `SUBMISSIONS` and `USERS` tables
+    * Files are moved to the new structure, and the old files' folder is deleted. Only submissions files are kept
+      starting from version 3.0.0.
