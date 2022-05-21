@@ -28,6 +28,10 @@ def parse_list(obj: str) -> list[str]:
     return obj.removeprefix("|").removesuffix("|").split("||")
 
 
+def parse_list_filter_empty(obj: str) -> list[str]:
+    return list(filter(bool, obj.removeprefix("|").removesuffix("|").split("||")))
+
+
 def type_to_sql(t: type) -> str:
     t_: type = get_origin(t) if type(t) is GenericAlias else t
 
@@ -98,8 +102,8 @@ def default_parser(t: Type[T]) -> Callable[[Value], T]:
     elif t_ is datetime:
         return lambda v: datetime.strptime(v, date_format) if v is not None else None
     elif t_ in (list, tuple, set):
-        return (lambda v: t_(map(sub_type, parse_list(v))) if v is not None else None) if sub_type else (
-            lambda v: t_(parse_list(v)) if v is not None else None)
+        return (lambda v: t_(map(sub_type, parse_list_filter_empty(v))) if v is not None else None) if sub_type else (
+            lambda v: t_(parse_list_filter_empty(v)) if v is not None else None)
     elif t_ is dict:
         return lambda v: loads(v) if v is not None else None
     else:

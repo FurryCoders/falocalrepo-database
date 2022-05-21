@@ -3,6 +3,7 @@ from enum import Enum
 from enum import EnumMeta
 
 from .column import Column
+from .column import parse_list
 from .util import clean_username
 
 __all__ = [
@@ -53,8 +54,8 @@ class SubmissionsColumns(ColumnsEnum):
     GENDER = Column("GENDER", str)
     RATING = Column("RATING", str)
     TYPE = Column("TYPE", str, to_entry=str.lower, check="{name} in ('image', 'music', 'text', 'flash')")
-    FILEURL = Column("FILEURL", list[str])
-    FILEEXT = Column("FILEEXT", list[str])
+    FILEURL = Column("FILEURL", list[str], from_entry=lambda v: parse_list(v))
+    FILEEXT = Column("FILEEXT", list[str], from_entry=lambda v: parse_list(v))
     FILESAVED = Column("FILESAVED", int, check="{name} in (0, 1, 2, 3, 4, 5, 6, 7)")
     FAVORITE = Column("FAVORITE", set)
     MENTIONS = Column("MENTIONS", set)
