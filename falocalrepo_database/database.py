@@ -318,12 +318,13 @@ class SubmissionsTable(Table):
     def save_submission(self, submission: dict[str, Value | list[Value]], files: list[bytes] = None,
                         thumbnail: bytes = None, *, replace: bool = False, exist_ok: bool = False):
         submission = self.format_entry(submission)
+        file_url: list[str] = \
+            SubmissionsColumns.FILEURL.value.from_entry(submission[SubmissionsColumns.FILEURL.value.name])
 
         submission[SubmissionsColumns.FILEEXT.value.name] = SubmissionsColumns.FILEEXT.value.to_entry([
             self.save_submission_file(
                 submission[SubmissionsColumns.ID.value.name], file, "submission",
-                s[1] if (s := search(r"/[^/]+\.([^.]+)$", submission[SubmissionsColumns.FILEURL.value.name])) else "",
-                n)
+                s[1] if (s := search(r"/[^/]+\.([^.]+)$", file_url[0] if file_url else "")) else "", n)
             for n, file in enumerate(files) if file
         ])
         self.save_submission_thumbnail(submission[SubmissionsColumns.ID.name], thumbnail or None)
