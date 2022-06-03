@@ -632,9 +632,15 @@ class Database:
             raise ValueError("No backup folder set in database settings")
         m_time: datetime = datetime.fromtimestamp(self.path.stat().st_mtime)
         folder.mkdir(parents=True, exist_ok=True)
-        copy2(self.path, folder / f"{self.path.name.removesuffix(self.path.suffix)} "
-                                  f"{m_time.strftime(date_format or '%Y-%m-%d %H.%M.%S')}"
-                                  f"{self.path.suffix}")
+        backup_file: Path = folder / (f"{self.path.name.removesuffix(self.path.suffix)} "
+                                      f"{m_time.strftime(date_format or '%Y-%m-%d %H.%M.%S')}"
+                                      f"{self.path.suffix}")
+        try:
+            copy2(self.path, backup_file.with_suffix(".tmp"))
+            copy2(backup_file.with_suffix(".tmp"), backup_file)
+        except Exception:
+            backup_file.with_suffix(".tmp").unlink(missing_ok=True)
+            raise
 
     def close(self):
         self.connection.close()
