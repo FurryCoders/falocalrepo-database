@@ -4,6 +4,7 @@ from pathlib import Path
 from re import search
 from shutil import copy
 from shutil import copy2
+from shutil import move
 from sqlite3 import Connection
 from sqlite3 import Cursor as SQLCursor
 from sqlite3 import DatabaseError
@@ -637,10 +638,9 @@ class Database:
                                       f"{self.path.suffix}")
         try:
             copy2(self.path, backup_file.with_suffix(".tmp"))
-            copy2(backup_file.with_suffix(".tmp"), backup_file)
-        except Exception:
+            move(backup_file.with_suffix(".tmp"), backup_file)
+        finally:
             backup_file.with_suffix(".tmp").unlink(missing_ok=True)
-            raise
 
     def close(self):
         self.connection.close()
