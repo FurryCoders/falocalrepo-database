@@ -507,6 +507,41 @@ def update_5_3(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]
     return []
 
 
+# noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode,SqlWithoutWhere
+def update_5_3_2(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]:
+    make_database_5_3(connect(db_new_path)).close()
+    conn.execute("attach database ? as db_new", [str(db_new_path)])
+    conn.execute("insert into db_new.USERS select * from USERS")
+    conn.execute("insert into db_new.SUBMISSIONS select * from SUBMISSIONS")
+    conn.execute("insert into db_new.JOURNALS select * from JOURNALS")
+    conn.execute("insert into db_new.COMMENTS select * from COMMENTS")
+    conn.execute("insert into db_new.HISTORY select * from HISTORY")
+    conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS where SETTING != 'VERSION'")
+    conn.execute("update db_new.SETTINGS set SVALUE = '5.3.2' where SETTING = 'VERSION'")
+
+    def tiered_path(i: int | str, depth: int = 5, width: int = 2) -> Path:
+        id_str: str = str(int(i)).zfill(depth * width)
+        return Path(*[id_str[n_:n_ + width] for n_ in range(0, depth * width, width)])
+
+    files_folder: Path = Path(conn.execute("select SVALUE from SETTINGS where SETTING = 'FILESFOLDER'").fetchone()[0])
+    submissions = conn.execute("""select ID, FILEEXT from db_new.SUBMISSIONS
+        where FILEEXT like '%|||%' or FILEEXT like '%||' order by ID""")
+    submissions_fixed: int = 0
+
+    for [id_, exts_raw] in submissions:
+        exts = exts_raw.removeprefix("|").removesuffix("|").split("||")
+        folder: Path = files_folder / tiered_path(id_)
+        for n, ext in [(n, e) for n, e in enumerate(exts) if "|" in e]:
+            ext_new = ext.removesuffix("|")
+            file = folder / f"submission{n if n else ''}.{ext}"
+            if file.is_file():
+                file.replace(file.with_suffix(ext_new))
+            exts[n] = ext_new
+        conn.execute("update db_new.SUBMISSIONS set FILEEXT = ? where ID = ?", [f"|{'|'.join(exts)}|", id_])
+        submissions_fixed += 1
+    return [f"{submissions_fixed} submissions extensions fixed"]
+
+
 def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path, Path], list[str] | None],
                    version_old: str, version_new: str) -> Connection:
     print(f"Updating {version_old} to {version_new}... ", end="", flush=True)
@@ -570,6 +605,8 @@ def update_database(conn: Connection, version: str) -> Connection:
         conn = update_wrapper(conn, update_5_2_2, db_version, v)  # 5.2.0-5.2.1 to 5.2.2
     elif compare_versions(db_version, v := "5.3.0") < 0:
         conn = update_wrapper(conn, update_5_3, db_version, v)  # 5.2.2 to 5.3.0
+    elif compare_versions(db_version, v := "5.3.2") < 0:
+        conn = update_wrapper(conn, update_5_3_2, db_version, v)  # 5.3.0 to 5.3.2
     elif compare_versions(db_version, version) < 0:
         return update_patch(conn, db_version, version)  # Update to the latest patch
 
