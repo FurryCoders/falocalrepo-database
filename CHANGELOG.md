@@ -1,5 +1,9 @@
 # Changelog
 
+# 5.3.2
+
+* Fix broken extensions
+
 # 5.3.1
 
 * Fix extension error when saving submissions with special extensions
