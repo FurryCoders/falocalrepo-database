@@ -1,6 +1,10 @@
 # Changelog
 
-## 5.3.3
+## 5.3.4
+
+* Fix file folder error for 5.3.2 (now 5.3.4) update
+
+## 5.3.3 YANKED
 
 * Fix backup error
 
