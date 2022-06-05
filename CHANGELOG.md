@@ -1,14 +1,14 @@
 # Changelog
 
-# 5.3.2
+## 5.3.2
 
 * Fix broken extensions
 
-# 5.3.1
+## 5.3.1
 
 * Fix extension error when saving submissions with special extensions
 
-# 5.3.0
+## 5.3.0
 
 * Change `SUBMISSIONS.FILEURL` and `SUBMISSIONS.FILEEXT` to lists and support multiple files per submission
 * Add backup method to `Database`
