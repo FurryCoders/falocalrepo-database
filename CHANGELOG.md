@@ -1,6 +1,10 @@
 # Changelog
 
-## 5.3.2
+## 5.3.3
+
+* Fix backup error
+
+## 5.3.2 YANKED
 
 * Fix broken extensions
 
