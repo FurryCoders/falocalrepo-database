@@ -524,6 +524,7 @@ def update_5_3_2(conn: Connection, _db_path: Path, db_new_path: Path) -> list[st
         return Path(*[id_str[n_:n_ + width] for n_ in range(0, depth * width, width)])
 
     files_folder: Path = Path(conn.execute("select SVALUE from SETTINGS where SETTING = 'FILESFOLDER'").fetchone()[0])
+    files_folder = files_folder if files_folder.is_absolute() else (db_new_path.parent / files_folder)
     submissions = conn.execute("""select ID, FILEEXT from db_new.SUBMISSIONS
         where FILEEXT like '%|||%' or FILEEXT like '%||' order by ID""")
     submissions_fixed: int = 0
@@ -535,7 +536,7 @@ def update_5_3_2(conn: Connection, _db_path: Path, db_new_path: Path) -> list[st
             ext_new = ext.removesuffix("|")
             file = folder / f"submission{n if n else ''}.{ext}"
             if file.is_file():
-                file.replace(file.with_suffix(ext_new))
+                file.replace(file.with_suffix(f'.{ext_new}' if ext_new else ''))
             exts[n] = ext_new
         conn.execute("update db_new.SUBMISSIONS set FILEEXT = ? where ID = ?", [f"|{'|'.join(exts)}|", id_])
         submissions_fixed += 1
