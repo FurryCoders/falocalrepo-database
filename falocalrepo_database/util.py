@@ -24,6 +24,20 @@ __all__ = [
     "query_to_sql",
 ]
 
+# noinspection SpellCheckingInspection
+_encodings: list[str] = ["ASCII", "BIG5", "BIG5HKSCS", "CP037", "CP424", "CP437", "CP500", "CP737", "CP775", "CP850",
+                         "CP852", "CP855", "CP856", "CP857", "CP860", "CP861", "CP862", "CP863", "CP864", "CP865",
+                         "CP866", "CP869", "CP874", "CP875", "CP932", "CP949", "CP950", "CP1006", "CP1026", "CP1140",
+                         "CP1250", "CP1251", "CP1252", "CP1253", "CP1254", "CP1255", "CP1256", "CP1257", "CP1258",
+                         "EUC-JP", "EUC-JIS-2004", "EUC-JISX0213", "EUC-KR", "GB2312", "GBK", "GB18030", "HZ",
+                         "ISO2022-JP", "ISO2022-JP-1", "ISO2022-JP-2", "ISO2022-JP-2004", "ISO2022-JP-3",
+                         "ISO2022-JP-EXT", "ISO2022-KR", "LATIN-1", "ISO8859-2", "ISO8859-3", "ISO8859-4", "ISO8859-5",
+                         "ISO8859-6", "ISO8859-7", "ISO8859-8", "ISO8859-9", "ISO8859-10", "ISO8859-13", "ISO8859-14",
+                         "ISO8859-15", "ISO8859-16", "JOHAB", "KOI8-R", "KOI8-U", "MAC-CYRILLIC", "MAC-GREEK",
+                         "MAC-ICELAND", "MAC-LATIN2", "MAC-ROMAN", "MAC-TURKISH", "PTCP154", "SHIFT-JIS",
+                         "SHIFT-JIS-2004", "SHIFT-JISX0213", "UTF-32", "UTF-32-BE", "UTF-32-LE", "UTF-16", "UTF-16-BE",
+                         "UTF-16-LE", "UTF-7", "UTF-8", "UTF-8-SIG"]
+
 
 def compare_version(version_a: str, *, major: bool = True, minor: bool = True, patch: bool = True,
                     version_b: str = __version__) -> VersionError | None:
@@ -57,6 +71,14 @@ def clean_username(username: str) -> str:
     return str(sub(r"[^a-zA-Z0-9\-.~]", "", username.lower().strip()))
 
 
+def check_plain_text(file: bytes) -> bool:
+    result: dict = detect_encoding(file[:2048])
+    if result.get("encoding", "").upper() in _encodings and result.get("confidence", 0) > .9:
+        return True
+    else:
+        return False
+
+
 def guess_extension(file: bytes | None, default: str = "") -> str:
     if (default := default.lower()) == "jpg":
         default = "jpeg"
@@ -64,7 +86,7 @@ def guess_extension(file: bytes | None, default: str = "") -> str:
     if not file:
         return default
     elif (file_type := filetype_guess_extension(file)) is None:
-        return default or ("" if detect_encoding(file[:2048]).get("encoding", None) is not None else "txt")
+        return "txt" if check_plain_text(file) else default
     elif (ext := str(file_type)) in (exts := ("zip", "octet-stream")):
         return default if default not in exts else ext
     else:
