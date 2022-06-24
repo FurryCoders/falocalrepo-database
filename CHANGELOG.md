@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.3.5
+
+* Improve detection of plain text file
+
 ## 5.3.4
 
 * Fix file folder error for 5.3.2 (now 5.3.4) update
