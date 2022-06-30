@@ -93,7 +93,9 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
         else:
             raise DatabaseError(f"Unknown table {cursor.table.name}")
         for entry in cursor:
-            if dest_table.name.lower() == db_dest.submissions.name.lower():
+            if entry[cursor.table.key.name] in dest_table and not replace:
+                continue
+            elif dest_table.name.lower() == db_dest.submissions.name.lower():
                 fs, t = cursor_db.submissions.get_submission_files(entry[cursor.table.key.name])
                 db_dest.submissions.save_submission(entry, [f.read_bytes() for f in fs or []],
                                                     t.read_bytes() if t else None,
