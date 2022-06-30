@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.3.6
+
+* `Database.merge` and `Database.copy` skip existing entries directly when replace is set to `False`
+
 ## 5.3.5
 
 * Improve detection of plain text file
