@@ -50,6 +50,7 @@ def insert(conn: Connection, table: str, keys: Collection[str], values: Collecti
     )
 
 
+# noinspection SqlNoDataSourceInspection
 def count(conn: Connection, table: str) -> int:
     return conn.execute(f"SELECT COUNT(*) FROM {table}").fetchall()[0][0]
 
