@@ -440,9 +440,9 @@ class CommentsTable(Table):
 
 
 class SettingsTable(Table):
-    _version_setting: str = "VERSION"
-    _files_folder_setting: str = "FILESFOLDER"
-    _backup_folder_setting: str = "BACKUPFOLDER"
+    version_setting: str = "VERSION"
+    files_folder_setting: str = "FILESFOLDER"
+    backup_folder_setting: str = "BACKUPFOLDER"
     _default_files_folder: str = "FA.files"
     _default_backup_folder: str = "FA.backup"
 
@@ -454,20 +454,20 @@ class SettingsTable(Table):
 
     @property
     def version(self):
-        return self[self._version_setting]
+        return self[self.version_setting]
 
     @property
     def files_folder(self) -> Path:
-        folder: Path = Path(self[self._files_folder_setting])
+        folder: Path = Path(self[self.files_folder_setting])
         return folder if folder.is_absolute() else (self.database.path.parent / folder).resolve()
 
     @files_folder.setter
     def files_folder(self, value: str | Path):
-        self[self._files_folder_setting] = str(value)
+        self[self.files_folder_setting] = str(value)
 
     @property
     def backup_folder(self) -> Path | None:
-        folder: str | None = self[self._backup_folder_setting]
+        folder: str | None = self[self.backup_folder_setting]
         if folder is None:
             return None
         return p if (p := Path(folder)).is_absolute() else (self.database.path.parent / p).resolve()
@@ -475,15 +475,15 @@ class SettingsTable(Table):
     @backup_folder.setter
     def backup_folder(self, value: str | Path | None):
         if value is None:
-            del self[self._backup_folder_setting]
+            del self[self.backup_folder_setting]
         else:
-            self[self._backup_folder_setting] = str(value)
+            self[self.backup_folder_setting] = str(value)
 
     def create(self, exists_ignore: bool = False):
         super().create(exists_ignore=exists_ignore)
-        self.insert({SettingsColumns.SETTING.name: self._files_folder_setting,
+        self.insert({SettingsColumns.SETTING.name: self.files_folder_setting,
                      SettingsColumns.SVALUE.name: self._default_files_folder}, exists_ok=True)
-        self.insert({SettingsColumns.SETTING.name: self._version_setting,
+        self.insert({SettingsColumns.SETTING.name: self.version_setting,
                      SettingsColumns.SVALUE.name: __version__}, exists_ok=True)
 
 
