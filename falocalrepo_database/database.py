@@ -299,16 +299,16 @@ class UsersTable(Table):
         return True
 
     def add_folder(self, user: str, folder: str) -> bool:
-        return self.add_to_list(clean_username(user), UsersColumns.FOLDERS.value.name, [folder])
+        return self.add_to_list(clean_username(user), UsersColumns.FOLDERS.name, [folder])
 
     def remove_folder(self, user: str, folder: str) -> bool:
-        return self.remove_from_list(clean_username(user), UsersColumns.FOLDERS.value.name, [folder])
+        return self.remove_from_list(clean_username(user), UsersColumns.FOLDERS.name, [folder])
 
     def set_userpage(self, user: str, userpage: str) -> bool:
         entry: dict = self._get_exists(user := clean_username(user))
-        if entry[UsersColumns.USERPAGE.value.name] == userpage:
+        if entry[UsersColumns.USERPAGE.name] == userpage:
             return False
-        entry[UsersColumns.USERPAGE.value.name] = userpage
+        entry[UsersColumns.USERPAGE.name] = userpage
         self[user] = entry
         return True
 
@@ -322,17 +322,17 @@ class SubmissionsTable(Table):
                         thumbnail: bytes = None, *, replace: bool = False, exist_ok: bool = False):
         submission = self.format_entry(submission)
         file_url: list[str] = \
-            SubmissionsColumns.FILEURL.value.from_entry(submission[SubmissionsColumns.FILEURL.value.name])
+            SubmissionsColumns.FILEURL.value.from_entry(submission[SubmissionsColumns.FILEURL.name])
 
-        submission[SubmissionsColumns.FILEEXT.value.name] = SubmissionsColumns.FILEEXT.value.to_entry([
+        submission[SubmissionsColumns.FILEEXT.name] = SubmissionsColumns.FILEEXT.value.to_entry([
             self.save_submission_file(
-                submission[SubmissionsColumns.ID.value.name], file, "submission",
+                submission[SubmissionsColumns.ID.name], file, "submission",
                 s[1] if (s := search(r"/[^/]+\.([^.]+)$", file_url[0] if file_url else "")) else "", n)
             for n, file in enumerate(files) if file
         ])
         self.save_submission_thumbnail(submission[SubmissionsColumns.ID.name], thumbnail or None)
 
-        submission[SubmissionsColumns.FILESAVED.value.name] = (
+        submission[SubmissionsColumns.FILESAVED.name] = (
                 (0b100 * all(map(bool, files)) * bool(files)) +  # all files were valid
                 (0b010 * any(map(bool, files))) +  # at least one file was valid
                 (0b001 * bool(thumbnail))  # the thumbnail was valid
@@ -357,10 +357,10 @@ class SubmissionsTable(Table):
         self.save_submission_file(submission_id, file, "thumbnail", "jpg", False)
 
     def get_submission_files(self, submission_id: int) -> tuple[list[Path] | None, Path | None]:
-        if (entry := self[submission_id]) is None or (f := entry[SubmissionsColumns.FILESAVED.value.name]) == 0:
+        if (entry := self[submission_id]) is None or (f := entry[SubmissionsColumns.FILESAVED.name]) == 0:
             return None, None
         folder: Path = self.files_folder / tiered_path(submission_id)
-        file_ext: list[str] = entry[SubmissionsColumns.FILEEXT.value.name]
+        file_ext: list[str] = entry[SubmissionsColumns.FILEEXT.name]
         return (
             [folder / f"submission{n or ''}{('.' + ext) if ext else ''}"
              for n, ext in enumerate(file_ext)] if f & 0b10 else None,
@@ -369,20 +369,20 @@ class SubmissionsTable(Table):
 
     def set_filesaved(self, submission_id: int, all_files: bool | int, any_file: bool | int, thumbnail: bool | int):
         filesaved: int = (0b100 * bool(all_files)) + (0b010 * bool(any_file)) + (0b001 * bool(thumbnail))
-        if self._get_exists(submission_id)[SubmissionsColumns.FILESAVED.value.name] != filesaved:
-            self.update({EQ: {self.key.name: submission_id}}, {SubmissionsColumns.FILESAVED.value.name: filesaved})
+        if self._get_exists(submission_id)[SubmissionsColumns.FILESAVED.name] != filesaved:
+            self.update({EQ: {self.key.name: submission_id}}, {SubmissionsColumns.FILESAVED.name: filesaved})
             return True
         return False
 
     def set_folder(self, submission_id: int, folder: str) -> bool:
-        if self._get_exists(submission_id)[SubmissionsColumns.FOLDER.value.name] != (folder := folder.lower().strip()):
-            self.update({EQ: {self.key.name: submission_id}}, {SubmissionsColumns.FOLDER.value.name: folder})
+        if self._get_exists(submission_id)[SubmissionsColumns.FOLDER.name] != (folder := folder.lower().strip()):
+            self.update({EQ: {self.key.name: submission_id}}, {SubmissionsColumns.FOLDER.name: folder})
             return True
         return False
 
     def set_user_update(self, submission_id: int, update: bool) -> bool:
-        if self._get_exists(submission_id)[SubmissionsColumns.USERUPDATE.value.name] != update:
-            self.update({EQ: {self.key.name: submission_id}}, {SubmissionsColumns.USERUPDATE.value.name: update})
+        if self._get_exists(submission_id)[SubmissionsColumns.USERUPDATE.name] != update:
+            self.update({EQ: {self.key.name: submission_id}}, {SubmissionsColumns.USERUPDATE.name: update})
             return True
         return False
 
@@ -404,8 +404,8 @@ class JournalsTable(Table):
         self.insert(self.format_entry(journal), replace=replace, exists_ok=exist_ok)
 
     def set_user_update(self, journal_id: int, update: bool) -> bool:
-        if self._get_exists(journal_id)[JournalsColumns.USERUPDATE.value.name] != update:
-            self.update({EQ: {self.key.name: journal_id}}, {JournalsColumns.USERUPDATE.value.name: update})
+        if self._get_exists(journal_id)[JournalsColumns.USERUPDATE.name] != update:
+            self.update({EQ: {self.key.name: journal_id}}, {JournalsColumns.USERUPDATE.name: update})
             return True
         return False
 
@@ -447,10 +447,10 @@ class SettingsTable(Table):
     _default_backup_folder: str = "FA.backup"
 
     def __getitem__(self, item: str) -> str | None:
-        return (super().__getitem__(item) or {}).get(SettingsColumns.SVALUE.value.name, None)
+        return (super().__getitem__(item) or {}).get(SettingsColumns.SVALUE.name, None)
 
     def __setitem__(self, key: str, value: str):
-        self.insert(self.format_entry({self.key.name: key, SettingsColumns.SVALUE.value.name: value}), replace=True)
+        self.insert(self.format_entry({self.key.name: key, SettingsColumns.SVALUE.name: value}), replace=True)
 
     @property
     def version(self):
@@ -481,10 +481,10 @@ class SettingsTable(Table):
 
     def create(self, exists_ignore: bool = False):
         super().create(exists_ignore=exists_ignore)
-        self.insert({SettingsColumns.SETTING.value.name: self._files_folder_setting,
-                     SettingsColumns.SVALUE.value.name: self._default_files_folder}, exists_ok=True)
-        self.insert({SettingsColumns.SETTING.value.name: self._version_setting,
-                     SettingsColumns.SVALUE.value.name: __version__}, exists_ok=True)
+        self.insert({SettingsColumns.SETTING.name: self._files_folder_setting,
+                     SettingsColumns.SVALUE.name: self._default_files_folder}, exists_ok=True)
+        self.insert({SettingsColumns.SETTING.name: self._version_setting,
+                     SettingsColumns.SVALUE.name: __version__}, exists_ok=True)
 
 
 class HistoryTable(Table):
@@ -492,7 +492,7 @@ class HistoryTable(Table):
         return self.select(order=[self.key.name]).entries
 
     def add_event(self, event: str, time: datetime = None):
-        self[time or datetime.now()] = {HistoryColumns.EVENT.value.name: event}
+        self[time or datetime.now()] = {HistoryColumns.EVENT.name: event}
 
 
 class Database:
