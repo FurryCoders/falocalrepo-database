@@ -1,6 +1,8 @@
 from datetime import datetime
 from enum import Enum
 from enum import EnumMeta
+from types import DynamicClassAttribute
+from typing import TypedDict
 
 from .column import Column
 from .column import parse_list
@@ -30,6 +32,12 @@ history_table: str = "HISTORY"
 
 
 class ColumnsEnum(Enum):
+    _value_: Column
+
+    @DynamicClassAttribute
+    def value(self) -> Column:
+        return self._value_
+
     @classmethod
     def as_list(cls: EnumMeta) -> list[Column]:
         return [c.value for c in cls]
@@ -75,7 +83,8 @@ class JournalsColumns(ColumnsEnum):
 
 class CommentsColumns(ColumnsEnum):
     ID = Column("ID", int, key=True, check="{name} > 0")
-    PARENT_TABLE = Column("PARENT_TABLE", str, key=True, check=f"{'{name}'} in ('{submissions_table}', '{journals_table}')")
+    PARENT_TABLE = Column("PARENT_TABLE", str, key=True,
+                          check=f"{'{name}'} in ('{submissions_table}', '{journals_table}')")
     PARENT_ID = Column("PARENT_ID", int, key=True, check="{name} > 0")
     REPLY_TO = Column("REPLY_TO", int, not_null=False, check="{name} == null or {name} > 0")
     AUTHOR = Column("AUTHOR", str, check="length({name}) > 0")
