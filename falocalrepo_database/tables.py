@@ -49,6 +49,7 @@ class SubmissionsColumns:
     TITLE = Column("TITLE", str)
     DATE = Column("DATE", datetime)
     DESCRIPTION = Column("DESCRIPTION", str)
+    FOOTER = Column("FOOTER", str)
     TAGS = Column("TAGS", list)
     CATEGORY = Column("CATEGORY", str)
     SPECIES = Column("SPECIES", str)
@@ -71,6 +72,7 @@ class SubmissionsColumns:
             cls.TITLE,
             cls.DATE,
             cls.DESCRIPTION,
+            cls.FOOTER,
             cls.TAGS,
             cls.CATEGORY,
             cls.SPECIES,
@@ -93,6 +95,8 @@ class JournalsColumns:
     TITLE = Column("TITLE", str)
     DATE = Column("DATE", datetime)
     CONTENT = Column("CONTENT", str)
+    HEADER = Column("HEADER", str)
+    FOOTER = Column("FOOTER", str)
     MENTIONS = Column("MENTIONS", set)
     USERUPDATE = Column("USERUPDATE", bool)
 
@@ -104,6 +108,8 @@ class JournalsColumns:
             cls.TITLE,
             cls.DATE,
             cls.CONTENT,
+            cls.HEADER,
+            cls.FOOTER,
             cls.MENTIONS,
             cls.USERUPDATE,
         ]
