@@ -443,6 +443,7 @@ class SettingsTable(Table):
     version_setting: str = "VERSION"
     files_folder_setting: str = "FILESFOLDER"
     backup_folder_setting: str = "BACKUPFOLDER"
+    bbcode_setting: str = "BBCODE"
     _default_files_folder: str = "FA.files"
     _default_backup_folder: str = "FA.backup"
 
@@ -478,6 +479,17 @@ class SettingsTable(Table):
             del self[self.backup_folder_setting]
         else:
             self[self.backup_folder_setting] = str(value)
+
+    @property
+    def bbcode(self) -> bool:
+        return self[self.bbcode_setting] == "true"
+
+    @bbcode.setter
+    def bbcode(self, value: bool | None):
+        if value is None:
+            del self[self.bbcode_setting]
+        else:
+            self[self.bbcode_setting] = "true" if value else "false"
 
     def create(self, exists_ignore: bool = False):
         super().create(exists_ignore=exists_ignore)
