@@ -68,7 +68,7 @@ The journals' table contains the metadata of the journals downloaded by the prog
 * `DATE` upload date in ISO format _YYYY-MM-DDTHH:MM_
 * `CONTENT` content in HTML or BBCode format
 * `HEADER` header in HTML or BBCode format
-* `FOOTEr` footer in HTML or BBCode format
+* `FOOTER` footer in HTML or BBCode format
 * `MENTIONS` a bar-separated list of users that are mentioned in the journal content as links
 * `USERUPDATE` `1` if the journal was added as a user update otherwise `0`
 
