@@ -2,10 +2,11 @@ from datetime import datetime
 from json import loads
 from operator import itemgetter
 from pathlib import Path
+from re import sub
+from sqlite3 import connect
 from sqlite3 import Connection
 from sqlite3 import DatabaseError
 from sqlite3 import OperationalError
-from sqlite3 import connect
 from typing import Callable
 from typing import Collection
 from typing import Optional
@@ -386,6 +387,78 @@ def make_database_5_3(conn: Connection) -> Connection:
 
 
 # noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode
+def make_database_5_4(conn: Connection) -> Connection:
+    conn.execute("""create table USERS
+    (USERNAME text unique not null check (length(USERNAME) > 0),
+    FOLDERS text not null,
+    ACTIVE boolean not null,
+    USERPAGE text not null,
+    primary key (USERNAME));""")
+
+    conn.execute("""create table SUBMISSIONS
+    (ID integer unique not null check (ID > 0),
+    AUTHOR text not null check (length(AUTHOR) > 0),
+    TITLE text not null,
+    DATE datetime not null,
+    DESCRIPTION text not null,
+    FOOTER text not null,
+    TAGS text not null,
+    CATEGORY text not null,
+    SPECIES text not null,
+    GENDER text not null,
+    RATING text not null,
+    TYPE text not null check (TYPE in ('image', 'music', 'text', 'flash')),
+    FILEURL text not null,
+    FILEEXT text not null,
+    FILESAVED integer not null check (FILESAVED in (0, 1, 2, 3, 4, 5, 6, 7)),
+    FAVORITE text not null,
+    MENTIONS text not null,
+    FOLDER text not null check (FOLDER in ('gallery', 'scraps')),
+    USERUPDATE boolean not null,
+    primary key (ID));""")
+
+    conn.execute("""create table JOURNALS
+    (ID integer unique not null check (ID > 0),
+    AUTHOR text not null check (length(AUTHOR) > 0),
+    TITLE text not null,
+    DATE datetime not null,
+    CONTENT text not null,
+    HEADER text not null,
+    FOOTER text not null,
+    MENTIONS text not null,
+    USERUPDATE integer not null check (USERUPDATE in (0, 1)),
+    primary key (ID))""")
+
+    conn.execute("""create table COMMENTS
+    (ID integer not null check (ID > 0),
+    PARENT_TABLE text not null check (PARENT_TABLE in ('SUBMISSIONS', 'JOURNALS')),
+    PARENT_ID integer not null check (PARENT_ID > 0),
+    REPLY_TO integer check (REPLY_TO == null or REPLY_TO > 0),
+    AUTHOR text not null check (length(AUTHOR) > 0),
+    DATE datetime not null,
+    TEXT text not null,
+    primary key (ID, PARENT_TABLE, PARENT_ID))""")
+
+    conn.execute("""create table SETTINGS
+    (SETTING text unique not null check (length(SETTING) > 0),
+    SVALUE text check (SVALUE == null or length(SVALUE) > 0),
+    primary key (SETTING));""")
+
+    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["FILESFOLDER", "FA.files"])
+    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["BACKUPFOLDER", "FA.backup"])
+    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["VERSION", "5.4.0"])
+
+    conn.execute("""create table HISTORY
+    (TIME datetime unique not null,
+    EVENT text not null,
+    primary key (TIME));""")
+
+    conn.commit()
+
+    return conn
+
+
+# noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode
 def update_5_0(conn: Connection, _db_path: Path, db_new_path: Path):
     make_database_5(connect(db_new_path)).close()
     conn.execute("attach database ? as db_new", [str(db_new_path)])
@@ -544,6 +617,63 @@ def update_5_3_4(conn: Connection, _db_path: Path, db_new_path: Path) -> list[st
     return [f"{submissions_fixed} submissions extensions fixed"]
 
 
+# noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode,SqlWithoutWhere
+def update_5_4_0(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]:
+    messages: list[str] = []
+
+    try:
+        # noinspection PyPackageRequirements
+        import bs4
+        from warnings import filterwarnings
+        filterwarnings("ignore", category=bs4.MarkupResemblesLocatorWarning, module="bs4")
+
+        def clean_html(html: str) -> str:
+            return sub(r" {2,}", " ", sub(r"[\r\n]", "", html)).strip()
+
+        def get_footer(description: str) -> tuple[str, str]:
+            body = bs4.BeautifulSoup(f"<html><body>{description}</body></html>", "lxml").select_one("html > body")
+            tag_footer = body.select_one("div.submission-footer")
+            footer: str = ""
+            if tag_footer:
+                if tag_footer_hr := tag_footer.select_one("hr"):
+                    tag_footer_hr.decompose()
+                footer = clean_html(tag_footer.decode_contents())
+                tag_footer.decompose()
+            return clean_html(body.decode_contents()), footer
+
+        make_database_5_4(connect(db_new_path)).close()
+        conn.execute("attach database ? as db_new", [str(db_new_path)])
+        conn.execute("insert into db_new.USERS select * from USERS")
+        conn.execute(
+            "insert into db_new.SUBMISSIONS (ID,AUTHOR,TITLE,DATE,DESCRIPTION,TAGS,CATEGORY,SPECIES,GENDER,"
+            "RATING,TYPE,FILEURL,FILEEXT,FAVORITE,MENTIONS,FOLDER,USERUPDATE,FILESAVED,FOOTER)"
+            "select ID,AUTHOR,TITLE,DATE,DESCRIPTION,TAGS,CATEGORY,SPECIES,GENDER,RATING,TYPE,FILEURL,"
+            "FILEEXT,FAVORITE,MENTIONS,FOLDER,USERUPDATE,FILESAVED,'' from SUBMISSIONS")
+        conn.execute(
+            "insert into db_new.JOURNALS (ID,AUTHOR,TITLE,DATE,CONTENT,MENTIONS,USERUPDATE,HEADER,FOOTER)"
+            "select ID,AUTHOR,TITLE,DATE,CONTENT,MENTIONS,USERUPDATE,'','' from JOURNALS")
+        conn.execute("insert into db_new.COMMENTS select * from COMMENTS")
+        conn.execute("insert into db_new.HISTORY select * from HISTORY")
+        conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS where SETTING != 'VERSION'")
+        conn.execute("update db_new.SETTINGS set SVALUE = '5.4.0' where SETTING = 'VERSION'")
+
+        footers_extracted: int = 0
+        for i, d in conn.execute("select ID, DESCRIPTION from db_new.SUBMISSIONS order by ID"):
+            d, f = get_footer(d)
+            footers_extracted += 1 if f else 0
+            conn.execute("update db_new.SUBMISSIONS set DESCRIPTION = ?, FOOTER = ? where ID = ?", [d, f, i])
+
+        for i, c in conn.execute("select ID, CONTENT from db_new.JOURNALS order by ID"):
+            print(f"\r{i}", end="", flush=True)
+            conn.execute("update db_new.JOURNALS set CONTENT = ? where ID = ?", [clean_html(c), i])
+
+        messages.append(f"{footers_extracted} submission footers extracted")
+    except ImportError:
+        raise ImportError("Cannot update to 5.4.0 without beautifulsoup4 dependency")
+
+    return messages
+
+
 def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path, Path], list[str] | None],
                    version_old: str, version_new: str) -> Connection:
     print(f"Updating {version_old} to {version_new}... ", end="", flush=True)
@@ -609,6 +739,8 @@ def update_database(conn: Connection, version: str) -> Connection:
         conn = update_wrapper(conn, update_5_3, db_version, v)  # 5.2.2 to 5.3.0
     elif compare_versions(db_version, v := "5.3.4") < 0:
         conn = update_wrapper(conn, update_5_3_4, db_version, v)  # 5.3.0 to 5.3.4
+    elif compare_versions(db_version, v := "5.4_0") < 0:
+        conn = update_wrapper(conn, update_5_4_0, db_version, v)  # 5.3.4 to 5.4.0
     elif compare_versions(db_version, version) < 0:
         return update_patch(conn, db_version, version)  # Update to the latest patch
 
