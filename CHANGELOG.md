@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.4.0
+
+* Add `SUBMISSIONS.FOOTER`, `JOURNALS.HEADER`, and `JOURNALS.FOOTER` columns
+* Add bbcode setting to `SettingsTable`
+* Use normal class variables instead of enums for columns
+
 ## 5.3.6
 
 * `Database.merge` and `Database.copy` skip existing entries directly when replace is set to `False`
