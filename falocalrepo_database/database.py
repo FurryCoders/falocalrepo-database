@@ -322,9 +322,9 @@ class SubmissionsTable(Table):
                         thumbnail: bytes = None, *, replace: bool = False, exist_ok: bool = False):
         submission = self.format_entry(submission)
         file_url: list[str] = \
-            SubmissionsColumns.FILEURL.value.from_entry(submission[SubmissionsColumns.FILEURL.name])
+            SubmissionsColumns.FILEURL.from_entry(submission[SubmissionsColumns.FILEURL.name])
 
-        submission[SubmissionsColumns.FILEEXT.name] = SubmissionsColumns.FILEEXT.value.to_entry([
+        submission[SubmissionsColumns.FILEEXT.name] = SubmissionsColumns.FILEEXT.to_entry([
             self.save_submission_file(
                 submission[SubmissionsColumns.ID.name], file, "submission",
                 s[1] if (s := search(r"/[^/]+\.([^.]+)$", file_url[0] if file_url else "")) else "", n)
@@ -387,16 +387,16 @@ class SubmissionsTable(Table):
         return False
 
     def add_favorite(self, submission_id: int, user: str) -> bool:
-        return self.add_to_list(submission_id, SubmissionsColumns.FAVORITE.value, [clean_username(user)])
+        return self.add_to_list(submission_id, SubmissionsColumns.FAVORITE, [clean_username(user)])
 
     def remove_favorite(self, submission_id: int, user: str) -> bool:
-        return self.remove_from_list(submission_id, SubmissionsColumns.FAVORITE.value, [clean_username(user)])
+        return self.remove_from_list(submission_id, SubmissionsColumns.FAVORITE, [clean_username(user)])
 
     def add_mention(self, submission_id: int, user: str) -> bool:
-        return self.add_to_list(submission_id, SubmissionsColumns.MENTIONS.value, [clean_username(user)])
+        return self.add_to_list(submission_id, SubmissionsColumns.MENTIONS, [clean_username(user)])
 
     def remove_mention(self, submission_id: int, user: str) -> bool:
-        return self.remove_from_list(submission_id, SubmissionsColumns.MENTIONS.value, [clean_username(user)])
+        return self.remove_from_list(submission_id, SubmissionsColumns.MENTIONS, [clean_username(user)])
 
 
 class JournalsTable(Table):
@@ -410,10 +410,10 @@ class JournalsTable(Table):
         return False
 
     def add_mention(self, journal_id: int, user: str) -> bool:
-        return self.add_to_list(journal_id, JournalsColumns.MENTIONS.value, [clean_username(user)])
+        return self.add_to_list(journal_id, JournalsColumns.MENTIONS, [clean_username(user)])
 
     def remove_mention(self, journal_id: int, user: str) -> bool:
-        return self.remove_from_list(journal_id, JournalsColumns.MENTIONS.value, [clean_username(user)])
+        return self.remove_from_list(journal_id, JournalsColumns.MENTIONS, [clean_username(user)])
 
 
 class CommentsTable(Table):

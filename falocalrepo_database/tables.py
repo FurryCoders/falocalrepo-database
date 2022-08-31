@@ -1,8 +1,4 @@
 from datetime import datetime
-from enum import Enum
-from enum import EnumMeta
-from types import DynamicClassAttribute
-from typing import TypedDict
 
 from .column import Column
 from .column import parse_list
@@ -31,26 +27,23 @@ settings_table: str = "SETTINGS"
 history_table: str = "HISTORY"
 
 
-class ColumnsEnum(Enum):
-    _value_: Column
-
-    @DynamicClassAttribute
-    def value(self) -> Column:
-        return self._value_
-
-    @classmethod
-    def as_list(cls: EnumMeta) -> list[Column]:
-        return [c.value for c in cls]
-
-
-class UsersColumns(ColumnsEnum):
+class UsersColumns:
     USERNAME = Column("USERNAME", str, unique=True, key=True, check="length({name}) > 0", to_entry=clean_username)
     FOLDERS = Column("FOLDERS", set)
     ACTIVE = Column("ACTIVE", bool)
     USERPAGE = Column("USERPAGE", str, to_entry=str.strip)
 
+    @classmethod
+    def as_list(cls) -> list[Column]:
+        return [
+            cls.USERNAME,
+            cls.FOLDERS,
+            cls.ACTIVE,
+            cls.USERPAGE,
+        ]
 
-class SubmissionsColumns(ColumnsEnum):
+
+class SubmissionsColumns:
     ID = Column("ID", int, unique=True, key=True, check="{name} > 0")
     AUTHOR = Column("AUTHOR", str, check="length({name}) > 0")
     TITLE = Column("TITLE", str)
@@ -70,8 +63,31 @@ class SubmissionsColumns(ColumnsEnum):
     FOLDER = Column("FOLDER", str, to_entry=str.lower, check="{name} in ('gallery', 'scraps')")
     USERUPDATE = Column("USERUPDATE", bool)
 
+    @classmethod
+    def as_list(cls) -> list[Column]:
+        return [
+            cls.ID,
+            cls.AUTHOR,
+            cls.TITLE,
+            cls.DATE,
+            cls.DESCRIPTION,
+            cls.TAGS,
+            cls.CATEGORY,
+            cls.SPECIES,
+            cls.GENDER,
+            cls.RATING,
+            cls.TYPE,
+            cls.FILEURL,
+            cls.FILEEXT,
+            cls.FILESAVED,
+            cls.FAVORITE,
+            cls.MENTIONS,
+            cls.FOLDER,
+            cls.USERUPDATE,
+        ]
 
-class JournalsColumns(ColumnsEnum):
+
+class JournalsColumns:
     ID = Column("ID", int, unique=True, key=True, check="{name} > 0")
     AUTHOR = Column("AUTHOR", str, check="length({name}) > 0")
     TITLE = Column("TITLE", str)
@@ -80,8 +96,20 @@ class JournalsColumns(ColumnsEnum):
     MENTIONS = Column("MENTIONS", set)
     USERUPDATE = Column("USERUPDATE", bool)
 
+    @classmethod
+    def as_list(cls) -> list[Column]:
+        return [
+            cls.ID,
+            cls.AUTHOR,
+            cls.TITLE,
+            cls.DATE,
+            cls.CONTENT,
+            cls.MENTIONS,
+            cls.USERUPDATE,
+        ]
 
-class CommentsColumns(ColumnsEnum):
+
+class CommentsColumns:
     ID = Column("ID", int, key=True, check="{name} > 0")
     PARENT_TABLE = Column("PARENT_TABLE", str, key=True,
                           check=f"{'{name}'} in ('{submissions_table}', '{journals_table}')")
@@ -92,13 +120,39 @@ class CommentsColumns(ColumnsEnum):
                   from_entry=lambda v: datetime.strptime(v, "%Y-%m-%dT%H:%M:%S"))
     TEXT = Column("TEXT", str)
 
+    @classmethod
+    def as_list(cls) -> list[Column]:
+        return [
+            cls.ID,
+            cls.PARENT_TABLE,
+            cls.PARENT_ID,
+            cls.REPLY_TO,
+            cls.AUTHOR,
+            cls.DATE,
+            cls.TEXT,
+        ]
 
-class SettingsColumns(ColumnsEnum):
+
+class SettingsColumns:
     SETTING = Column("SETTING", str, unique=True, key=True, check="length({name}) > 0")
     SVALUE = Column("SVALUE", str, not_null=False, check="{name} == null or length({name}) > 0")
 
+    @classmethod
+    def as_list(cls) -> list[Column]:
+        return [
+            cls.SETTING,
+            cls.SVALUE,
+        ]
 
-class HistoryColumns(ColumnsEnum):
+
+class HistoryColumns:
     TIME = Column("TIME", datetime, unique=True, key=True, to_entry=lambda v: v.strftime("%Y-%m-%dT%H:%M:%S.%f"),
                   from_entry=lambda v: datetime.strptime(v, "%Y-%m-%dT%H:%M:%S.%f"))
     EVENT = Column("EVENT", str)
+
+    @classmethod
+    def as_list(cls) -> list[Column]:
+        return [
+            cls.TIME,
+            cls.EVENT,
+        ]
