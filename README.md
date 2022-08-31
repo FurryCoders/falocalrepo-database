@@ -39,7 +39,8 @@ The submissions' table contains the metadata of the submissions downloaded by th
 * `AUTHOR` the username of the author (uploader) in full format
 * `TITLE`
 * `DATE` upload date in ISO format _YYYY-MM-DDTHH:MM_
-* `DESCRIPTION` description in html format
+* `DESCRIPTION` description in HTML or BBCode format
+* `FOOTER` footer in HTML or BBCode format
 * `TAGS` bar-separated tags
 * `CATEGORY`
 * `SPECIES`
@@ -65,7 +66,9 @@ The journals' table contains the metadata of the journals downloaded by the prog
 * `AUTHOR` the username of the author (uploader) in full format
 * `TITLE`
 * `DATE` upload date in ISO format _YYYY-MM-DDTHH:MM_
-* `CONTENT` content in html format
+* `CONTENT` content in HTML or BBCode format
+* `HEADER` header in HTML or BBCode format
+* `FOOTEr` footer in HTML or BBCode format
 * `MENTIONS` a bar-separated list of users that are mentioned in the journal content as links
 * `USERUPDATE` `1` if the journal was added as a user update otherwise `0`
 
