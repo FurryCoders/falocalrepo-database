@@ -29,7 +29,7 @@ Each entry contains the following fields:
 * `USERNAME` the URL username of the user (no underscores or spaces)
 * `FOLDERS` the folders downloaded for that specific user, sorted and bar-separated
 * `ACTIVE` `1` if the user is active, `0` if not
-* `USERPAGE` the user's profile text
+* `USERPAGE` the user's profile in HTML or BBCode format
 
 ### Submissions
 
