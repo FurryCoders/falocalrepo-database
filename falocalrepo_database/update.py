@@ -657,7 +657,6 @@ def update_5_4_0(conn: Connection, _db_path: Path, db_new_path: Path) -> list[st
         conn.execute("update db_new.SUBMISSIONS set DESCRIPTION = ?, FOOTER = ? where ID = ?", [d, f, i])
 
     for i, c in conn.execute("select ID, CONTENT from db_new.JOURNALS order by ID"):
-        print(f"\r{i}", end="", flush=True)
         conn.execute("update db_new.JOURNALS set CONTENT = ? where ID = ?", [clean_html(c), i])
 
     return [f"{footers_extracted} submission footers extracted"]
