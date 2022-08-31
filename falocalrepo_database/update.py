@@ -2,6 +2,8 @@ from datetime import datetime
 from json import loads
 from operator import itemgetter
 from pathlib import Path
+from re import compile as re_compile
+from re import Pattern
 from re import sub
 from sqlite3 import connect
 from sqlite3 import Connection
@@ -619,59 +621,46 @@ def update_5_3_4(conn: Connection, _db_path: Path, db_new_path: Path) -> list[st
 
 # noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode,SqlWithoutWhere
 def update_5_4_0(conn: Connection, _db_path: Path, db_new_path: Path) -> list[str]:
-    messages: list[str] = []
+    footer_regexp: Pattern = re_compile(r'<div[^>]*class="[^"]*submission-footer[^>]+>(.*)</div>$')
 
-    try:
-        # noinspection PyPackageRequirements
-        import bs4
-        from warnings import filterwarnings
-        filterwarnings("ignore", category=bs4.MarkupResemblesLocatorWarning, module="bs4")
+    def clean_html(html: str) -> str:
+        return sub(r" {2,}", " ", sub(r"[\r\n]", "", html)).strip()
 
-        def clean_html(html: str) -> str:
-            return sub(r" {2,}", " ", sub(r"[\r\n]", "", html)).strip()
+    def get_footer(description: str) -> tuple[str, str]:
+        description = clean_html(description)
+        footer: str = ""
+        if match := footer_regexp.search(description):
+            footer = sub(r"^<hr/?>", "", match.group(1).strip()).strip()
+            description = sub(footer_regexp, "", description)
+        return description, footer
 
-        def get_footer(description: str) -> tuple[str, str]:
-            body = bs4.BeautifulSoup(f"<html><body>{description}</body></html>", "lxml").select_one("html > body")
-            tag_footer = body.select_one("div.submission-footer")
-            footer: str = ""
-            if tag_footer:
-                if tag_footer_hr := tag_footer.select_one("hr"):
-                    tag_footer_hr.decompose()
-                footer = clean_html(tag_footer.decode_contents())
-                tag_footer.decompose()
-            return clean_html(body.decode_contents()), footer
+    make_database_5_4(connect(db_new_path)).close()
+    conn.execute("attach database ? as db_new", [str(db_new_path)])
+    conn.execute("insert into db_new.USERS select * from USERS")
+    conn.execute(
+        "insert into db_new.SUBMISSIONS (ID,AUTHOR,TITLE,DATE,DESCRIPTION,TAGS,CATEGORY,SPECIES,GENDER,"
+        "RATING,TYPE,FILEURL,FILEEXT,FAVORITE,MENTIONS,FOLDER,USERUPDATE,FILESAVED,FOOTER)"
+        "select ID,AUTHOR,TITLE,DATE,DESCRIPTION,TAGS,CATEGORY,SPECIES,GENDER,RATING,TYPE,FILEURL,"
+        "FILEEXT,FAVORITE,MENTIONS,FOLDER,USERUPDATE,FILESAVED,'' from SUBMISSIONS")
+    conn.execute(
+        "insert into db_new.JOURNALS (ID,AUTHOR,TITLE,DATE,CONTENT,MENTIONS,USERUPDATE,HEADER,FOOTER)"
+        "select ID,AUTHOR,TITLE,DATE,CONTENT,MENTIONS,USERUPDATE,'','' from JOURNALS")
+    conn.execute("insert into db_new.COMMENTS select * from COMMENTS")
+    conn.execute("insert into db_new.HISTORY select * from HISTORY")
+    conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS where SETTING != 'VERSION'")
+    conn.execute("update db_new.SETTINGS set SVALUE = '5.4.0' where SETTING = 'VERSION'")
 
-        make_database_5_4(connect(db_new_path)).close()
-        conn.execute("attach database ? as db_new", [str(db_new_path)])
-        conn.execute("insert into db_new.USERS select * from USERS")
-        conn.execute(
-            "insert into db_new.SUBMISSIONS (ID,AUTHOR,TITLE,DATE,DESCRIPTION,TAGS,CATEGORY,SPECIES,GENDER,"
-            "RATING,TYPE,FILEURL,FILEEXT,FAVORITE,MENTIONS,FOLDER,USERUPDATE,FILESAVED,FOOTER)"
-            "select ID,AUTHOR,TITLE,DATE,DESCRIPTION,TAGS,CATEGORY,SPECIES,GENDER,RATING,TYPE,FILEURL,"
-            "FILEEXT,FAVORITE,MENTIONS,FOLDER,USERUPDATE,FILESAVED,'' from SUBMISSIONS")
-        conn.execute(
-            "insert into db_new.JOURNALS (ID,AUTHOR,TITLE,DATE,CONTENT,MENTIONS,USERUPDATE,HEADER,FOOTER)"
-            "select ID,AUTHOR,TITLE,DATE,CONTENT,MENTIONS,USERUPDATE,'','' from JOURNALS")
-        conn.execute("insert into db_new.COMMENTS select * from COMMENTS")
-        conn.execute("insert into db_new.HISTORY select * from HISTORY")
-        conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS where SETTING != 'VERSION'")
-        conn.execute("update db_new.SETTINGS set SVALUE = '5.4.0' where SETTING = 'VERSION'")
+    footers_extracted: int = 0
+    for i, d in conn.execute("select ID, DESCRIPTION from db_new.SUBMISSIONS order by ID"):
+        d, f = get_footer(d)
+        footers_extracted += 1 if f else 0
+        conn.execute("update db_new.SUBMISSIONS set DESCRIPTION = ?, FOOTER = ? where ID = ?", [d, f, i])
 
-        footers_extracted: int = 0
-        for i, d in conn.execute("select ID, DESCRIPTION from db_new.SUBMISSIONS order by ID"):
-            d, f = get_footer(d)
-            footers_extracted += 1 if f else 0
-            conn.execute("update db_new.SUBMISSIONS set DESCRIPTION = ?, FOOTER = ? where ID = ?", [d, f, i])
+    for i, c in conn.execute("select ID, CONTENT from db_new.JOURNALS order by ID"):
+        print(f"\r{i}", end="", flush=True)
+        conn.execute("update db_new.JOURNALS set CONTENT = ? where ID = ?", [clean_html(c), i])
 
-        for i, c in conn.execute("select ID, CONTENT from db_new.JOURNALS order by ID"):
-            print(f"\r{i}", end="", flush=True)
-            conn.execute("update db_new.JOURNALS set CONTENT = ? where ID = ?", [clean_html(c), i])
-
-        messages.append(f"{footers_extracted} submission footers extracted")
-    except ImportError:
-        raise ImportError("Cannot update to 5.4.0 without beautifulsoup4 dependency")
-
-    return messages
+    return [f"{footers_extracted} submission footers extracted"]
 
 
 def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path, Path], list[str] | None],
