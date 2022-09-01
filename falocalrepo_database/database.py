@@ -74,6 +74,8 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
         raise VersionError("Cursors must point to a database with the same version as the destination database.")
     elif any(set(c_.name for c_ in c.columns) != set(c_.name for c_ in c.table.columns) for c in cursors):
         raise DatabaseError("Cursors must contain all columns.")
+    elif any(c.table.database.settings.bbcode != db_dest.settings.bbcode for c in cursors):
+        raise DatabaseError("Cursors and destination database must have the same BBCode setting")
 
     for cursor in cursors:
         cursor_db: Database = cursor.table.database
