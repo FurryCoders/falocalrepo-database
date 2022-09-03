@@ -624,7 +624,10 @@ def update_5_4_0(conn: Connection, _db_path: Path, db_new_path: Path) -> list[st
     footer_regexp: Pattern = re_compile(r'<div[^>]*class="[^"]*submission-footer[^>]+>(.*)</div>$')
 
     def clean_html(html: str) -> str:
-        return sub(r" {2,}", " ", sub(r"[\r\n]", "", html)).strip()
+        html = sub(r" *\n *", "\n", html)
+        html = sub(r"[\r\n]", "", html)
+        html = sub(r" {2,}", " ", html)
+        return html.strip()
 
     def get_footer(description: str) -> tuple[str, str]:
         description = clean_html(description)
