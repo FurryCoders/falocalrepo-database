@@ -73,7 +73,7 @@ def clean_username(username: str) -> str:
 
 def check_plain_text(file: bytes) -> bool:
     result: dict = detect_encoding(file[:2048])
-    if result.get("encoding", "").upper() in _encodings and result.get("confidence", 0) > .9:
+    if str(result.get("encoding", "") or "").upper() in _encodings and result.get("confidence", 0) > .9:
         return True
     else:
         return False
