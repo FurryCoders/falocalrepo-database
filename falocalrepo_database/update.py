@@ -730,7 +730,7 @@ def update_database(conn: Connection, version: str) -> Connection:
         conn = update_wrapper(conn, update_5_3, db_version, v)  # 5.2.2 to 5.3.0
     elif compare_versions(db_version, v := "5.3.4") < 0:
         conn = update_wrapper(conn, update_5_3_4, db_version, v)  # 5.3.0 to 5.3.4
-    elif compare_versions(db_version, v := "5.4_0") < 0:
+    elif compare_versions(db_version, v := "5.4.0") < 0:
         conn = update_wrapper(conn, update_5_4_0, db_version, v)  # 5.3.4 to 5.4.0
     elif compare_versions(db_version, version) < 0:
         return update_patch(conn, db_version, version)  # Update to the latest patch
