@@ -68,7 +68,7 @@ def find_connections(path: Path, raise_for_limit: bool = False, limit: int = 0) 
 
 
 def clean_username(username: str) -> str:
-    return str(sub(r"[^a-zA-Z\d\-.~]", "", username.lower().strip()))
+    return str(sub(r"[^a-z\d\-`.~]", "", username.lower().strip()))
 
 
 def check_plain_text(file: bytes) -> bool:
