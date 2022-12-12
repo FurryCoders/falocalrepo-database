@@ -127,8 +127,8 @@ class Column(_Column):
                  unique: bool = False, key: bool = False, check: str = None, default: T = NoDefault,
                  to_entry: Callable[[T], Value] = None, from_entry: Callable[[Value], T] = None):
         self.name: str = name
-        self.type: Type[T] = type_ if isinstance(type_, type) else sql_to_type(type_)
-        self._sql_type: str | None = sql_type
+        self.type: Type[T] = sql_to_type(type_) if isinstance(type_, str) else type_
+        self.sql_type: str = sql_type or type_to_sql(self.type)
         self.not_null: bool = not_null
         self.unique: bool = unique
         self.key: bool = key
@@ -143,10 +143,6 @@ class Column(_Column):
     @property
     def check(self) -> str:
         return self._check.format(name=self.name) if self._check else ""
-
-    @property
-    def sql_type(self) -> str:
-        return self._sql_type or type_to_sql(self.type)
 
     def create_statement(self) -> str:
         elements: list[str] = [self.name, self.sql_type]
