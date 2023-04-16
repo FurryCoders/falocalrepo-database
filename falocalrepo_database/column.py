@@ -123,11 +123,11 @@ class _Column(Protocol[T]):
 
 
 class Column(_Column):
-    def __init__(self, name: str, type_: Type[T] | str, sql_type: str = None, not_null: bool = True,
+    def __init__(self, name: str, cls: Type[T] | str, sql_type: str = None, not_null: bool = True,
                  unique: bool = False, key: bool = False, check: str = None, default: T = NoDefault,
                  to_entry: Callable[[T], Value] = None, from_entry: Callable[[Value], T] = None):
         self.name: str = name
-        self.type: Type[T] = sql_to_type(type_) if isinstance(type_, str) else type_
+        self.type: Type[T] = sql_to_type(cls) if isinstance(cls, str) else cls
         self.sql_type: str = sql_type or type_to_sql(self.type)
         self.not_null: bool = not_null
         self.unique: bool = unique
