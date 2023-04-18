@@ -25,7 +25,7 @@ def format_list(obj: list[Value], *, sort: bool = False) -> str:
 
 
 def parse_list(obj: str) -> list[str]:
-    return obj.removeprefix("|").removesuffix("|").split("||")
+    return obj.removeprefix("|").removesuffix("|").split("||") if obj else []
 
 
 def parse_list_filter_empty(obj: str) -> list[str]:
