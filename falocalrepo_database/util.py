@@ -1,7 +1,9 @@
+from math import ceil
 from pathlib import Path
 from re import match
 from re import split
 from re import sub
+from typing import Any
 
 from chardet import detect as detect_encoding
 from filetype import guess_extension as filetype_guess_extension
@@ -93,13 +95,14 @@ def guess_extension(file: bytes | None, default: str = "") -> str:
         return ext
 
 
-def tiered_path(id_: int | str, depth: int = 5, width: int = 2) -> Path:
-    assert isinstance(id_, int) or (isinstance(id_, str) and id_.isdigit()), "id not an integer"
-    assert isinstance(depth, int) and depth > 0, "depth must be greater than 0"
+def tiered_path(id_: Any, min_depth: int = 5, width: int = 2) -> Path:
+    assert isinstance(min_depth, int) and min_depth > 0, "depth must be greater than 0"
     assert isinstance(width, int) and width > 0, "depth must be greater than 0"
 
-    id_str: str = str(int(id_)).zfill(depth * width)
-    return Path(*[id_str[n:n + width] for n in range(0, depth * width, width)])
+    id_ = str(id_)
+    depth: int = max(ceil(len(id_) / width), min_depth)
+    id_padded: str = str(id_).zfill(depth * width)
+    return Path(*[id_padded[n:n + width] for n in range(0, len(id_padded), width)])
 
 
 def format_value(value: str, *, like: bool = False) -> str:
