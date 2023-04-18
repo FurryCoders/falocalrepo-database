@@ -29,7 +29,7 @@ def parse_list(obj: str) -> list[str]:
 
 
 def parse_list_filter_empty(obj: str) -> list[str]:
-    return list(filter(bool, obj.removeprefix("|").removesuffix("|").split("||")))
+    return [e for e in obj.removeprefix("|").removesuffix("|").split("||") if e]
 
 
 def type_to_sql(t: type) -> str:
