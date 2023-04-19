@@ -1,8 +1,11 @@
+from hashlib import sha256
 from math import ceil
 from pathlib import Path
 from re import match
 from re import split
 from re import sub
+from string import ascii_lowercase
+from string import digits
 from typing import Any
 
 from chardet import detect as detect_encoding
@@ -20,6 +23,7 @@ __all__ = [
     "compare_version",
     "find_connections",
     "clean_username",
+    "hash_username",
     "guess_extension",
     "tiered_path",
     "format_value",
@@ -71,6 +75,16 @@ def find_connections(path: Path, raise_for_limit: bool = False, limit: int = 0) 
 
 def clean_username(username: str) -> str:
     return str(sub(r"[^a-z\d\-`.~]", "", username.lower().strip()))
+
+
+def hash_username(username: str) -> str:
+    h = sha256(clean_username(username).encode())
+    h_int: int = int(h.hexdigest(), 16)
+    h_digits: list[int] = []
+    while h_int:
+        h_digits.insert(0, h_int % 36)
+        h_int //= 36
+    return "".join((digits + ascii_lowercase)[d] for d in (h_digits or [0])).zfill(50)
 
 
 def check_plain_text(file: bytes) -> bool:
