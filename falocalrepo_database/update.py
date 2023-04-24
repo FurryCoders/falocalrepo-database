@@ -18,12 +18,19 @@ __all__ = [
 ]
 
 
+def get_setting(conn: Connection, setting: str) -> str:
+    value = conn.execute("select SVALUE from SETTINGS where SETTING = ?", [setting]).fetchone()
+    if not value:
+        raise KeyError(f"Setting {setting} does not exist in database")
+    return value[0]
+
+
 # noinspection SqlResolve,SqlNoDataSourceInspection
 def get_version(conn: Connection) -> str:
     try:
         # Database version 3.0.0 and above
-        return conn.execute("SELECT SVALUE FROM SETTINGS WHERE SETTING = 'VERSION'").fetchone()[0]
-    except OperationalError:
+        return get_setting(conn, "VERSION")
+    except (OperationalError, KeyError):
         return ""
 
 
