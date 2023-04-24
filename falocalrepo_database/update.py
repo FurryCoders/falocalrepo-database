@@ -41,11 +41,6 @@ def compare_versions(a: str, b: str) -> int:
     return 0
 
 
-# noinspection SqlNoDataSourceInspection
-def count(conn: Connection, table: str) -> int:
-    return conn.execute(f"SELECT COUNT(*) FROM {table}").fetchall()[0][0]
-
-
 def database_path(conn: Connection) -> Path | None:
     name: str
     filename: Optional[str]
