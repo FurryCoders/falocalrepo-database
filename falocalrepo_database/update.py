@@ -2,16 +2,17 @@ from datetime import datetime
 from json import loads
 from operator import itemgetter
 from pathlib import Path
-from re import compile as re_compile
 from re import Pattern
+from re import compile as re_compile
 from re import sub
-from sqlite3 import connect
 from sqlite3 import Connection
 from sqlite3 import DatabaseError
 from sqlite3 import OperationalError
+from sqlite3 import connect
 from typing import Callable
 from typing import Collection
 from typing import Optional
+from typing import Sequence
 from typing import Union
 
 __all__ = [
@@ -32,8 +33,8 @@ def get_version(conn: Connection) -> str:
 def compare_versions(a: str, b: str) -> int:
     a_split = list(map(int, a.split("-", 1)[0].split(".")))
     b_split = list(map(int, b.split("-", 1)[0].split(".")))
-    a_split.extend([0] * (3 - len(a_split)))
-    b_split.extend([0] * (3 - len(b_split)))
+    a_split.extend([0] * (max(len(a_split), len(b_split)) - len(a_split)))
+    b_split.extend([0] * (max(len(a_split), len(b_split)) - len(b_split)))
 
     for a_, b_ in zip(a_split, b_split):
         if a_ > b_:
@@ -41,16 +42,6 @@ def compare_versions(a: str, b: str) -> int:
         elif a_ < b_:
             return -1
     return 0
-
-
-def insert(conn: Connection, table: str, keys: Collection[str], values: Collection[Union[int, str]],
-           replace: bool = True):
-    conn.execute(
-        f"""INSERT OR {"REPLACE" if replace else "IGNORE"} INTO {table}
-        ({",".join(keys)})
-        VALUES ({",".join(["?"] * len(values))})""",
-        values
-    )
 
 
 # noinspection SqlNoDataSourceInspection
@@ -461,6 +452,80 @@ def make_database_5_4(conn: Connection) -> Connection:
 
 
 # noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode
+def make_database_5_5(conn: Connection) -> Connection:
+    conn.execute("""create table USERS
+    (USERNAME text unique not null check (length(USERNAME) > 0),
+    USERPAGE text not null,
+    FOLDERS text not null,
+    AVATAR text not null check (AVATAR = '' or AVATAR != BANNER),
+    BANNER text not null check (BANNER = '' or BANNER != AVATAR),
+    ACTIVE boolean not null,
+    primary key (USERNAME));""")
+
+    conn.execute("""create table SUBMISSIONS
+    (ID integer unique not null check (ID > 0),
+    AUTHOR text not null check (length(AUTHOR) > 0),
+    TITLE text not null,
+    DATE datetime not null,
+    DESCRIPTION text not null,
+    FOOTER text not null,
+    TAGS text not null,
+    CATEGORY text not null,
+    SPECIES text not null,
+    GENDER text not null,
+    RATING text not null,
+    TYPE text not null check (TYPE in ('image', 'music', 'text', 'flash')),
+    FILEURLS text not null,
+    FILES text not null,
+    THUMBNAIL integer not null,
+    FAVORITE text not null,
+    MENTIONS text not null,
+    FOLDER text not null check (FOLDER in ('gallery', 'scraps')),
+    USERUPDATE boolean not null,
+    primary key (ID));""")
+
+    conn.execute("""create table JOURNALS
+    (ID integer unique not null check (ID > 0),
+    AUTHOR text not null check (length(AUTHOR) > 0),
+    TITLE text not null,
+    DATE datetime not null,
+    CONTENT text not null,
+    HEADER text not null,
+    FOOTER text not null,
+    MENTIONS text not null,
+    USERUPDATE integer not null check (USERUPDATE in (0, 1)),
+    primary key (ID))""")
+
+    conn.execute("""create table COMMENTS
+    (ID integer not null check (ID > 0),
+    PARENT_TABLE text not null check (PARENT_TABLE in ('SUBMISSIONS', 'JOURNALS')),
+    PARENT_ID integer not null check (PARENT_ID > 0),
+    REPLY_TO integer check (REPLY_TO == null or REPLY_TO > 0),
+    AUTHOR text not null check (length(AUTHOR) > 0),
+    DATE datetime not null,
+    TEXT text not null,
+    primary key (ID, PARENT_TABLE, PARENT_ID))""")
+
+    conn.execute("""create table SETTINGS
+    (SETTING text unique not null check (length(SETTING) > 0),
+    SVALUE text check (SVALUE == null or length(SVALUE) > 0),
+    primary key (SETTING));""")
+
+    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["FILESFOLDER", "FA.files"])
+    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["BACKUPFOLDER", "FA.backup"])
+    conn.execute("insert or ignore into SETTINGS (SETTING, SVALUE) values (?, ?)", ["VERSION", "5.4.0"])
+
+    conn.execute("""create table HISTORY
+    (TIME datetime unique not null,
+    EVENT text not null,
+    primary key (TIME));""")
+
+    conn.commit()
+
+    return conn
+
+
+# noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode
 def update_5_0(conn: Connection, _db_path: Path, db_new_path: Path):
     make_database_5(connect(db_new_path)).close()
     conn.execute("attach database ? as db_new", [str(db_new_path)])
@@ -665,6 +730,65 @@ def update_5_4_0(conn: Connection, _db_path: Path, db_new_path: Path) -> list[st
     return [f"{footers_extracted} submission footers extracted"]
 
 
+# noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode,SqlWithoutWhere
+def update_5_5(conn: Connection, db_path: Path, db_new_path: Path) -> list[str]:
+    make_database_5_5(connect(db_new_path)).close()
+    conn.execute("attach database ? as db_new", [str(db_new_path)])
+    conn.execute("insert into db_new.USERS (USERNAME, USERPAGE, FOLDERS, AVATAR, BANNER, ACTIVE)"
+                 "select USERNAME, USERPAGE, FOLDERS, '', '', ACTIVE from USERS")
+    conn.execute("insert into db_new.SUBMISSIONS (ID,AUTHOR,TITLE,DATE,DESCRIPTION,TAGS,CATEGORY,SPECIES,GENDER,RATING,"
+                 "TYPE,FILEURLS,FILES,THUMBNAIL,FAVORITE,MENTIONS,FOLDER,USERUPDATE,FOOTER)"
+                 "select ID,AUTHOR,TITLE,DATE,DESCRIPTION,TAGS,CATEGORY,SPECIES,GENDER,RATING,TYPE,FILEURL,'','',"
+                 "FAVORITE,MENTIONS,FOLDER,USERUPDATE,FOOTER from SUBMISSIONS")
+    conn.execute("insert into db_new.JOURNALS select * from JOURNALS")
+    conn.execute("insert into db_new.COMMENTS select * from COMMENTS")
+    conn.execute("insert into db_new.HISTORY select * from HISTORY")
+    conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS where SETTING != 'VERSION'")
+    conn.execute("update db_new.SETTINGS set SVALUE = '5.5.0' where SETTING = 'VERSION'")
+
+    files_folder_setting: str = conn.execute("select SVALUE from SETTINGS where SETTING = 'FILESFOLDER'").fetchone()[0]
+    files_folder: Path = Path(files_folder_setting)
+
+    if not files_folder.is_absolute():
+        files_folder = db_path.parent.resolve().joinpath(files_folder).resolve()
+
+    if not files_folder.is_dir() and conn.execute("select ID from SUBMISSIONS where FILEEXT != '' limit 1").fetchone():
+        raise FileNotFoundError(f"Files folder {Path(files_folder_setting)} does not exist")
+
+    updated_usernames: int = 0
+
+    for table in ["SUBMISSIONS", "JOURNALS", "COMMENTS"]:
+        for [username, username_new] in conn.execute(f"select distinct USERNAME, {table}.AUTHOR from db_new.USERS "
+                                                     f"inner join {table} "
+                                                     f"on replace(lower({table}.AUTHOR), '_', '') = USERNAME "
+                                                     f"where USERNAME != {table}.AUTHOR;"):
+            conn.execute("update db_new.USERS set USERNAME = ? where USERNAME = ?", [username_new, username])
+            updated_usernames += 1
+
+    for [submission_id, exts, fs] in conn.execute("select ID, FILEEXT, FILESAVED from SUBMISSIONS"):
+        files: list[str] = [
+            f"submission{n or ''}{f'.{ext}' if ext else ''}"
+            for n, ext in enumerate(exts.removeprefix("|").removesuffix("|").split("||"))
+        ] if exts else []
+        thumbnail: str = "thumbnail.jpg" if fs & 0b001 else ""
+
+        conn.execute("update db_new.SUBMISSIONS set FILES = ?, THUMBNAIL = ? where ID = ?",
+                     ["".join(f"|{e}|" for e in files), thumbnail, submission_id])
+
+    files_folder_submissions = files_folder / "submissions"
+    files_folder_submissions.mkdir(parents=True, exist_ok=True)
+
+    for submissions_folder in [f for f in files_folder.iterdir() if f.name not in ("submissions", "users")]:
+        submissions_folder.rename(files_folder_submissions / submissions_folder.name)
+
+    return [
+        f"Updated {updated_usernames} usernames",
+        f"Moved submissions files from "
+        f"'{Path(files_folder_setting)}' to "
+        f"'{Path(files_folder_setting) / 'submissions'}'"
+    ]
+
+
 def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path, Path], list[str] | None],
                    version_old: str, version_new: str) -> Connection:
     print(f"Updating {version_old} to {version_new}... ", end="", flush=True)
@@ -707,11 +831,11 @@ def update_patch(conn: Connection, version: str, target_version: str) -> Connect
 
 def update_database(conn: Connection, version: str) -> Connection:
     if not (db_version := get_version(conn)):
-        raise DatabaseError("Cannot read version from database.")
+        raise DatabaseError("Cannot read version from database. Only database versions 3.0.0 and up are supported.")
     elif (v := compare_versions(db_version, version)) == 0:
         return conn
     elif v > 0:
-        raise DatabaseError("Database version is newer than program.")
+        raise DatabaseError(f"Database version ({db_version}) is newer than program ({version}).")
     elif compare_versions(db_version, "4.19.0") < 0:
         raise DatabaseError("Update does not support versions lower than 4.19.0.")
     elif compare_versions(db_version, v := "5.0.0") < 0:
@@ -732,6 +856,8 @@ def update_database(conn: Connection, version: str) -> Connection:
         conn = update_wrapper(conn, update_5_3_4, db_version, v)  # 5.3.0 to 5.3.4
     elif compare_versions(db_version, v := "5.4.0") < 0:
         conn = update_wrapper(conn, update_5_4_0, db_version, v)  # 5.3.4 to 5.4.0
+    elif compare_versions(db_version, v := "5.5.0") < 0:
+        conn = update_wrapper(conn, update_5_5, db_version, v)  # 5.4.0 to 5.5.0
     elif compare_versions(db_version, version) < 0:
         return update_patch(conn, db_version, version)  # Update to the latest patch
 
