@@ -36,8 +36,8 @@ class UsersColumns(Columns):
     USERNAME: Column = Column("USERNAME", str, unique=True, key=True, check="length({name}) > 0")
     USERPAGE: Column = Column("USERPAGE", str, to_entry=str.strip)
     FOLDERS: Column = Column("FOLDERS", set)
-    AVATAR: Column = Column("AVATAR", str, check="AVATAR = '' or AVATAR != BANNER", to_entry=str.strip)
-    BANNER: Column = Column("BANNER", str, check="BANNER = '' or BANNER != AVATAR", to_entry=str.strip)
+    AVATAR: Column = Column("AVATAR", str, to_entry=str.strip)
+    BANNER: Column = Column("BANNER", str, to_entry=str.strip)
     ACTIVE: Column = Column("ACTIVE", bool)
 
 
