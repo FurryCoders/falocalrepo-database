@@ -812,7 +812,7 @@ def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path
         print("Complete")
         for message in messages:
             print(f"  {message}")
-        print("  Previous version moved to:", db_path, end="", flush=True)
+        print(f"  Previous version moved to: {db_path}", end="", flush=True)
         return connect(db_new_path)
     except BaseException as err:
         conn.close()
