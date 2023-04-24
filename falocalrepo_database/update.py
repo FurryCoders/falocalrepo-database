@@ -798,21 +798,26 @@ def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path
     if not (db_path := database_path(conn)):
         raise DatabaseError("Cannot determine path of database.")
 
-    print(f"Updating {version_old} to {version_new}... ", end="", flush=True)
+    print(f"Updating {version_old} to {version_new}")
     db_new_path: Path = db_path.with_name(f".new_{db_path.name}")
     db_new_path.unlink(missing_ok=True)
+
     try:
         messages: list[str] = update_function(conn, db_path, db_new_path) or []
+
         conn.commit()
         conn.close()
         conn = None
+
         orig_name: str = db_path.name
         db_path.replace(db_path := db_path.with_name(f"v{version_old.replace('.', '_')}_{db_path.name}"))
         db_new_path.replace(db_new_path := db_new_path.with_name(orig_name))
-        print("Complete")
+
         for message in messages:
             print(f"  {message}")
-        print(f"  Previous version moved to: {db_path}", end="", flush=True)
+
+        print(f"  Previous version moved to: {db_path}")
+
         return connect(db_new_path)
     except BaseException as err:
         conn.close()
@@ -823,7 +828,6 @@ def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path
         if conn is not None:
             conn.commit()
             conn.close()
-        print()
 
 
 # noinspection SqlResolve,SqlNoDataSourceInspection
