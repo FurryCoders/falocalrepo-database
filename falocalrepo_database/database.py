@@ -81,20 +81,23 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
     for cursor in cursors:
         cursor_db: Database = cursor.table.database
         dest_table: Table
-        if cursor.table.name.lower() == db_dest.users.name.lower():
-            dest_table = db_dest.users
-        elif cursor.table.name.lower() == db_dest.submissions.name.lower():
-            dest_table = db_dest.submissions
-        elif cursor.table.name.lower() == db_dest.journals.name.lower():
-            dest_table = db_dest.journals
-        elif cursor.table.name.lower() == db_dest.comments.name.lower():
-            dest_table = db_dest.comments
-        elif cursor.table.name.lower() == db_dest.settings.name.lower():
-            dest_table = db_dest.settings
-        elif cursor.table.name.lower() == db_dest.history.name.lower():
-            dest_table = db_dest.history
-        else:
-            raise DatabaseError(f"Unknown table {cursor.table.name}")
+
+        match cursor.table.name.lower():
+            case db_dest.users.name.lower():
+                dest_table = db_dest.users
+            case db_dest.submissions.name.lower():
+                dest_table = db_dest.submissions
+            case db_dest.journals.name.lower():
+                dest_table = db_dest.journals
+            case db_dest.comments.name.lower():
+                dest_table = db_dest.comments
+            case db_dest.settings.name.lower():
+                dest_table = db_dest.settings
+            case db_dest.history.name.lower():
+                dest_table = db_dest.history
+            case _:
+                raise DatabaseError(f"Unknown table {cursor.table.name}")
+
         for entry in cursor:
             if entry[cursor.table.key.name] in dest_table and not replace:
                 continue
