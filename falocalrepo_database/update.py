@@ -28,10 +28,13 @@ def get_setting(conn: Connection, setting: str) -> str:
 # noinspection SqlResolve,SqlNoDataSourceInspection
 def get_version(conn: Connection) -> str:
     try:
-        # Database version 3.0.0 and above
-        return get_setting(conn, "VERSION")
-    except (OperationalError, KeyError):
-        return ""
+        if not (version := get_setting(conn, "VERSION")):
+            raise DatabaseError("Version setting is empty.")
+        return version
+    except KeyError:
+        raise DatabaseError("Malformed database, version setting is missing.")
+    except OperationalError:
+        raise DatabaseError("Cannot read version from database. Only database versions 3.0.0 and up are supported.")
 
 
 def compare_versions(a: str, b: str) -> int:
@@ -829,9 +832,9 @@ def update_patch(conn: Connection, version: str, target_version: str) -> Connect
 
 
 def update_database(conn: Connection, version: str) -> Connection:
-    if not (db_version := get_version(conn)):
-        raise DatabaseError("Cannot read version from database. Only database versions 3.0.0 and up are supported.")
-    elif (v := compare_versions(db_version, version)) == 0:
+    db_version: str = get_version(conn)
+
+    if (v := compare_versions(db_version, version)) == 0:
         return conn
     elif v > 0:
         raise DatabaseError(f"Database version ({db_version}) is newer than program ({version}).")
