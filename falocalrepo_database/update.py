@@ -10,10 +10,7 @@ from sqlite3 import DatabaseError
 from sqlite3 import OperationalError
 from sqlite3 import connect
 from typing import Callable
-from typing import Collection
 from typing import Optional
-from typing import Sequence
-from typing import Union
 
 __all__ = [
     "compare_versions",
