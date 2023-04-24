@@ -101,6 +101,11 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
         for entry in cursor:
             if entry[cursor.table.key.name] in dest_table and not replace:
                 continue
+            elif dest_table.name.lower() == db_dest.users.name.lower():
+                avatar_path, banner_path = cursor_db.users.get_user_avatar_banner(entry[cursor.table.key.name])
+                avatar = [avatar_path.read_bytes(), avatar_path.suffix.removeprefix(".")] if avatar_path else None
+                banner = [banner_path.read_bytes(), banner_path.suffix.removeprefix(".")] if banner_path else None
+                db_dest.users.save_user(entry, avatar, banner)
             elif dest_table.name.lower() == db_dest.submissions.name.lower():
                 fs, t = cursor_db.submissions.get_submission_files(entry[cursor.table.key.name])
                 db_dest.submissions.save_submission(
