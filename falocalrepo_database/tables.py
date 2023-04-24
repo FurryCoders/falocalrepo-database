@@ -2,7 +2,6 @@ from datetime import datetime
 
 from .column import Column
 from .column import parse_list
-from .util import clean_username
 
 __all__ = [
     "users_table",
@@ -34,11 +33,12 @@ class Columns:
 
 
 class UsersColumns(Columns):
-    USERNAME: Column = Column("USERNAME", str, unique=True, key=True, check="length({name}) > 0",
-                              to_entry=clean_username)
-    FOLDERS: Column = Column("FOLDERS", set)
-    ACTIVE: Column = Column("ACTIVE", bool)
+    USERNAME: Column = Column("USERNAME", str, unique=True, key=True, check="length({name}) > 0")
     USERPAGE: Column = Column("USERPAGE", str, to_entry=str.strip)
+    FOLDERS: Column = Column("FOLDERS", set)
+    AVATAR: Column = Column("AVATAR", str, check="AVATAR = '' or AVATAR != BANNER", to_entry=str.strip)
+    BANNER: Column = Column("BANNER", str, check="BANNER = '' or BANNER != AVATAR", to_entry=str.strip)
+    ACTIVE: Column = Column("ACTIVE", bool)
 
 
 class SubmissionsColumns(Columns):

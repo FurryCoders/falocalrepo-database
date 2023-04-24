@@ -1,7 +1,7 @@
 from datetime import datetime
 from os import PathLike
+from os import scandir
 from pathlib import Path
-from re import search
 from shutil import copy
 from shutil import copy2
 from shutil import move
@@ -46,6 +46,7 @@ from .util import clean_username
 from .util import compare_version
 from .util import find_connections
 from .util import guess_extension
+from .util import hash_username
 from .util import query_to_sql
 from .util import tiered_path
 
@@ -104,6 +105,20 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
                                                     replace=replace, exist_ok=exist_ok)
             else:
                 dest_table.insert(dest_table.format_entry(entry), replace=replace, exists_ok=True)
+
+
+def rm_tree(path: Path, root: Path):
+    if path == root or root.is_relative_to(path):
+        return
+    elif path.is_file():
+        return
+    elif not path.is_dir():
+        return rm_tree(path.parent, root)
+    elif next(scandir(path), None):
+        return
+    else:
+        path.rmdir()
+        return rm_tree(path.parent, root)
 
 
 class Cursor:
@@ -291,8 +306,56 @@ class Table:
 
 
 class UsersTable(Table):
-    def save_user(self, user: dict[str, Any], *, replace: bool = False, exist_ok: bool = False):
-        self.insert(self.format_entry(user), replace=replace, exists_ok=exist_ok)
+    def __getitem__(self, key: Value | dict[str, Value] | tuple[Value]
+                    ) -> dict[str, Value] | list[dict[str, Value]] | None:
+        if isinstance(key, (dict, tuple, list)):
+            return super().__getitem__(key)
+        else:
+            return self.select({EQ: {f"replace(lower({self.key.name}), '_', '')": clean_username(key)}}).fetchone()
+
+    @property
+    def files_folder(self) -> Path:
+        return self.database.settings.files_folder / "users"
+
+    def save_user(self, user: dict[str, Any], avatar: bytes = None, banner: bytes = None,
+                  *, replace: bool = False, exist_ok: bool = False):
+        user = self.format_entry(user)
+        user[UsersColumns.AVATAR.name] = self.save_user_file(user[self.key.name], avatar, "avatar", "")
+        user[UsersColumns.BANNER.name] = self.save_user_file(user[self.key.name], banner, "banner", "")
+
+        self.insert(user, replace=replace, exists_ok=exist_ok)
+
+    def save_user_file(self, user: str, file: bytes, name: str, ext: str, guess_ext: bool = True) -> str:
+        assert name, "Name must not be empty"
+        if not file:
+            return ""
+
+        ext = guess_extension(file, ext) if guess_ext else ext
+        path: Path = self.files_folder / tiered_path(hash_username(user), width=2) / (name + (f".{ext}" * bool(ext)))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(file)
+
+        return path.name
+
+    def move_user_files(self, user: str, new_username: str):
+        avatar, banner = self.get_user_avatar_banner(user)
+
+        if avatar:
+            self.save_user_file(new_username, avatar.read_bytes(), "avatar", avatar.suffix.removeprefix("."))
+            avatar.unlink(missing_ok=True)
+        if banner:
+            self.save_user_file(new_username, banner.read_bytes(), "banner", banner.suffix.removeprefix("."))
+            banner.unlink(missing_ok=True)
+        if avatar or banner:
+            rm_tree((avatar or banner).parent, self.files_folder)
+
+    def get_user_avatar_banner(self, user: str) -> tuple[Path | None, Path | None]:
+        if not (user_entry := self[user]):
+            return None, None
+        folder: Path = self.files_folder / tiered_path(hash_username(user), width=2)
+        avatar: Path | None = (folder / avatar_name) if (avatar_name := user_entry[UsersColumns.AVATAR.name]) else None
+        banner: Path | None = (folder / banner_name) if (banner_name := user_entry[UsersColumns.BANNER.name]) else None
+        return avatar, banner
 
     def set_active(self, user: str, active: bool) -> bool:
         if (entry := self._get_exists(user := clean_username(user)))[UsersColumns.ACTIVE.name] is active:
