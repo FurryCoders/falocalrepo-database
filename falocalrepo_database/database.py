@@ -125,7 +125,7 @@ def copy_cursors(db_dest: 'Database', cursors: Sequence['Cursor'], replace: bool
 
 
 def rm_tree(path: Path, root: Path):
-    if path == root or root.is_relative_to(path):
+    if root.is_relative_to(path):
         return
     elif path.is_file():
         return
