@@ -30,6 +30,8 @@ def get_version(conn: Connection) -> str:
     try:
         if not (version := get_setting(conn, "VERSION")):
             raise DatabaseError("Version setting is empty.")
+        elif not re_compile(r"^\d+\.\d+\.\d+(-\w+)?$").match(version):
+            raise DatabaseError(f"Malformed version number {version!r} is not of type major.minor.patch-hotfix")
         return version
     except KeyError:
         raise DatabaseError("Malformed database, version setting is missing.")
