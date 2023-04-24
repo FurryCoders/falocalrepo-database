@@ -736,6 +736,15 @@ def update_5_4_0(conn: Connection, _db_path: Path, db_new_path: Path) -> list[st
 
 # noinspection SqlResolve,SqlNoDataSourceInspection,DuplicatedCode,SqlWithoutWhere
 def update_5_5(conn: Connection, db_path: Path, db_new_path: Path) -> list[str]:
+    files_folder_setting: str = get_setting(conn, "FILESFOLDER")
+    files_folder: Path = Path(files_folder_setting)
+
+    if not files_folder.is_absolute():
+        files_folder = db_path.parent.resolve().joinpath(files_folder).resolve()
+
+    if not files_folder.is_dir() and conn.execute("select ID from SUBMISSIONS where FILEEXT != '' limit 1").fetchone():
+        raise FileNotFoundError(f"Files folder {str(files_folder)!r} does not exist")
+
     make_database_5_5(connect(db_new_path)).close()
     conn.execute("attach database ? as db_new", [str(db_new_path)])
     conn.execute("insert into db_new.USERS (USERNAME, USERPAGE, FOLDERS, AVATAR, BANNER, ACTIVE)"
@@ -749,15 +758,6 @@ def update_5_5(conn: Connection, db_path: Path, db_new_path: Path) -> list[str]:
     conn.execute("insert into db_new.HISTORY select * from HISTORY")
     conn.execute("insert or replace into db_new.SETTINGS select * from SETTINGS where SETTING != 'VERSION'")
     conn.execute("update db_new.SETTINGS set SVALUE = '5.5.0' where SETTING = 'VERSION'")
-
-    files_folder_setting: str = conn.execute("select SVALUE from SETTINGS where SETTING = 'FILESFOLDER'").fetchone()[0]
-    files_folder: Path = Path(files_folder_setting)
-
-    if not files_folder.is_absolute():
-        files_folder = db_path.parent.resolve().joinpath(files_folder).resolve()
-
-    if not files_folder.is_dir() and conn.execute("select ID from SUBMISSIONS where FILEEXT != '' limit 1").fetchone():
-        raise FileNotFoundError(f"Files folder {Path(files_folder_setting)} does not exist")
 
     updated_usernames: int = 0
 
