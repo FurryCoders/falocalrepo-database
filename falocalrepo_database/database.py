@@ -13,6 +13,7 @@ from sqlite3 import connect
 from typing import Any
 from typing import Generator
 from typing import Iterable
+from typing import Sequence
 from typing import Type
 from typing import TypeVar
 from typing import overload
@@ -62,7 +63,7 @@ def _copy_folder(src: Path, dest: Path):
         copy(src, dest)
 
 
-def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool, exist_ok: bool):
+def copy_cursors(db_dest: 'Database', cursors: Sequence['Cursor'], replace: bool, exist_ok: bool):
     if not cursors:
         return
     elif not db_dest.is_formatted:
