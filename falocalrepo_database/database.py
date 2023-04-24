@@ -717,11 +717,13 @@ class Database:
                    autocommit=self.autocommit if autocommit is None else autocommit)
 
     def merge(self, db_b: 'Database', *cursors: Cursor, replace: bool = True, exist_ok: bool = True):
-        copy_cursors(self, cursors or [db_b.users.select(), db_b.submissions.select(), db_b.journals.select()],
+        copy_cursors(self, cursors or [db_b.users.select(), db_b.submissions.select(),
+                                       db_b.journals.select(), db_b.comments.select()],
                      replace=replace, exist_ok=exist_ok)
 
     def copy(self, db_b: 'Database', *cursors: Cursor, replace: bool = True, exist_ok: bool = True):
-        copy_cursors(db_b, cursors or [self.users.select(), self.submissions.select(), self.journals.select()],
+        copy_cursors(db_b, cursors or [self.users.select(), self.submissions.select(),
+                                       self.journals.select(), self.comments.select()],
                      replace=replace, exist_ok=exist_ok)
 
     def backup(self, *, folder: Path = None, date_format: str = "%Y-%m-%d %H.%M.%S"):
