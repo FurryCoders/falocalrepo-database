@@ -832,10 +832,10 @@ def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path
 
 # noinspection SqlResolve,SqlNoDataSourceInspection
 def update_patch(conn: Connection, version: str, target_version: str) -> Connection:
-    print(f"Patching {version} to {target_version}... ", end="", flush=True)
+    print(f"Patching {version} to {target_version}", end="", flush=True)
     conn.execute("UPDATE SETTINGS SET SVALUE = ? WHERE SETTING = 'VERSION'", [target_version])
     conn.commit()
-    print("Complete")
+    print()
     return conn
 
 
