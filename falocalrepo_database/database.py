@@ -322,11 +322,13 @@ class UsersTable(Table):
     def files_folder(self) -> Path:
         return self.database.settings.files_folder / "users"
 
-    def save_user(self, user: dict[str, Any], avatar: bytes = None, banner: bytes = None,
+    def save_user(self, user: dict[str, Any], avatar: tuple[bytes, str] = None, banner: tuple[bytes, str] = None,
                   *, replace: bool = False, exist_ok: bool = False):
         user = self.format_entry(user)
-        user[UsersColumns.AVATAR.name] = self.save_user_file(user[self.key.name], avatar, "avatar", "")
-        user[UsersColumns.BANNER.name] = self.save_user_file(user[self.key.name], banner, "banner", "")
+        if avatar:
+            user[UsersColumns.AVATAR.name] = self.save_user_file(user[self.key.name], avatar[0], "avatar", avatar[1])
+        if banner:
+            user[UsersColumns.BANNER.name] = self.save_user_file(user[self.key.name], banner[0], "banner", banner[1])
 
         self.insert(user, replace=replace, exists_ok=exist_ok)
 
