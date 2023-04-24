@@ -795,8 +795,10 @@ def update_5_5(conn: Connection, db_path: Path, db_new_path: Path) -> list[str]:
 
 def update_wrapper(conn: Connection, update_function: Callable[[Connection, Path, Path], list[str] | None],
                    version_old: str, version_new: str) -> Connection:
+    if not (db_path := database_path(conn)):
+        raise DatabaseError("Cannot determine path of database.")
+
     print(f"Updating {version_old} to {version_new}... ", end="", flush=True)
-    db_path: Path = p if (p := database_path(conn)) else Path("FA.db")
     db_new_path: Path = db_path.with_name(f".new_{db_path.name}")
     db_new_path.unlink(missing_ok=True)
     try:
