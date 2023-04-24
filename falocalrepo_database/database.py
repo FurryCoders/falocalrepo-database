@@ -79,6 +79,13 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
         raise DatabaseError("Cursors and destination database must have the same BBCode setting")
 
     for cursor in cursors:
+        if cursor.table.name.lower() not in (
+                db_dest.users.name.lower(), db_dest.submissions.name.lower(), db_dest.journals.name.lower(),
+                db_dest.comments.name.lower(), db_dest.settings.name.lower(), db_dest.history.name.lower()
+        ):
+            raise DatabaseError(f"Unknown table {cursor.table.name}")
+
+    for cursor in cursors:
         cursor_db: Database = cursor.table.database
         dest_table: Table
 
