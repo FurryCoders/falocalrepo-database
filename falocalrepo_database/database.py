@@ -100,9 +100,11 @@ def copy_cursors(db_dest: 'Database', cursors: Iterable['Cursor'], replace: bool
                 continue
             elif dest_table.name.lower() == db_dest.submissions.name.lower():
                 fs, t = cursor_db.submissions.get_submission_files(entry[cursor.table.key.name])
-                db_dest.submissions.save_submission(entry, [f.read_bytes() for f in fs or []],
-                                                    t.read_bytes() if t else None,
-                                                    replace=replace, exist_ok=exist_ok)
+                db_dest.submissions.save_submission(
+                    entry,
+                    [(f.read_bytes(), f.suffix.removeprefix(".")) for f in fs or []],
+                    (t.read_bytes(), t.suffix.removeprefix(".")) if t else None,
+                    replace=replace, exist_ok=exist_ok)
             else:
                 dest_table.insert(dest_table.format_entry(entry), replace=replace, exists_ok=True)
 
@@ -381,63 +383,69 @@ class UsersTable(Table):
 class SubmissionsTable(Table):
     @property
     def files_folder(self) -> Path:
-        return self.database.settings.files_folder
+        return self.database.settings.files_folder / "submissions"
 
-    def save_submission(self, submission: dict[str, Value | list[Value]], files: list[bytes] = None,
-                        thumbnail: bytes = None, *, replace: bool = False, exist_ok: bool = False):
+    def save_submission(self, submission: dict[str, Value | list[Value]], files: list[tuple[bytes, str]] = None,
+                        thumbnail: tuple[bytes, str] = None, *, replace: bool = False, exist_ok: bool = False):
         submission = self.format_entry(submission)
-        file_url: list[str] = \
-            SubmissionsColumns.FILEURL.from_entry(submission[SubmissionsColumns.FILEURL.name])
+        files, thumbnail = files or [], thumbnail or [b'', ""]
 
-        submission[SubmissionsColumns.FILEEXT.name] = SubmissionsColumns.FILEEXT.to_entry([
-            self.save_submission_file(
-                submission[SubmissionsColumns.ID.name], file, "submission",
-                s[1] if (s := search(r"/[^/]+\.([^.]+)$", file_url[0] if file_url else "")) else "", n)
-            for n, file in enumerate(files) if file
+        submission[SubmissionsColumns.FILES.name] = SubmissionsColumns.FILES.to_entry([
+            self.save_submission_file(submission[SubmissionsColumns.ID.name], file, "submission", ext, n)
+            for n, [file, ext] in enumerate([f for f in files if f[0]])
         ])
-        self.save_submission_thumbnail(submission[SubmissionsColumns.ID.name], thumbnail or None)
-
-        submission[SubmissionsColumns.FILESAVED.name] = (
-                (0b100 * all(map(bool, files)) * bool(files)) +  # all files were valid
-                (0b010 * any(map(bool, files))) +  # at least one file was valid
-                (0b001 * bool(thumbnail))  # the thumbnail was valid
+        submission[SubmissionsColumns.THUMBNAIL.name] = SubmissionsColumns.THUMBNAIL.to_entry(
+            self.save_submission_thumbnail(submission[SubmissionsColumns.ID.name], thumbnail[0], thumbnail[1]) or ""
         )
 
         self.insert(submission, replace=replace, exists_ok=exist_ok)
 
     def save_submission_file(self, submission_id: int, file: bytes | None, name: str, ext: str, n: int = 0,
-                             guess_ext: bool = True) -> str:
-        if file is None:
-            return ""
+                             guess_ext: bool = True) -> str | None:
         assert n >= 0, "n must be zero or positive"
+        if file is None:
+            return None
 
         ext: str = guess_extension(file, ext) if guess_ext else ext
-        folder: Path = self.files_folder / tiered_path(submission_id)
-        folder.mkdir(parents=True, exist_ok=True)
-        folder.joinpath(f"{name}{n if n > 0 else ''}" + f".{ext}" * bool(ext)).write_bytes(file)
+        path: Path = self.files_folder / tiered_path(submission_id)
+        path.mkdir(parents=True, exist_ok=True)
+        path /= f"{name}{n or ''}" + (f".{ext}" if ext else "")
+        path.write_bytes(file)
 
-        return ext
+        return path.name
 
-    def save_submission_thumbnail(self, submission_id: int, file: bytes | None):
-        self.save_submission_file(submission_id, file, "thumbnail", "jpg", False)
+    def save_submission_thumbnail(self, submission_id: int, file: bytes | None, ext: str) -> str | None:
+        return self.save_submission_file(submission_id, file, "thumbnail", ext)
 
     def get_submission_files(self, submission_id: int) -> tuple[list[Path] | None, Path | None]:
-        if (entry := self[submission_id]) is None or (f := entry[SubmissionsColumns.FILESAVED.name]) == 0:
+        if (submission := self[submission_id]) is None:
             return None, None
         folder: Path = self.files_folder / tiered_path(submission_id)
-        file_ext: list[str] = entry[SubmissionsColumns.FILEEXT.name]
         return (
-            [folder / f"submission{n or ''}{('.' + ext) if ext else ''}"
-             for n, ext in enumerate(file_ext)] if f & 0b10 else None,
-            folder / "thumbnail.jpg" if f & 0b01 else None
+            [folder / f for f in fs] if (fs := submission[SubmissionsColumns.FILES.name]) else None,
+            folder / t if (t := submission[SubmissionsColumns.THUMBNAIL.name]) else None
         )
 
-    def set_filesaved(self, submission_id: int, all_files: bool | int, any_file: bool | int, thumbnail: bool | int):
-        filesaved: int = (0b100 * bool(all_files)) + (0b010 * bool(any_file)) + (0b001 * bool(thumbnail))
-        if self._get_exists(submission_id)[SubmissionsColumns.FILESAVED.name] != filesaved:
-            self.update({EQ: {self.key.name: submission_id}}, {SubmissionsColumns.FILESAVED.name: filesaved})
-            return True
-        return False
+    def move_submission_files(self, submission_id: int, new_submission_id: int):
+        if self[new_submission_id]:
+            raise KeyError(f"Duplicate ID {new_submission_id}")
+
+        files, thumbnail = self.get_submission_files(submission_id)
+
+        if files:
+            for n, file in enumerate(files):
+                self.save_submission_file(new_submission_id, file.read_bytes(), "submission",
+                                          file.suffix.removeprefix("."), n)
+                file.unlink(missing_ok=True)
+        if thumbnail:
+            self.save_submission_thumbnail(new_submission_id, thumbnail.read_bytes(),
+                                           thumbnail.suffix.removeprefix("."))
+            thumbnail.unlink(missing_ok=True)
+
+        if files:
+            rm_tree(files[0].parent, self.files_folder)
+        elif thumbnail:
+            rm_tree(thumbnail.parent, self.files_folder)
 
     def set_folder(self, submission_id: int, folder: str) -> bool:
         if self._get_exists(submission_id)[SubmissionsColumns.FOLDER.name] != (folder := folder.lower().strip()):
